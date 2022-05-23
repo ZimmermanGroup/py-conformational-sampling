@@ -1,0 +1,9 @@
+#python utility files
+__pycache__
+.ipynb_checkpoints
+*/__pycache__
+src/*.egg-info
+.pytest_cache
+
+#vscode utility files
+.vscode
