@@ -20,6 +20,8 @@ setuptools.setup(
         'numpy',
         'rdkit-pypi',
         'stk',
+        'stko',
+        'nglview',
     ),
     extras_require={
         "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
