@@ -43,6 +43,9 @@ class CustomSquarePlanar(MetalComplex):
     )
 
 # %%
+%reload_ext autoreload
+%autoreload 2
+from IPython.display import display
 
 from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
@@ -63,6 +66,7 @@ nglview.show_rdkit(vitek_dmpp_ligand)
 # %%
 from rdkit import Chem
 import stk
+import stko
 
 metal = stk.BuildingBlock(
     smiles='[Pd]',
@@ -104,4 +108,16 @@ complex = stk.ConstructedMolecule(
 
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
-nglview.show_rdkit(mol)
+display(nglview.show_rdkit(mol))
+complex = stk.MCHammer().optimize(complex)
+mol = complex.to_rdkit_mol()
+Chem.SanitizeMol(mol)
+display(nglview.show_rdkit(mol))
+complex = stko.MetalOptimizer().optimize(complex)
+mol = complex.to_rdkit_mol()
+Chem.SanitizeMol(mol)
+display(nglview.show_rdkit(mol))
+complex = stko.XTB('/export/apps/CentOS7/xtb/xtb/bin/xtb').optimize(complex)
+mol = complex.to_rdkit_mol()
+Chem.SanitizeMol(mol)
+display(nglview.show_rdkit(mol))
