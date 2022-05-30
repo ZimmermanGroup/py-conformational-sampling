@@ -18,10 +18,14 @@ setuptools.setup(
     python_requires=">=3.8",
     install_requires=(
         'numpy',
+        'pandas',
+        'param',
+        'hvplot',
+        'panel>=0.13.1',
+        # 'panel-chemistry',
         'rdkit-pypi',
         'stk',
         'stko',
-        'nglview',
     ),
     extras_require={
         "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
