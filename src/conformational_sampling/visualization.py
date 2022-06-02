@@ -1,7 +1,7 @@
 # %%
-# %reload_ext autoreload
-# %autoreload 2
-# from IPython.display import display
+%reload_ext autoreload
+%autoreload 2
+from IPython.display import display
 import numpy as np
 import pandas as pd
 
@@ -15,7 +15,7 @@ import stk
 #     LigninMaccollCalculator, LigninMaccollFunctionalGroupFactory, init_stk_from_rdkit
 
 import param
-# import hvplot.pandas # noqa
+import hvplot.pandas # noqa
 # import holoviews as hv
 # from holoviews import opts
 # from holoviews.streams import Selection1D
@@ -23,7 +23,8 @@ import panel as pn
 # from panel_chemistry.pane import \
 #     NGLViewer  # panel_chemistry needs to be imported before you run pn.extension()
 # from panel_chemistry.pane.ngl_viewer import EXTENSIONS
-pn.extension('bokeh', comms='vscode')
+pn.extension('bokeh')
+pn.extension(comms='vscode')
 # pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
@@ -31,14 +32,18 @@ import openbabel as ob
 from openbabel import pybel as pb
 import nglview
 
-def setup_mol():
-    vitek_dmpp = Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/vitek_dmpp/all_openbabel5.xyz')
-    vitek_dmpp = list(pb.readfile('xyz', str(vitek_dmpp)))
-    vitek_dmpp = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in vitek_dmpp]
-    # return nglview.show_rdkit(vitek_dmpp[0])
-    return vitek_dmpp
-
-setup_mol()
+def setup_mols():
+    # extract the conformers for a molecule from an xyz file
+    def setup_mol(path):
+        mol_confs = list(pb.readfile('xyz', str(path)))
+        mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
+        return mol_confs
+    
+    paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
+    mols = {path.parts[-2] : setup_mol(path) for path in paths}
+    return mols
+    
+# setup_mol()
 
 class ConformationalSamplingDashboard(param.Parameterized):
     # mechanism = param.Selector(['Pericylic', 'Maccoll'])
@@ -49,7 +54,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
 
     def __init__(self):
         super().__init__()
-        self.mols = setup_mol()
+        self.mols = setup_mols()
         # self.dataframe()
         # self.stream = Selection1D()
     
@@ -57,13 +62,25 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     # @param.depends('mechanism', watch=True)
     def dataframe(self):
-        energies = [float(MolToMolBlock(mol).split()[0]) for mol in self.mols]
-        return pd.Series(energies, name='energies')
+        def mol_dataframe(mol_confs):
+            energies = [MolToMolBlock(conf).split()[0] for conf in mol_confs]
+            energies = pd.Series(energies, name='energies (kcal/mol)')
+            energies = pd.to_numeric(energies, errors='coerce')
+            energies -= energies.min()
+            energies = energies.where(energies <= 100) * 627.5 #hartree -> kcal/mol
+            return energies
+        df = pd.concat({name : mol_dataframe(mol_confs) for (name, mol_confs) in self.mols.items()},
+                       names=['mol_name', 'idx'])
+        return df.reset_index(level=0).reset_index(drop=True)
     #     distances = self.mechanism().calculate_distances(self.mol)
     #     self.df = distances.to_dataframe().reset_index().astype({FUNC_GROUP_ID_1: 'str'})
     
-    # @param.depends('dataframe', 'setup_stk_mol')
-    # def scatter_plot(self):
+    @param.depends('dataframe')
+    def scatter_plot(self):
+        df = self.dataframe()
+        plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', title='Conformer Energies', height=400, width=400, legend=False) 
+        plot *= df.hvplot.scatter(y='energies (kcal/mol)', x='mol_name', c='orange').opts(jitter=0.5)
+        return plot
     #     if self.mechanism == LigninMaccollCalculator:
     #         points = self.df.hvplot.scatter(x='Lignin Maccoll mechanism distances', y='Energies', c='func_group_id_1')
     #     elif self.mechanism == LigninPericyclicCalculator:
@@ -78,10 +95,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
     #     return points
     
     # param.depends('display_mol', 'scatter_plot', 'index_conf', 'disp_mechanism', 'mechanism')
-    param.depends('dataframe')
+    param.depends('dataframe', 'scatter_plot')
     def app(self):
         # return pn.Row(pn.Column(self.param.mechanism, self.scatter_plot, self.index_conf), self.display_mol)
-        return pn.Row(self.dataframe, 'test2')
+        return pn.Row(self.dataframe, 'test2', self.scatter_plot)
     
     # @param.depends('mechanism', watch=True)
     # def setup_stk_mol(self):
@@ -132,7 +149,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
 dashboard = ConformationalSamplingDashboard()
 try:
     bokeh_server.stop()
-except NameError:
+except (NameError, AssertionError):
     pass
 bokeh_server = dashboard.app().show(port=45350)
 # dashboard.app()
