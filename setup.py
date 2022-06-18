@@ -19,6 +19,7 @@ setuptools.setup(
     install_requires=(
         'numpy',
         'pandas',
+        'dask-jobqueue',
         'param',
         'hvplot',
         'panel>=0.13.1',

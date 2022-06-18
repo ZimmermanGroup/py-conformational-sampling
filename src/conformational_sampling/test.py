@@ -1,6 +1,8 @@
 # %%
-%reload_ext autoreload
-%autoreload 2
+
+# jupyter only imports
+# %reload_ext autoreload
+# %autoreload 2
 from IPython.display import display
 
 from pathlib import Path
@@ -65,11 +67,11 @@ def bind_to_dimethyl_Pd(ligand):
 complex = bind_to_dimethyl_Pd(vitek_dmpp_ligand)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
-# display(nglview.show_rdkit(mol))
+display(nglview.show_rdkit(mol))
 complex = stk.MCHammer().optimize(complex)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
-# display(nglview.show_rdkit(mol))
+display(nglview.show_rdkit(mol))
 complex = stko.MetalOptimizer().optimize(complex)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
@@ -89,3 +91,18 @@ with ProcessPoolExecutor(max_workers=2) as executor:
 mol = optimized_complexes[0].to_rdkit_mol()
 Chem.SanitizeMol(mol)
 display(nglview.show_rdkit(mol))
+
+# %%
+from dask_jobqueue import SLURMCluster
+from dask.distributed import Client
+with SLURMCluster(
+    queue='zimintel',
+    cores=1,
+    memory='1GB',
+    processes=1
+) as cluster, Client(cluster) as client:
+    cluster.scale(jobs=2)
+    # futures = client.map(execute_xtb, range(len(complexes)), complexes)
+    # mol = futures[0].result(timeout=10).to_rdkit_mol()
+# Chem.SanitizeMol(mol)
+# display(nglview.show_rdkit(mol))
