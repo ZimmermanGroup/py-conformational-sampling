@@ -9,6 +9,7 @@ from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 import openbabel as ob
 from openbabel import pybel as pb
+from rdkit import Chem
 import nglview
 
 from conformational_sampling.mixed_square_planar import MixedSquarePlanar
@@ -17,15 +18,20 @@ vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sam
 # vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
 vitek_dmpp_ligand = next(pb.readfile('xyz', str(vitek_dmpp_ligand)))
 vitek_dmpp_ligand = MolFromMolBlock(vitek_dmpp_ligand.write('mol'), removeHs=False)
-nglview.show_rdkit(vitek_dmpp_ligand)
+cids = Chem.AllChem.EmbedMultipleConfs(vitek_dmpp_ligand, numConfs=100, randomSeed=40, pruneRmsThresh=0.6)
+confs = vitek_dmpp_ligand.GetConformers()
+conf_ids = [conf.GetId() for conf in confs]
+print(conf_ids)
+for i in conf_ids:
+    display(nglview.show_rdkit(vitek_dmpp_ligand, conf_id=i))
+
 
 
 # %%
-from rdkit import Chem
 import stk
 import stko
 
-def bind_to_dimethyl_Pd(ligand):
+def bind_to_dimethyl_Pd(ligand, conf_id=-1):
     metal = stk.BuildingBlock(
         smiles='[Pd]',
         functional_groups=(
@@ -53,6 +59,7 @@ def bind_to_dimethyl_Pd(ligand):
             )
         ]
     )
+    ligand_stk = ligand_stk.with_position_matrix(ligand.GetConformer(conf_id).GetPositions())
 
     return stk.ConstructedMolecule(
         topology_graph=MixedSquarePlanar(
@@ -64,7 +71,7 @@ def bind_to_dimethyl_Pd(ligand):
         ),
     )
 
-complex = bind_to_dimethyl_Pd(vitek_dmpp_ligand)
+complex = bind_to_dimethyl_Pd(vitek_dmpp_ligand, 3)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
 display(nglview.show_rdkit(mol))
@@ -76,6 +83,7 @@ complex = stko.MetalOptimizer().optimize(complex)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
 display(nglview.show_rdkit(mol))
+
 complexes = [complex] * 2
 from concurrent.futures import ProcessPoolExecutor
 def execute_xtb(idx, complex):
