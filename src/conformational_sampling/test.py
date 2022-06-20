@@ -1,8 +1,8 @@
 # %%
 
 # jupyter only imports
-# %reload_ext autoreload
-# %autoreload 2
+%reload_ext autoreload
+%autoreload 2
 from IPython.display import display
 
 from pathlib import Path
@@ -12,24 +12,15 @@ from openbabel import pybel as pb
 from rdkit import Chem
 import nglview
 
-from conformational_sampling.mixed_square_planar import MixedSquarePlanar
-
-vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/vitek_dmpp/ligand.xyz')
-# vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
-vitek_dmpp_ligand = next(pb.readfile('xyz', str(vitek_dmpp_ligand)))
-vitek_dmpp_ligand = MolFromMolBlock(vitek_dmpp_ligand.write('mol'), removeHs=False)
-cids = Chem.AllChem.EmbedMultipleConfs(vitek_dmpp_ligand, numConfs=100, randomSeed=40, pruneRmsThresh=0.6)
-confs = vitek_dmpp_ligand.GetConformers()
-conf_ids = [conf.GetId() for conf in confs]
-print(conf_ids)
-for i in conf_ids:
-    display(nglview.show_rdkit(vitek_dmpp_ligand, conf_id=i))
-
-
-
-# %%
 import stk
 import stko
+from conformational_sampling.mixed_square_planar import MixedSquarePlanar
+
+def load_mol(molecule_path, fmt='xyz'):
+    'loads a molecule from a file via pybel into an rdkit Mol object'
+    pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
+    rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
+    return rdkit_mol
 
 def bind_to_dimethyl_Pd(ligand, conf_id=-1):
     metal = stk.BuildingBlock(
@@ -71,10 +62,28 @@ def bind_to_dimethyl_Pd(ligand, conf_id=-1):
         ),
     )
 
+def gen_ligand_library_entry(mol):
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(mol, numConfs=100, randomSeed=40, pruneRmsThresh=0.6)
+    complexes = [bind_to_dimethyl_Pd(mol, conf_id=conf_id) for conf_id in conf_ids]
+    for complex in complexes:
+        display_mol = complex.to_rdkit_mol()
+        Chem.SanitizeMol(display_mol)
+        display(nglview.show_rdkit(display_mol))
+    
+mol_path = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/vitek_dmpp/ligand.xyz')
+vitek_dmpp_ligand = load_mol(mol_path)
+# vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
+gen_ligand_library_entry(vitek_dmpp_ligand)
+# for i in conf_ids:
+#     display(nglview.show_rdkit(vitek_dmpp_ligand, conf_id=i))
+
+
+
+
+# %%
+
+
 complex = bind_to_dimethyl_Pd(vitek_dmpp_ligand, 3)
-mol = complex.to_rdkit_mol()
-Chem.SanitizeMol(mol)
-display(nglview.show_rdkit(mol))
 complex = stk.MCHammer().optimize(complex)
 mol = complex.to_rdkit_mol()
 Chem.SanitizeMol(mol)
