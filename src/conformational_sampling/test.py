@@ -6,7 +6,7 @@
 from IPython.display import display
 
 from pathlib import Path
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
+from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
 import openbabel as ob
 from openbabel import pybel as pb
 from rdkit import Chem
@@ -62,9 +62,17 @@ def bind_to_dimethyl_Pd(ligand, conf_id=-1):
         ),
     )
 
+def stk_list_to_xyz_file(stk_mol_list, file_path):
+    with open(file_path, 'w') as file:
+        for stk_mol in stk_mol_list:
+            file.write(MolToXYZBlock(stk_mol.to_rdkit_mol()))
+
 def gen_ligand_library_entry(mol):
     conf_ids = Chem.AllChem.EmbedMultipleConfs(mol, numConfs=100, randomSeed=40, pruneRmsThresh=0.6)
     complexes = [bind_to_dimethyl_Pd(mol, conf_id=conf_id) for conf_id in conf_ids]
+    stk_list_to_xyz_file(complexes, 'test_output.xyz')
+    # mc_hammer_complexes = [stk.MCHammer().optimize(complex) for complex in complexes]
+    
     for complex in complexes:
         display_mol = complex.to_rdkit_mol()
         Chem.SanitizeMol(display_mol)
@@ -81,7 +89,6 @@ gen_ligand_library_entry(vitek_dmpp_ligand)
 
 
 # %%
-
 
 complex = bind_to_dimethyl_Pd(vitek_dmpp_ligand, 3)
 complex = stk.MCHammer().optimize(complex)
