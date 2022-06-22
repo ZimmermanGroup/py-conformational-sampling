@@ -41,3 +41,18 @@ def test_slurm():
             display(future.result(timeout=5))
 if __name__ == '__main__':
     test_slurm()
+    
+# %%
+# from dask_jobqueue import SLURMCluster
+# from dask.distributed import Client
+# with SLURMCluster(
+#     queue='zimintel',
+#     cores=1,
+#     memory='1GB',
+#     processes=1
+# ) as cluster, Client(cluster) as client:
+#     cluster.scale(jobs=2)
+    # futures = client.map(execute_xtb, range(len(complexes)), complexes)
+    # mol = futures[0].result(timeout=10).to_rdkit_mol()
+# Chem.SanitizeMol(mol)
+# display(nglview.show_rdkit(mol))

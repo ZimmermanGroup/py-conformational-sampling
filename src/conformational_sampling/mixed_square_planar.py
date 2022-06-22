@@ -8,7 +8,8 @@ class MixedSquarePlanar(MetalComplex):
         MetalVertex(0, (0, 0, 0)),
     )
     _ligand_vertex_prototypes = (
-        BiDentateLigandVertex(1, (2.5, 2.5, 0)),
+        # BiDentateLigandVertex(1, (2.5, 2.5, 0)),
+        BiDentateLigandVertex(1, (5, 5, 0)),
         MonoDentateLigandVertex(2, (-2.5, 0, 0)),
         MonoDentateLigandVertex(3, (0, -2.5, 0)),
     )

@@ -155,3 +155,7 @@ bokeh_server = dashboard.app().show(port=45350)
 # dashboard.app()
 
 # %%
+# for complex in unoptimized_complexes:
+#     display_mol = complex.to_rdkit_mol()
+#     Chem.SanitizeMol(display_mol)
+#     display(nglview.show_rdkit(display_mol))
