@@ -1,8 +1,8 @@
 # %%
 
 # jupyter only imports
-%reload_ext autoreload
-%autoreload 2
+# %reload_ext autoreload
+# %autoreload 2
 
 import os
 # from IPython.display import display
@@ -75,15 +75,16 @@ def stk_list_to_xyz_file(stk_mol_list, file_path):
 def execute_xtb(idx, complex):
     return stko.XTB(
         '/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        output_dir=f'xtb_test_{idx}',
+        output_dir=f'scratch/xtb_test_{idx}',
         calculate_hessian=False,
         max_runs=1,
         charge=0
     ).optimize(complex)
 
 def gen_ligand_library_entry(mol):
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(mol, numConfs=10, randomSeed=40, pruneRmsThresh=0.6, numThreads=2)
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(mol, numConfs=40, randomSeed=40, pruneRmsThresh=0.6, numThreads=4)
     stk_ligands = [rdkit_conf_to_building_block(mol, conf_id) for conf_id in conf_ids]
+    stk_list_to_xyz_file(unoptimized_complexes, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_ligands]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_0_unoptimized.xyz')
     mc_hammer_complexes = [stk.MCHammer().optimize(complex) for complex in unoptimized_complexes]
@@ -91,14 +92,15 @@ def gen_ligand_library_entry(mol):
     metal_optimizer_complexes = [stko.MetalOptimizer().optimize(complex)
                                  for complex in mc_hammer_complexes]
     stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_2_metal_optimizer.xyz')
-    # with ProcessPoolExecutor(max_workers=2) as executor:
-    #     xtb_complexes = list(executor.map(execute_xtb, range(len(metal_optimizer_complexes)),
-    #                                       metal_optimizer_complexes))
-    # stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz')
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        xtb_complexes = list(executor.map(execute_xtb, range(len(metal_optimizer_complexes)),
+                                          metal_optimizer_complexes))
+    stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz')
     
 # os.chdir(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/vitek_dmpp/'))
-os.chdir(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/alonso_ligand/'))
+# os.chdir(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/alonso_ligand/'))
 mol_path = Path('ligand.xyz')
-vitek_dmpp_ligand = load_mol(mol_path)
-# vitek_dmpp_ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
-gen_ligand_library_entry(vitek_dmpp_ligand)
+ligand = load_mol(mol_path)
+# ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
+gen_ligand_library_entry(ligand)
+
