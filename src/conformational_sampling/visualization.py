@@ -16,16 +16,16 @@ import stk
 
 import param
 import hvplot.pandas # noqa
-# import holoviews as hv
-# from holoviews import opts
-# from holoviews.streams import Selection1D
+import holoviews as hv
+from holoviews import opts
+from holoviews.streams import Selection1D
 import panel as pn
-# from panel_chemistry.pane import \
-#     NGLViewer  # panel_chemistry needs to be imported before you run pn.extension()
-# from panel_chemistry.pane.ngl_viewer import EXTENSIONS
+from panel_chemistry.pane import \
+    NGLViewer  # panel_chemistry needs to be imported before you run pn.extension()
+from panel_chemistry.pane.ngl_viewer import EXTENSIONS
 pn.extension('bokeh')
 pn.extension(comms='vscode')
-# pn.extension("ngl_viewer", sizing_mode="stretch_width")
+pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 import openbabel as ob
@@ -40,6 +40,7 @@ def setup_mols():
         return mol_confs
     
     paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
+    # paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/').glob('*/conformers_3_xtb.xyz'))
     mols = {path.parts[-2] : setup_mol(path) for path in paths}
     return mols
     
@@ -55,8 +56,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def __init__(self):
         super().__init__()
         self.mols = setup_mols()
-        # self.dataframe()
-        # self.stream = Selection1D()
+        self.df = self.dataframe()
+        self.stream = Selection1D()
     
         
     
@@ -68,37 +69,39 @@ class ConformationalSamplingDashboard(param.Parameterized):
             energies = pd.to_numeric(energies, errors='coerce')
             energies -= energies.min()
             energies = energies.where(energies <= 100) * 627.5 #hartree -> kcal/mol
+            # indices = pd.Series(range(len(energies), name='conf_index'))
             return energies
         df = pd.concat({name : mol_dataframe(mol_confs) for (name, mol_confs) in self.mols.items()},
                        names=['mol_name', 'idx'])
-        return df.reset_index(level=0).reset_index(drop=True)
+        return df.reset_index()
     #     distances = self.mechanism().calculate_distances(self.mol)
     #     self.df = distances.to_dataframe().reset_index().astype({FUNC_GROUP_ID_1: 'str'})
     
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.dataframe()
-        plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', title='Conformer Energies', height=400, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='energies (kcal/mol)', x='mol_name', c='orange').opts(jitter=0.5)
+        plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', c='orange', title='Conformer Energies', height=400, width=400, legend=False) 
+        plot *= df.hvplot.scatter(y='energies (kcal/mol)', x='mol_name', c='blue').opts(jitter=0.5)
+        plot.opts(
+            opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
+                        # width=600, height=600,
+                        marker='triangle', size=10, fontsize={'labels': 14}),
+        )
+        self.stream.update(index=[])
+        self.stream.source = plot
         return plot
     #     if self.mechanism == LigninMaccollCalculator:
     #         points = self.df.hvplot.scatter(x='Lignin Maccoll mechanism distances', y='Energies', c='func_group_id_1')
     #     elif self.mechanism == LigninPericyclicCalculator:
     #         points = self.df.hvplot.scatter(x='Lignin retro-ene mechanism distances',
     #                                         y='Inhibition distance differences')
-    #     points.opts(
-    #         opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'], width=600, height=600,
-    #                     marker='triangle', size=10, fontsize={'labels': 14}),
-    #     )
-    #     self.stream.update(index=[])
-    #     self.stream.source = points
     #     return points
     
     # param.depends('display_mol', 'scatter_plot', 'index_conf', 'disp_mechanism', 'mechanism')
-    param.depends('dataframe', 'scatter_plot')
+    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf')
     def app(self):
         # return pn.Row(pn.Column(self.param.mechanism, self.scatter_plot, self.index_conf), self.display_mol)
-        return pn.Row(self.dataframe, 'test2', self.scatter_plot)
+        return pn.Row(pn.Column(self.index_conf, self.dataframe), self.scatter_plot, self.display_mol)
     
     # @param.depends('mechanism', watch=True)
     # def setup_stk_mol(self):
@@ -107,22 +110,24 @@ class ConformationalSamplingDashboard(param.Parameterized):
     #         functional_groups=(self.func_group_factories[self.mechanism](),),
     #     )
         
-    # @param.depends('stream.index', 'scatter_plot', watch=True)
-    # def display_mol(self):
-    #     index = self.stream.index
-    #     if not index:
-    #         return None
-    #     index = index[0]
-    #     conf_id = int(self.df.iloc[index]['conf_id'])
-    #     pdb_block = MolToPDBBlock(self.highlighted_mol(self.df.iloc[index][FUNC_GROUP_ID_1]), confId=conf_id)
-    #     viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=800, sizing_mode="stretch_both")
-    #     return viewer
+    @param.depends('stream.index', 'scatter_plot', watch=True)
+    def display_mol(self):
+        index = self.stream.index
+        if not index: # abort if nothing is selected
+            return None
+        index = index[0]
+        mol_name = self.df.iloc[index]['mol_name']
+        conf_index = int(self.df.iloc[index]['idx'])
+        pdb_block = MolToPDBBlock(self.mols[mol_name][conf_index])
+        # pdb_block = MolToPDBBlock(self.highlighted_mol(self.df.iloc[index][FUNC_GROUP_ID_1]), confId=conf_id)
+        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=800, sizing_mode="stretch_both")
+        return viewer
 
-    # @param.depends('stream.index', 'mechanism', watch=True)
-    # def index_conf(self):
-    #     # index = self.stream.index
-    #     # return index
-    #     return f'{self.stream.index = }\n{repr(dashboard) = }'
+    @param.depends('stream.index', watch=True)
+    def index_conf(self):
+        # index = self.stream.index
+        # return index
+        return f'{self.stream.index = }\n{repr(dashboard) = }'
     
     # @param.depends('mechanism', watch=True)
     # def disp_mechanism(self):

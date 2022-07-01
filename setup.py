@@ -23,7 +23,7 @@ setuptools.setup(
         'param',
         'hvplot',
         'panel>=0.13.1',
-        # 'panel-chemistry',
+        'panel-chemistry',
         'rdkit-pypi',
         'stk',
         'stko',

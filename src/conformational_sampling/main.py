@@ -1,44 +1,28 @@
-# %%
-
-# jupyter only imports
-# %reload_ext autoreload
-# %autoreload 2
-
 import os
-# from IPython.display import display
-
-from pathlib import Path
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
 from concurrent.futures import ProcessPoolExecutor
 
-import openbabel as ob
 from openbabel import pybel as pb
 from rdkit import Chem
-import nglview
+from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
 
 import stk
 import stko
+
 from conformational_sampling.mixed_square_planar import MixedSquarePlanar
 
-def load_mol(molecule_path, fmt='xyz'):
-    'loads a molecule from a file via pybel into an rdkit Mol object'
+def num_cpus():
+    try:
+        return int(os.environ["SLURM_CPUS_PER_TASK"])
+    except KeyError:
+        return 1
+
+def load_stk_mol(molecule_path, fmt='xyz'):
+    'loads a molecule from a file via pybel into an stk Molecule object'
     pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
     rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
-    return rdkit_mol
-
-def rdkit_conf_to_building_block(rdkit_mol, conf_id=-1):
     Chem.rdmolops.Kekulize(rdkit_mol)
-    stk_mol = stk.BuildingBlock.init_from_rdkit_mol(
-        rdkit_mol,
-        functional_groups=[
-            stk.SmartsFunctionalGroupFactory(
-                smarts='P',
-                bonders=(0,),
-                deleters=(),
-            )
-        ]
-    )
-    return stk_mol.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
+    stk_mol = stk.BuildingBlock.init_from_rdkit_mol(rdkit_mol)
+    return stk_mol
 
 def bind_to_dimethyl_Pd(ligand):
     metal = stk.BuildingBlock(
@@ -81,26 +65,21 @@ def execute_xtb(idx, complex):
         charge=0
     ).optimize(complex)
 
-def gen_ligand_library_entry(mol):
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(mol, numConfs=40, randomSeed=40, pruneRmsThresh=0.6, numThreads=4)
-    stk_ligands = [rdkit_conf_to_building_block(mol, conf_id) for conf_id in conf_ids]
+def gen_ligand_library_entry(stk_ligand):
+    rdkit_mol = stk_ligand.to_rdkit_mol()
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=40, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
+    stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
+                   for conf_id in conf_ids]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_ligand_only.xyz')
-    unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_ligands]
+    unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_0_unoptimized.xyz')
     mc_hammer_complexes = [stk.MCHammer().optimize(complex) for complex in unoptimized_complexes]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_1_mc_hammer.xyz')
     metal_optimizer_complexes = [stko.MetalOptimizer().optimize(complex)
                                  for complex in mc_hammer_complexes]
     stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_2_metal_optimizer.xyz')
-    with ProcessPoolExecutor(max_workers=4) as executor:
+    with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
         xtb_complexes = list(executor.map(execute_xtb, range(len(metal_optimizer_complexes)),
                                           metal_optimizer_complexes))
     stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz')
     
-# os.chdir(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/vitek_dmpp/'))
-# os.chdir(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/alonso_ligand/'))
-mol_path = Path('ligand.xyz')
-ligand = load_mol(mol_path)
-# ligand = Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/bis_hydrazone/bis_hydrazone_ligand.xyz')
-gen_ligand_library_entry(ligand)
-
