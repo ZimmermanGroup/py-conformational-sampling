@@ -39,8 +39,8 @@ def setup_mols():
         mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
         return mol_confs
     
-    paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
-    # paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/').glob('*/conformers_3_xtb.xyz'))
+    # paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
+    paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/').glob('*/conformers_3_xtb.xyz'))
     mols = {path.parts[-2] : setup_mol(path) for path in paths}
     return mols
     
@@ -58,8 +58,6 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.mols = setup_mols()
         self.df = self.dataframe()
         self.stream = Selection1D()
-    
-        
     
     # @param.depends('mechanism', watch=True)
     def dataframe(self):
@@ -158,9 +156,3 @@ except (NameError, AssertionError):
     pass
 bokeh_server = dashboard.app().show(port=45350)
 # dashboard.app()
-
-# %%
-# for complex in unoptimized_complexes:
-#     display_mol = complex.to_rdkit_mol()
-#     Chem.SanitizeMol(display_mol)
-#     display(nglview.show_rdkit(display_mol))
