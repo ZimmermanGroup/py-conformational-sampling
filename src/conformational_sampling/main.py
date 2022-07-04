@@ -67,17 +67,17 @@ def execute_xtb(idx, complex):
 
 def gen_ligand_library_entry(stk_ligand):
     rdkit_mol = stk_ligand.to_rdkit_mol()
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=40, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=1, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
     stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
                    for conf_id in conf_ids]
-    stk_list_to_xyz_file(unoptimized_complexes, 'conformers_ligand_only.xyz')
+    stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_0_unoptimized.xyz')
     mc_hammer_complexes = [stk.MCHammer().optimize(complex) for complex in unoptimized_complexes]
-    stk_list_to_xyz_file(unoptimized_complexes, 'conformers_1_mc_hammer.xyz')
+    stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_1_mc_hammer.xyz')
     metal_optimizer_complexes = [stko.MetalOptimizer().optimize(complex)
                                  for complex in mc_hammer_complexes]
-    stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_2_metal_optimizer.xyz')
+    stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
     with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
         xtb_complexes = list(executor.map(execute_xtb, range(len(metal_optimizer_complexes)),
                                           metal_optimizer_complexes))
