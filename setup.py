@@ -29,7 +29,8 @@ setuptools.setup(
         'stko',
     ),
     extras_require={
-        "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
+        # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
+        "dev": ["snakeviz"],
         # "research_analysis" : ["xarray", "panel", "holoviews", "hvplot", "panel-chemistry"],
         "vscode": ["pylint", "jupyter"]
     },

@@ -1,5 +1,6 @@
 import os
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
 from openbabel import pybel as pb
 from rdkit import Chem
@@ -78,7 +79,7 @@ def xtb_energy(idx, complex):
 
 def gen_ligand_library_entry(stk_ligand):
     rdkit_mol = stk_ligand.to_rdkit_mol()
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=10, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=100, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
     stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
                    for conf_id in conf_ids]
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
@@ -89,6 +90,7 @@ def gen_ligand_library_entry(stk_ligand):
     metal_optimizer_complexes = [stko.MetalOptimizer().optimize(complex)
                                  for complex in mc_hammer_complexes]
     stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
+    (Path.cwd() / 'scratch').mkdir(exist_ok=True)
     with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
         xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
                                           metal_optimizer_complexes))
