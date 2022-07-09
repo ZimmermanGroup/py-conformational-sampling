@@ -32,17 +32,6 @@ import openbabel as ob
 from openbabel import pybel as pb
 import nglview
 
-def setup_mols():
-    # extract the conformers for a molecule from an xyz file
-    def setup_mol(path):
-        mol_confs = list(pb.readfile('xyz', str(path)))
-        mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
-        return mol_confs
-    
-    # paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
-    paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/').glob('*/conformers_3_xtb.xyz'))
-    mols = {path.parts[-2] : setup_mol(path) for path in paths}
-    return mols
     
 # setup_mol()
 
@@ -53,13 +42,28 @@ class ConformationalSamplingDashboard(param.Parameterized):
     # func_group_factories = {LigninPericyclicCalculator: LigninPericyclicFunctionalGroupFactory,
     #                         LigninMaccollCalculator: LigninMaccollFunctionalGroupFactory}
 
+    refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
+
     def __init__(self):
         super().__init__()
-        self.mols = setup_mols()
-        self.df = self.dataframe()
+        self.setup_mols()
+        self.dataframe()
         self.stream = Selection1D()
     
-    # @param.depends('mechanism', watch=True)
+    @param.depends('refresh', watch=True)
+    def setup_mols(self):
+        # extract the conformers for a molecule from an xyz file
+        def setup_mol(path):
+            mol_confs = list(pb.readfile('xyz', str(path)))
+            mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
+            return mol_confs
+        
+        # paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ConformationalSampling-1/examples/').glob('*/all_openbabel5.xyz'))
+        paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/').glob('*/conformers_3_xtb.xyz'))
+        mols = {path.parts[-2] : setup_mol(path) for path in paths}
+        self.mols = mols
+    
+    @param.depends('setup_mols', watch=True)
     def dataframe(self):
         def mol_dataframe(mol_confs):
             energies = [MolToMolBlock(conf).split()[0] for conf in mol_confs]
@@ -69,15 +73,16 @@ class ConformationalSamplingDashboard(param.Parameterized):
             energies = energies.where(energies <= 100) * 627.5 #hartree -> kcal/mol
             # indices = pd.Series(range(len(energies), name='conf_index'))
             return energies
+        
         df = pd.concat({name : mol_dataframe(mol_confs) for (name, mol_confs) in self.mols.items()},
                        names=['mol_name', 'idx'])
-        return df.reset_index()
+        self.df = df.reset_index()
     #     distances = self.mechanism().calculate_distances(self.mol)
     #     self.df = distances.to_dataframe().reset_index().astype({FUNC_GROUP_ID_1: 'str'})
     
     @param.depends('dataframe')
     def scatter_plot(self):
-        df = self.dataframe()
+        df = self.df
         plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', c='orange', title='Conformer Energies', height=400, width=400, legend=False) 
         plot *= df.hvplot.scatter(y='energies (kcal/mol)', x='mol_name', c='blue').opts(jitter=0.5)
         plot.opts(
@@ -98,8 +103,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     # param.depends('display_mol', 'scatter_plot', 'index_conf', 'disp_mechanism', 'mechanism')
     param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf')
     def app(self):
-        # return pn.Row(pn.Column(self.param.mechanism, self.scatter_plot, self.index_conf), self.display_mol)
-        return pn.Row(pn.Column(self.index_conf, self.dataframe), self.scatter_plot, self.display_mol)
+        return pn.Row(pn.Column(self.param.refresh, self.scatter_plot), self.display_mol)
     
     # @param.depends('mechanism', watch=True)
     # def setup_stk_mol(self):
@@ -150,7 +154,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     #     return mol
 
 dashboard = ConformationalSamplingDashboard()
-try:
+try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass

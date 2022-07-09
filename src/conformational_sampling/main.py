@@ -77,9 +77,9 @@ def xtb_energy(idx, complex):
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
 
-def gen_ligand_library_entry(stk_ligand):
+def gen_ligand_library_entry(stk_ligand, numConfs=100):
     rdkit_mol = stk_ligand.to_rdkit_mol()
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=100, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=numConfs, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
     stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
                    for conf_id in conf_ids]
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
