@@ -9,7 +9,7 @@ from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
 import stk
 import stko
 
-from conformational_sampling.mixed_square_planar import MixedSquarePlanar
+from conformational_sampling.metal_complexes import OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar
 
 XTB_PATH = '/export/apps/CentOS7/xtb/xtb/bin/xtb'
 
@@ -43,16 +43,28 @@ def bind_to_dimethyl_Pd(ligand):
             stk.SingleAtom(stk.C(0))
         ]
     )
+    
+    if ligand.get_num_functional_groups() == 1: #monodentate
+        return stk.ConstructedMolecule(
+            topology_graph=OneLargeTwoSmallMonodentateTrigonalPlanar(
+                metals=metal,
+                ligands={
+                    ligand: (0, ),
+                    methyl: (1, 2),
+                },
+            ),
+        )
+    elif ligand.get_num_functional_groups() == 2: #bidentate
+        return stk.ConstructedMolecule(
+            topology_graph=TwoMonoOneBidentateSquarePlanar(
+                metals=metal,
+                ligands={
+                    ligand: (0, ),
+                    methyl: (1, 2),
+                },
+            ),
+        )
 
-    return stk.ConstructedMolecule(
-        topology_graph=MixedSquarePlanar(
-            metals=metal,
-            ligands={
-                ligand: (0, ),
-                methyl: (1, 2),
-            },
-        ),
-    )
 
 def stk_list_to_xyz_file(stk_mol_list, file_path, energies=None):
     with open(file_path, 'w') as file:

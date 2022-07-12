@@ -7,3 +7,6 @@ src/*.egg-info
 
 #vscode utility files
 .vscode
+
+#other
+examples/
