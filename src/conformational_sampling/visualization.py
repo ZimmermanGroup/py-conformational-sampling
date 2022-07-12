@@ -82,7 +82,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', c='orange', title='Conformer Energies', height=400, width=400, legend=False) 
+        plot = df.hvplot.box(by='mol_name', y='energies (kcal/mol)', c='orange', title='Conformer Energies', height=800, width=400, legend=False) 
         plot *= df.hvplot.scatter(y='energies (kcal/mol)', x='mol_name', c='blue').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],

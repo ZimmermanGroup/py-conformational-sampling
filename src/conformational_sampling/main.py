@@ -45,25 +45,19 @@ def bind_to_dimethyl_Pd(ligand):
     )
     
     if ligand.get_num_functional_groups() == 1: #monodentate
-        return stk.ConstructedMolecule(
-            topology_graph=OneLargeTwoSmallMonodentateTrigonalPlanar(
-                metals=metal,
-                ligands={
-                    ligand: (0, ),
-                    methyl: (1, 2),
-                },
-            ),
-        )
+        MetalComplexClass = OneLargeTwoSmallMonodentateTrigonalPlanar
     elif ligand.get_num_functional_groups() == 2: #bidentate
-        return stk.ConstructedMolecule(
-            topology_graph=TwoMonoOneBidentateSquarePlanar(
-                metals=metal,
-                ligands={
-                    ligand: (0, ),
-                    methyl: (1, 2),
-                },
-            ),
-        )
+        MetalComplexClass = TwoMonoOneBidentateSquarePlanar
+        
+    return stk.ConstructedMolecule(
+        topology_graph=MetalComplexClass(
+            metals=metal,
+            ligands={
+                ligand: (0, ),
+                methyl: (1, 2),
+            },
+        ),
+    )
 
 
 def stk_list_to_xyz_file(stk_mol_list, file_path, energies=None):
