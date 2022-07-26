@@ -82,6 +82,18 @@ def xtb_energy(idx, complex):
         XTB_PATH,
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
+    
+def get_unique_conformers(stk_molecules, rms_thresh=2.0):
+    rdkit_mols = [Chem.RemoveHs(stk_mol.to_rdkit_mol()) for stk_mol in stk_molecules]
+    unique_indices = []
+    for i, rdkit_mol in enumerate(rdkit_mols):
+        for j in unique_indices:
+            if Chem.AllChem.CalcRMS(rdkit_mol, rdkit_mols[j]) < rms_thresh:
+                break
+        else: # should only get here when conformer is sufficiently unique
+            unique_indices.append(i)
+    
+    return [stk_molecules[i] for i in unique_indices]
 
 def gen_ligand_library_entry(stk_ligand, numConfs=100):
     rdkit_mol = stk_ligand.to_rdkit_mol()
@@ -91,13 +103,17 @@ def gen_ligand_library_entry(stk_ligand, numConfs=100):
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     stk_list_to_xyz_file(unoptimized_complexes, 'conformers_0_unoptimized.xyz')
-    mc_hammer_complexes = [stk.MCHammer().optimize(complex) for complex in unoptimized_complexes]
-    stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_1_mc_hammer.xyz')
-    metal_optimizer_complexes = [stko.MetalOptimizer().optimize(complex)
-                                 for complex in mc_hammer_complexes]
-    stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
-    (Path.cwd() / 'scratch').mkdir(exist_ok=True)
+    
     with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
+        mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
+        stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_1_mc_hammer.xyz')
+        metal_optimizer_complexes = list(executor.map(stko.MetalOptimizer().optimize, mc_hammer_complexes))
+        stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
+        
+        # adding capability to remove duplicate molecules before running xTB
+        metal_optimizer_complexes = get_unique_conformers(metal_optimizer_complexes)
+        
+        (Path.cwd() / 'scratch').mkdir(exist_ok=True)
         xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
                                           metal_optimizer_complexes))
         xtb_energies = list(executor.map(xtb_energy, range(len(metal_optimizer_complexes)),
