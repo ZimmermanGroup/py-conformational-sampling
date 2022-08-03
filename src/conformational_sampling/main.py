@@ -19,13 +19,16 @@ def num_cpus():
     except KeyError:
         return 2
 
-def load_stk_mol(molecule_path, fmt='xyz'):
-    'loads a molecule from a file via pybel into an stk Molecule object'
-    pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
+def pybel_mol_to_stk_mol(pybel_mol):
     rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
     Chem.rdmolops.Kekulize(rdkit_mol)
     stk_mol = stk.BuildingBlock.init_from_rdkit_mol(rdkit_mol)
     return stk_mol
+
+def load_stk_mol(molecule_path, fmt='xyz'):
+    'loads a molecule from a file via pybel into an stk Molecule object'
+    pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
+    return pybel_mol_to_stk_mol(pybel_mol)
 
 def bind_to_dimethyl_Pd(ligand):
     metal = stk.BuildingBlock(
@@ -60,12 +63,15 @@ def bind_to_dimethyl_Pd(ligand):
     )
 
 
-def stk_list_to_xyz_file(stk_mol_list, file_path, energies=None):
+def stk_list_to_xyz_file(stk_mol_list, file_path):
     with open(file_path, 'w') as file:
         for i, stk_mol in enumerate(stk_mol_list):
             rdkit_mol = stk_mol.to_rdkit_mol()
-            if energies is not None:
-                rdkit_mol.SetProp('_Name', str(energies[i]))
+            try: # add energy line if energy has been defined
+                energy = stk_mol.energy
+                rdkit_mol.SetProp('_Name', str(energy))
+            except AttributeError:
+                pass
             file.write(MolToXYZBlock(rdkit_mol))
 
 def xtb_optimize(idx, complex):
@@ -78,11 +84,24 @@ def xtb_optimize(idx, complex):
     ).optimize(complex)
 
 def xtb_energy(idx, complex):
-    return stko.XTBEnergy(
+    complex.energy = stko.XTBEnergy(
         XTB_PATH,
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
     
+def reperceive_bonds(stk_mol):
+    # output to xyz and read in with pybel to reperceive bonding
+    pybel_mol = pb.readstring('xyz', MolToXYZBlock(stk_mol.to_rdkit_mol()))
+    return pybel_mol_to_stk_mol(pybel_mol)
+
+def num_connectivity_differences(stk_mol_1, stk_mol_2):
+    def bond_tuple(bond):
+        return(tuple(sorted((bond.get_atom1().get_id(),  bond.get_atom2().get_id()))))
+        
+    bond_tuples_1 = {bond_tuple(bond) for bond in stk_mol_1.get_bonds()}
+    bond_tuples_2 = {bond_tuple(bond) for bond in stk_mol_2.get_bonds()}
+    return len(bond_tuples_1 ^ bond_tuples_2)
+
 def get_unique_conformers(stk_molecules, rms_thresh=2.0):
     rdkit_mols = [Chem.RemoveHs(stk_mol.to_rdkit_mol()) for stk_mol in stk_molecules]
     unique_indices = []
@@ -116,7 +135,16 @@ def gen_ligand_library_entry(stk_ligand, numConfs=100):
         (Path.cwd() / 'scratch').mkdir(exist_ok=True)
         xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
                                           metal_optimizer_complexes))
-        xtb_energies = list(executor.map(xtb_energy, range(len(metal_optimizer_complexes)),
-                                          metal_optimizer_complexes))
-    stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz', energies=xtb_energies)
+        
+        # filter based on number of connectivity changes
+        xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
+        
+        # compute energies
+        executor.map(xtb_energy, range(len(xtb_complexes)),
+                                          xtb_complexes)
+        
+            
+    xtb_complexes = [xtb_complex for xtb_complex in xtb_complexes
+                     if num_connectivity_differences(unoptimized_complexes[0], xtb_complex) <=2]
+    stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz')
     
