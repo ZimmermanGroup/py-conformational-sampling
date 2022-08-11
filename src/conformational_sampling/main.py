@@ -11,7 +11,7 @@ import stko
 
 from conformational_sampling.metal_complexes import OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar
 
-XTB_PATH = '/export/apps/CentOS7/xtb/xtb/bin/xtb'
+XTB_PATH = '/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/xtb'
 
 def num_cpus():
     try:
@@ -129,7 +129,7 @@ def gen_ligand_library_entry(stk_ligand, numConfs=100):
         metal_optimizer_complexes = list(executor.map(stko.MetalOptimizer().optimize, mc_hammer_complexes))
         stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
         
-        # adding capability to remove duplicate molecules before running xTB
+        # remove duplicate molecules before running xTB
         metal_optimizer_complexes = get_unique_conformers(metal_optimizer_complexes)
         
         (Path.cwd() / 'scratch').mkdir(exist_ok=True)
