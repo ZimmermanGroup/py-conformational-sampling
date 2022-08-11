@@ -19,7 +19,6 @@ setuptools.setup(
     install_requires=(
         'numpy',
         'pandas',
-        'dask-jobqueue',
         'param',
         'hvplot',
         'panel>=0.13.1',
@@ -30,8 +29,7 @@ setuptools.setup(
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
-        "dev": ["snakeviz"],
-        # "research_analysis" : ["xarray", "panel", "holoviews", "hvplot", "panel-chemistry"],
+        "dev": ["snakeviz", "dask-jobqueue"],
         "vscode": ["pylint", "jupyter"]
     },
 )
