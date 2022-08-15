@@ -1,6 +1,8 @@
 # py-conformational-sampling
 py-conformational-sampling is an experimental python library for sampling conformers of a ligand and binding it to a metal.
 
+![Conformational sampling](https://user-images.githubusercontent.com/5794446/184696183-d74131bb-960a-4632-805c-12e6ae92f536.png)
+
 ## Draft installation instructions
 py-conformational-sampling is developed and primarily tested in a CentOS 7 linux high performance computing environment using anaconda and pip for python and other dependency installation. While not specifically tested, the code and dependencies aren't intentionally tied to this specific platform and are in principle portable to other platforms.
 
