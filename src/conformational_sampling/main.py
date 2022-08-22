@@ -51,7 +51,7 @@ class ConformerEnsembleOptimizer:
     
     def get_unique_conformer_ids(self, stage, rms_thresh=2.0):
         rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol()) for i, conformer in enumerate(self.conformers)
-                      if len(conformer.stages) > stage}
+                      if stage in conformer.stages}
         unique_indices = []
         for i, rdkit_mol in rdkit_mols.items():
             for j in unique_indices:
@@ -74,7 +74,7 @@ class ConformerEnsembleOptimizer:
             self.write()
         
             # remove duplicate molecules before running xTB
-            unique_ids = self.get_unique_conformer_ids(metal_optimizer_complexes)
+            unique_ids = self.get_unique_conformer_ids(METAL_OPTIMIZER)
             unique_conformers = [self.conformers[i] for i in unique_ids]
 
             metal_optimizer_complexes = [conformer.stages[METAL_OPTIMIZER] for conformer in unique_conformers]
@@ -89,7 +89,7 @@ class ConformerEnsembleOptimizer:
             
             # filter based on number of connectivity changes
             xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
-            for i, confromer in enumerate(unique_conformers):
+            for i, conformer in enumerate(unique_conformers):
                 conformer.num_connectivity_changes = num_connectivity_differences(unoptimized_complexes[0], xtb_complexes[i])
             
             self.write()
