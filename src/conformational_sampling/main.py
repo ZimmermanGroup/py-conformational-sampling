@@ -24,7 +24,7 @@ NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'm
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
         self.stages = {UNOPTIMIZED: unoptimized}
-        self.energy = None
+        self.energies = {}
         self.num_connectivity_changes = None
 
 class ConformerEnsembleOptimizer:
@@ -36,17 +36,14 @@ class ConformerEnsembleOptimizer:
         xtb_conformers = []
         final_conformers = []
         for conformer in self.conformers:
-            if (conformer.num_connectivity_changes is not None and conformer.num_conectivity_changes <= 2):
+            if (conformer.num_connectivity_changes is not None and conformer.num_connectivity_changes <= 2):
                 final_conformers.append(conformer)
             elif XTB in conformer.stages:
                 xtb_conformers.append(conformer)
             else: # only made it to metal optimizer stage
                 metal_optimized_conformers.append(conformer)
-        final_conformers = [conformer for conformer in self.conformers
-                            if (conformer.num_connectivity_changes is not None
-                                and conformer.num_conectivity_changes <= 2)]
-        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energy)
-        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energy)
+        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
         self.conformers += metal_optimized_conformers
     
     def get_unique_conformer_ids(self, stage, rms_thresh=2.0):
@@ -85,19 +82,28 @@ class ConformerEnsembleOptimizer:
             energies = list(executor.map(xtb_energy, range(len(xtb_complexes)), xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
                 conformer.stages[XTB] = xtb_complexes[i]
-                conformer.energy = energies[i]
+                conformer.energies[XTB] = energies[i]
             
             # filter based on number of connectivity changes
             xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
                 conformer.num_connectivity_changes = num_connectivity_differences(unoptimized_complexes[0], xtb_complexes[i])
             
+            # order conformers with the most relevant first and write to output file
+            self.order_conformers()
             self.write()
     
     def write(self):
         for i, name in NAMES.items():
             complexes = [conformer.stages[i] for conformer in self.conformers if i in conformer.stages]
-            stk_list_to_xyz_file(complexes, f'conformers_{i}_{name}.xyz')
+            energies = [conformer.energies[i] if i in conformer.energies else None for conformer in self.conformers]
+            with open(f'conformers_{i}_{name}.xyz', 'w') as file:
+                for i, (stk_mol, energy) in enumerate(zip(complexes, energies)):
+                    rdkit_mol = stk_mol.to_rdkit_mol()
+                    if energy is not None:
+                        rdkit_mol.SetProp('_Name', str(energy))
+                    file.write(MolToXYZBlock(rdkit_mol))
+
            
 
 def num_cpus():
@@ -154,11 +160,6 @@ def stk_list_to_xyz_file(stk_mol_list, file_path):
     with open(file_path, 'w') as file:
         for i, stk_mol in enumerate(stk_mol_list):
             rdkit_mol = stk_mol.to_rdkit_mol()
-            try: # add energy line if energy has been defined
-                energy = stk_mol.energy
-                rdkit_mol.SetProp('_Name', str(energy))
-            except AttributeError:
-                pass
             file.write(MolToXYZBlock(rdkit_mol))
 
 def xtb_optimize(idx, complex):
@@ -197,30 +198,3 @@ def gen_ligand_library_entry(stk_ligand, numConfs=100):
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     ConformerEnsembleOptimizer(unoptimized_complexes).optimize()
-    # stk_list_to_xyz_file(unoptimized_complexes, 'conformers_0_unoptimized.xyz')
-    
-    # with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
-    #     mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
-    #     stk_list_to_xyz_file(mc_hammer_complexes, 'conformers_1_mc_hammer.xyz')
-    #     metal_optimizer_complexes = list(executor.map(stko.MetalOptimizer().optimize, mc_hammer_complexes))
-    #     stk_list_to_xyz_file(metal_optimizer_complexes, 'conformers_2_metal_optimizer.xyz')
-        
-    #     # remove duplicate molecules before running xTB
-    #     metal_optimizer_complexes = get_unique_conformers(metal_optimizer_complexes)
-        
-    #     (Path.cwd() / 'scratch').mkdir(exist_ok=True)
-    #     xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
-    #                                       metal_optimizer_complexes))
-        
-    #     # filter based on number of connectivity changes
-    #     xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
-        
-    #     # compute energies
-    #     executor.map(xtb_energy, range(len(xtb_complexes)),
-    #                                       xtb_complexes)
-        
-            
-    # xtb_complexes = [xtb_complex for xtb_complex in xtb_complexes
-    #                  if num_connectivity_differences(unoptimized_complexes[0], xtb_complex) <=2]
-    # stk_list_to_xyz_file(xtb_complexes, 'conformers_3_xtb.xyz')
-    
