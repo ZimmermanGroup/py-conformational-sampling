@@ -1,4 +1,3 @@
-import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -12,12 +11,6 @@ import stko
 from conformational_sampling.metal_complexes import OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar
 
 XTB_PATH = '/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/xtb'
-
-def num_cpus():
-    try:
-        return int(os.environ["SLURM_CPUS_PER_TASK"])
-    except KeyError:
-        return 2
 
 def pybel_mol_to_stk_mol(pybel_mol):
     rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
