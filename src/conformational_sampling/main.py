@@ -73,8 +73,9 @@ class ConformerEnsembleOptimizer:
             # remove duplicate molecules before running xTB
             unique_ids = self.get_unique_conformer_ids(METAL_OPTIMIZER)
             unique_conformers = [self.conformers[i] for i in unique_ids]
-
             metal_optimizer_complexes = [conformer.stages[METAL_OPTIMIZER] for conformer in unique_conformers]
+
+            # run xTB on conformers in parallel
             (Path.cwd() / 'scratch').mkdir(exist_ok=True)
             xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
                                             metal_optimizer_complexes))
@@ -104,7 +105,6 @@ class ConformerEnsembleOptimizer:
                         rdkit_mol.SetProp('_Name', str(energy))
                     file.write(MolToXYZBlock(rdkit_mol))
 
-           
 
 def num_cpus():
     try:
