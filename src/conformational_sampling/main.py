@@ -8,7 +8,9 @@ from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
 import stk
 import stko
 
-from conformational_sampling.metal_complexes import OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar
+from conformational_sampling.utils import num_cpus
+from conformational_sampling.metal_complexes import (OneLargeTwoSmallMonodentateTrigonalPlanar,
+                                                     TwoMonoOneBidentateSquarePlanar)
 
 # XTB_PATH = '/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/xtb'
 XTB_PATH = '/export/apps/CentOS7/xtb/xtb/bin/xtb'
@@ -27,15 +29,17 @@ class ConformerOptimizationSequence:
         self.num_connectivity_changes = None
 
 class ConformerEnsembleOptimizer:
-    def __init__(self, unoptimized_conformers) -> None:
+    def __init__(self, unoptimized_conformers, config) -> None:
         self.conformers = [ConformerOptimizationSequence(conformer) for conformer in unoptimized_conformers]
+        self.config = config
     
     def order_conformers(self):
         metal_optimized_conformers = []
         xtb_conformers = []
         final_conformers = []
         for conformer in self.conformers:
-            if (conformer.num_connectivity_changes is not None and conformer.num_connectivity_changes <= 2):
+            if (conformer.num_connectivity_changes is not None
+                and conformer.num_connectivity_changes <= self.config.max_connectivity_changes):
                 final_conformers.append(conformer)
             elif XTB in conformer.stages:
                 xtb_conformers.append(conformer)
@@ -45,13 +49,14 @@ class ConformerEnsembleOptimizer:
         self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
         self.conformers += metal_optimized_conformers
     
-    def get_unique_conformer_ids(self, stage, rms_thresh=2.0):
-        rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol()) for i, conformer in enumerate(self.conformers)
+    def get_unique_conformer_ids(self, stage):
+        rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol())
+                      for i, conformer in enumerate(self.conformers)
                       if stage in conformer.stages}
         unique_indices = []
         for i, rdkit_mol in rdkit_mols.items():
             for j in unique_indices:
-                if Chem.AllChem.CalcRMS(rdkit_mol, rdkit_mols[j]) < rms_thresh:
+                if Chem.AllChem.CalcRMS(rdkit_mol, rdkit_mols[j]) < self.config.pre_xtb_rms_threshold:
                     break
             else: # should only get here when conformer is sufficiently unique
                 unique_indices.append(i)
@@ -87,7 +92,10 @@ class ConformerEnsembleOptimizer:
             # filter based on number of connectivity changes
             xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
-                conformer.num_connectivity_changes = num_connectivity_differences(unoptimized_complexes[0], xtb_complexes[i])
+                conformer.num_connectivity_changes = num_connectivity_differences(
+                    unoptimized_complexes[0],
+                    xtb_complexes[i]
+                )
             
             # order conformers with the most relevant first and write to output file
             self.order_conformers()
@@ -96,7 +104,8 @@ class ConformerEnsembleOptimizer:
     def write(self):
         for i, name in NAMES.items():
             complexes = [conformer.stages[i] for conformer in self.conformers if i in conformer.stages]
-            energies = [conformer.energies[i] if i in conformer.energies else None for conformer in self.conformers]
+            energies = [conformer.energies[i] if i in conformer.energies else None
+                        for conformer in self.conformers]
             with open(f'conformers_{i}_{name}.xyz', 'w') as file:
                 for i, (stk_mol, energy) in enumerate(zip(complexes, energies)):
                     rdkit_mol = stk_mol.to_rdkit_mol()
@@ -183,11 +192,17 @@ def num_connectivity_differences(stk_mol_1, stk_mol_2):
     bond_tuples_2 = {bond_tuple(bond) for bond in stk_mol_2.get_bonds()}
     return len(bond_tuples_1 ^ bond_tuples_2)
 
-def gen_ligand_library_entry(stk_ligand, numConfs=100):
+def gen_ligand_library_entry(stk_ligand, config):
     rdkit_mol = stk_ligand.to_rdkit_mol()
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(rdkit_mol, numConfs=numConfs, randomSeed=40, pruneRmsThresh=0.6, numThreads=num_cpus())
+    conf_ids = Chem.AllChem.EmbedMultipleConfs(
+        rdkit_mol,
+        numConfs=config.initial_conformers,
+        randomSeed=40,
+        pruneRmsThresh=config.initial_rms_threshold,
+        numThreads=config.num_cpus
+    )
     stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
                    for conf_id in conf_ids]
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
-    ConformerEnsembleOptimizer(unoptimized_complexes).optimize()
+    ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
