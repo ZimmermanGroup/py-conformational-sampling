@@ -6,6 +6,7 @@
 from pathlib import Path
 import stk
 from conformational_sampling.main import load_stk_mol, gen_ligand_library_entry
+from conformational_sampling.config import Config
 
 mol_path = Path('ligand.xyz')
 stk_ligand = load_stk_mol(mol_path)
@@ -17,4 +18,6 @@ functional_group_factory = stk.SmartsFunctionalGroupFactory(
 )
 stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
 
-gen_ligand_library_entry(stk_ligand)
+config = Config(initial_conformers=100)
+
+gen_ligand_library_entry(stk_ligand, config)
