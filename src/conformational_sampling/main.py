@@ -1,4 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
 from pathlib import Path
 
 from openbabel import pybel as pb
@@ -11,9 +12,6 @@ import stko
 from conformational_sampling.utils import num_cpus
 from conformational_sampling.metal_complexes import (OneLargeTwoSmallMonodentateTrigonalPlanar,
                                                      TwoMonoOneBidentateSquarePlanar)
-
-# XTB_PATH = '/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/xtb'
-XTB_PATH = '/export/apps/CentOS7/xtb/xtb/bin/xtb'
 
 UNOPTIMIZED = 0
 MC_HAMMER = 1
@@ -82,9 +80,10 @@ class ConformerEnsembleOptimizer:
             # run xTB on conformers in parallel
             (Path.cwd() / 'scratch').mkdir(exist_ok=True)
             xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
-                                            metal_optimizer_complexes))
+                                            metal_optimizer_complexes, repeat(self.config.xtb_path)))
             # compute energies
-            energies = list(executor.map(xtb_energy, range(len(xtb_complexes)), xtb_complexes))
+            energies = list(executor.map(xtb_energy, range(len(xtb_complexes)),
+                                         xtb_complexes, repeat(self.config.xtb_path)))
             for i, conformer in enumerate(unique_conformers):
                 conformer.stages[XTB] = xtb_complexes[i]
                 conformer.energies[XTB] = energies[i]
@@ -164,18 +163,18 @@ def stk_list_to_xyz_file(stk_mol_list, file_path):
             rdkit_mol = stk_mol.to_rdkit_mol()
             file.write(MolToXYZBlock(rdkit_mol))
 
-def xtb_optimize(idx, complex):
+def xtb_optimize(idx, complex, xtb_path):
     return stko.XTB(
-        XTB_PATH,
+        xtb_path,
         output_dir=f'scratch/xtb_optimize_{idx}',
         calculate_hessian=False,
         max_runs=1,
         charge=0
     ).optimize(complex)
 
-def xtb_energy(idx, complex):
+def xtb_energy(idx, complex, xtb_path):
     return stko.XTBEnergy(
-        XTB_PATH,
+        xtb_path,
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
     
@@ -190,6 +189,7 @@ def num_connectivity_differences(stk_mol_1, stk_mol_2):
         
     bond_tuples_1 = {bond_tuple(bond) for bond in stk_mol_1.get_bonds()}
     bond_tuples_2 = {bond_tuple(bond) for bond in stk_mol_2.get_bonds()}
+    # return the number of bonds that appear in one of the molecules but not both
     return len(bond_tuples_1 ^ bond_tuples_2)
 
 def gen_ligand_library_entry(stk_ligand, config):
