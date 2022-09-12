@@ -36,6 +36,8 @@ pip install -e .[dev,vscode]
 ```
 
 ## Getting started
+
+### Basic example
 * Navigate to the examples/dppe directory.
 ```
 cd examples/dppe
@@ -47,3 +49,14 @@ python ./slurm.py
 ```
 
 * Example output can be found in the examples/dppe_output directory. XYZ output files contain the conformer ensemble after each stage of optimization.
+
+### Intermediate example (under construction)
+* Example is in the alonso_ligand directory. Execution is similar to basic example.
+```
+cd examples/alonso_ligand
+python ./slurm.py
+```
+Output notes:
+* rdkit does not seem to preserve chirality when generating conformers even though by default `enforceChirality=True`. TODO: investigate whether there is a way to explicitly set stereocenters or if there is a bug in the rdkit conformer embedding.
+* Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Thresholds for uniqueness can be configured in `config.initial_rms_threshold` and `config.pre_xtb_rms_threshold`.
+* Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (10 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
