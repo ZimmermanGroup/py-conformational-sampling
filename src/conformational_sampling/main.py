@@ -88,7 +88,7 @@ class ConformerEnsembleOptimizer:
                 conformer.stages[XTB] = xtb_complexes[i]
                 conformer.energies[XTB] = energies[i]
             
-            # filter based on number of connectivity changes
+            # compute number of connectivity changes to put most relevant conformers first in output
             xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
                 conformer.num_connectivity_changes = num_connectivity_differences(
