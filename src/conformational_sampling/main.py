@@ -119,6 +119,13 @@ def pybel_mol_to_stk_mol(pybel_mol):
     stk_mol = stk.BuildingBlock.init_from_rdkit_mol(rdkit_mol)
     return stk_mol
 
+def stk_mol_to_pybel_mol(stk_mol, reperceive_bonds=False):
+    if reperceive_bonds:
+        return pb.readstring('xyz', MolToXYZBlock(stk_mol.to_rdkit_mol()))
+    else:
+        return pb.readstring('mol', MolToMolBlock(stk_mol.to_rdkit_mol()))
+    
+
 def load_stk_mol(molecule_path, fmt='xyz'):
     'loads a molecule from a file via pybel into an stk Molecule object'
     pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
@@ -192,17 +199,35 @@ def num_connectivity_differences(stk_mol_1, stk_mol_2):
     # return the number of bonds that appear in one of the molecules but not both
     return len(bond_tuples_1 ^ bond_tuples_2)
 
+def gen_confs_openbabel(stk_mol, config):
+    pybel_mol = stk_mol_to_pybel_mol(stk_mol)
+    cs = pb.ob.OBConformerSearch()
+    # Setup arguments: OBMol, numConformers, numChildren, mutability, convergence
+    cs.Setup(pybel_mol.OBMol, config.initial_conformers, 5, 5, 5) 
+    cs.Search()
+    cs.GetConformers(pybel_mol.OBMol)
+    
+    stk_conformers = []
+    for i in range(pybel_mol.OBMol.NumConformers()):
+        pybel_mol.OBMol.SetConformer(i)
+        stk_conformers.append(pybel_mol_to_stk_mol(pybel_mol))
+    # preserve any additional stk information from original ligand in returned stk conformers
+    return [stk_mol.with_position_matrix(stk_conformer.get_position_matrix())
+            for stk_conformer in stk_conformers]
+    
+
 def gen_ligand_library_entry(stk_ligand, config):
-    rdkit_mol = stk_ligand.to_rdkit_mol()
-    conf_ids = Chem.AllChem.EmbedMultipleConfs(
-        rdkit_mol,
-        numConfs=config.initial_conformers,
-        randomSeed=40,
-        pruneRmsThresh=config.initial_rms_threshold,
-        numThreads=config.num_cpus
-    )
-    stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
-                   for conf_id in conf_ids]
+    # rdkit_mol = stk_ligand.to_rdkit_mol()
+    # conf_ids = Chem.AllChem.EmbedMultipleConfs(
+    #     rdkit_mol,
+    #     numConfs=config.initial_conformers,
+    #     randomSeed=40,
+    #     pruneRmsThresh=config.initial_rms_threshold,
+    #     numThreads=config.num_cpus
+    # )
+    # stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
+    #                for conf_id in conf_ids]
+    stk_conformers = gen_confs_openbabel(stk_ligand, config)
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
