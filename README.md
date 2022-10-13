@@ -15,6 +15,11 @@ Note: the code for this project is written in python which is generally platform
 conda create -c conda-forge --name conformational-sampling python openbabel xtb-python
 ```
 
+ALTERNATIVE PIP INSTALLATION
+conda create --name conformational-sampling python
+
+
+
 Note: in the author's environment, manually compiling a version of xTB was found to run a few times faster than the precompiled binary from conda used in these instructions.
 
 * Activate the conda environment.
