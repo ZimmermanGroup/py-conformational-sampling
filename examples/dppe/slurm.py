@@ -23,4 +23,18 @@ stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=
 config = Config(initial_conformers=100, xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb')
 
 # generates conformers, performs multiple step optimization and uniqueness filtering
-gen_ligand_library_entry(stk_ligand, config)
+# gen_ligand_library_entry(stk_ligand, config)
+
+from ase import Atoms
+from ase.optimize import BFGS
+from ase.calculators.emt import EMT
+from ase.io import write
+h2 = Atoms('H2',
+
+           positions=[[0, 0, 0],
+
+                      [0, 0, 0.7]])
+
+h2.calc = EMT(xc='PBE')
+opt = BFGS(h2)
+opt.run(fmax=0.02)

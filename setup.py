@@ -26,6 +26,7 @@ setuptools.setup(
         'rdkit-pypi',
         'stk',
         'stko',
+        'ase',
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
