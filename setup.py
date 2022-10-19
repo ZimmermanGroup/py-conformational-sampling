@@ -22,6 +22,7 @@ setuptools.setup(
         'param',
         'hvplot',
         'panel>=0.13.1',
+        'nglview',
         'panel-chemistry',
         'rdkit-pypi',
         'stk',
