@@ -215,18 +215,7 @@ def gen_confs_openbabel(stk_mol, config):
     return [stk_mol.with_position_matrix(stk_conformer.get_position_matrix())
             for stk_conformer in stk_conformers]
     
-
 def gen_ligand_library_entry(stk_ligand, config):
-    # rdkit_mol = stk_ligand.to_rdkit_mol()
-    # conf_ids = Chem.AllChem.EmbedMultipleConfs(
-    #     rdkit_mol,
-    #     numConfs=config.initial_conformers,
-    #     randomSeed=40,
-    #     pruneRmsThresh=config.initial_rms_threshold,
-    #     numThreads=config.num_cpus
-    # )
-    # stk_conformers = [stk_ligand.with_position_matrix(rdkit_mol.GetConformer(conf_id).GetPositions())
-    #                for conf_id in conf_ids]
     stk_conformers = gen_confs_openbabel(stk_ligand, config)
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
