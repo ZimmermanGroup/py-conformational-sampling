@@ -187,7 +187,7 @@ def xtb_energy(idx, complex, xtb_path):
     
 def reperceive_bonds(stk_mol):
     # output to xyz and read in with pybel to reperceive bonding
-    pybel_mol = pb.readstring('xyz', MolToXYZBlock(stk_mol.to_rdkit_mol()))
+    pybel_mol = stk_mol_to_pybel_mol(reperceive_bonds=True)
     return pybel_mol_to_stk_mol(pybel_mol)
 
 def num_connectivity_differences(stk_mol_1, stk_mol_2):

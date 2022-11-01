@@ -5,7 +5,7 @@
 
 from pathlib import Path
 import stk
-from conformational_sampling.main import load_stk_mol, gen_ligand_library_entry, pybel_mol_to_stk_mol, stk_list_to_xyz_file
+from conformational_sampling.main import load_stk_mol, gen_ligand_library_entry
 from conformational_sampling.config import Config
 
 ligand_path = Path('ligand.xyz') # name of file containing ligand geometry
