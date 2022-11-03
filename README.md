@@ -57,9 +57,10 @@ cd examples/alonso_ligand
 python ./slurm.py
 ```
 Output notes:
-* rdkit does not seem to preserve chirality when generating conformers even though by default `enforceChirality=True`. TODO: investigate whether there is a way to explicitly set stereocenters or if there is a bug in the rdkit conformer embedding.
-* Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Due to this, the number of output conformers may be only a small fraction of `config.initial_conformers` especially for smaller or more rigid molecules. Thresholds for uniqueness can be configured with `config.initial_rms_threshold` and `config.pre_xtb_rms_threshold`.
-* Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (10 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
+
+* Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Due to this, the number of output conformers may be only a small fraction of `config.initial_conformers` especially for smaller or more rigid molecules. Threshold for uniqueness can be configured with `config.pre_xtb_rms_threshold`.
+* Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (3 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
+* Current openbabel implementation may not maintain all types of stereochemistry such as atropisomerism.
 
 ### Using your own ligand
 * Create a directory and copy an XYZ file of your ligand's structure into the directory.
