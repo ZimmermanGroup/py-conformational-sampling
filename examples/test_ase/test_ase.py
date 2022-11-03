@@ -8,6 +8,7 @@ from ase.io.trajectory import Trajectory
 import os
 from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolToXYZBlock
+from xtb.ase.calculator import XTB
 
 import stk
 
@@ -16,21 +17,21 @@ from conformational_sampling.main import stk_list_to_xyz_file
 os.environ['QCSCRATCH'] = 'qc_scratch'
 
 stk_mol = stk.BuildingBlock(smiles='[Ne][P](F)(F)(F)')
-stk_mol = stk.BuildingBlock(smiles='CC')
+stk_mol = stk.BuildingBlock(smiles='CCC')
 ase_mol = ase.Atoms(
     positions=list(stk_mol.get_atomic_positions()),
     numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
 )
 # write('test.xyz', ase_mol)
-calc = QChem(
-    label='ethane',
-    method='PBE',
-    basis='6-31G',
-    nt=4
-)
+# calc = QChem(
+#     label='ethane',
+#     method='PBE',
+#     basis='6-31G',
+#     nt=4
+# )
 
 # ase_mol = molecule('H2O')
-# calc = EMT()
+calc = XTB()
 
 ase_mol.calc = calc
 opt = BFGS(ase_mol, trajectory='test.traj')
