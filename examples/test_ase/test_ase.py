@@ -17,12 +17,10 @@ from conformational_sampling.main import stk_list_to_xyz_file
 os.environ['QCSCRATCH'] = 'qc_scratch'
 
 stk_mol = stk.BuildingBlock(smiles='[Ne][P](F)(F)(F)')
-stk_mol = stk.BuildingBlock(smiles='CCC')
 ase_mol = ase.Atoms(
     positions=list(stk_mol.get_atomic_positions()),
     numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
 )
-# write('test.xyz', ase_mol)
 # calc = QChem(
 #     label='ethane',
 #     method='PBE',
@@ -30,13 +28,11 @@ ase_mol = ase.Atoms(
 #     nt=4
 # )
 
-# ase_mol = molecule('H2O')
 calc = XTB()
 
 ase_mol.calc = calc
 opt = BFGS(ase_mol, trajectory='test.traj')
 opt.run()
 trajectory = Trajectory('test.traj')
-# print(opt.s) # list 
 stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
 stk_list_to_xyz_file(stk_trajectory, 'test_trajectory.xyz')

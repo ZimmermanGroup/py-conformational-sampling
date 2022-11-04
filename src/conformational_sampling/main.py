@@ -17,8 +17,9 @@ UNOPTIMIZED = 0
 MC_HAMMER = 1
 METAL_OPTIMIZER = 2
 XTB = 3
+DFT = 4
 
-NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb'}
+NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb', DFT: 'dft'}
 
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
@@ -88,12 +89,17 @@ class ConformerEnsembleOptimizer:
                 conformer.stages[XTB] = xtb_complexes[i]
                 conformer.energies[XTB] = energies[i]
             
+            # run dft calculator on conformers in parallel
+            self.conformers = list(executor.map(dft_optimize, range(len(self.conformers)), self.conformers))
+            dft_complexes = [conformer.stages[DFT] for conformer in self.conformers]
+            # Josh - RESUME HERE 
+            
             # compute number of connectivity changes to put most relevant conformers first in output
-            xtb_complexes = list(executor.map(reperceive_bonds, xtb_complexes))
+            dft_complexes = list(executor.map(reperceive_bonds, dft_complexes))
             for i, conformer in enumerate(unique_conformers):
                 conformer.num_connectivity_changes = num_connectivity_differences(
                     unoptimized_complexes[0],
-                    xtb_complexes[i]
+                    dft_complexes[i]
                 )
             
             # order conformers with the most relevant first and write to output file
