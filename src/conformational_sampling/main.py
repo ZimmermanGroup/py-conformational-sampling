@@ -2,16 +2,20 @@ from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
 
-from openbabel import pybel as pb
-from rdkit import Chem
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
+import ase
+from ase.optimize import QuasiNewton
+from ase.io.trajectory import Trajectory
 
 import stk
 import stko
+from openbabel import pybel as pb
+from rdkit import Chem
+from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
+from xtb.ase.calculator import XTB as XTBCalc
 
+from conformational_sampling.metal_complexes import (
+    OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar)
 from conformational_sampling.utils import num_cpus
-from conformational_sampling.metal_complexes import (OneLargeTwoSmallMonodentateTrigonalPlanar,
-                                                     TwoMonoOneBidentateSquarePlanar)
 
 UNOPTIMIZED = 0
 MC_HAMMER = 1
@@ -25,8 +29,16 @@ class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
         self.stages = {UNOPTIMIZED: unoptimized}
         self.energies = {}
-        self.num_connectivity_changes = None
-
+    
+    def num_connectivity_changes(self):
+        try:
+            return num_connectivity_differences(
+                self.stages[UNOPTIMIZED],
+                reperceive_bonds(self.stages[DFT])
+            )
+        except ValueError: # FIGURE OUT WHAT THE ACTUAL ERROR IS
+            return None
+    
 class ConformerEnsembleOptimizer:
     def __init__(self, unoptimized_conformers, config) -> None:
         self.conformers = [ConformerOptimizationSequence(conformer) for conformer in unoptimized_conformers]
@@ -37,8 +49,8 @@ class ConformerEnsembleOptimizer:
         xtb_conformers = []
         final_conformers = []
         for conformer in self.conformers:
-            if (conformer.num_connectivity_changes is not None
-                and conformer.num_connectivity_changes <= self.config.max_connectivity_changes):
+            if (conformer.num_connectivity_changes() is not None
+                and conformer.num_connectivity_changes() <= self.config.max_connectivity_changes):
                 final_conformers.append(conformer)
             elif XTB in conformer.stages:
                 xtb_conformers.append(conformer)
@@ -90,17 +102,11 @@ class ConformerEnsembleOptimizer:
                 conformer.energies[XTB] = energies[i]
             
             # run dft calculator on conformers in parallel
-            self.conformers = list(executor.map(dft_optimize, range(len(self.conformers)), self.conformers))
-            dft_complexes = [conformer.stages[DFT] for conformer in self.conformers]
-            # Josh - RESUME HERE 
+            unique_conformers = list(executor.map(dft_optimize, range(len(unique_conformers)), unique_conformers))
             
-            # compute number of connectivity changes to put most relevant conformers first in output
-            dft_complexes = list(executor.map(reperceive_bonds, dft_complexes))
-            for i, conformer in enumerate(unique_conformers):
-                conformer.num_connectivity_changes = num_connectivity_differences(
-                    unoptimized_complexes[0],
-                    dft_complexes[i]
-                )
+            # update conformer list since parallel  unique conformers to conformer list
+            for i, conformer in zip(unique_ids, unique_conformers):
+                self.conformers[i] = conformer
             
             # order conformers with the most relevant first and write to output file
             self.order_conformers()
@@ -190,6 +196,23 @@ def xtb_energy(idx, complex, xtb_path):
         xtb_path,
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
+    
+def dft_optimize(idx, sequence: ConformerOptimizationSequence) -> ConformerOptimizationSequence:
+    stk_mol = sequence.stages[XTB]
+    ase_mol = ase.Atoms(
+        positions=list(stk_mol.get_atomic_positions()),
+        numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
+    )
+    calc = XTBCalc()
+    ase_mol.calc = calc
+    
+    opt = QuasiNewton(ase_mol, trajectory='test.traj')
+    opt.run()
+    trajectory = Trajectory('test.traj')
+    stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
+    sequence.stages[DFT] = stk_trajectory[-1]
+    sequence.energies[DFT] = trajectory[-1].energy
+    return sequence
     
 def reperceive_bonds(stk_mol):
     # output to xyz and read in with pybel to reperceive bonding
