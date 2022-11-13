@@ -62,6 +62,24 @@ cd examples/alonso_ligand
 python ./slurm.py
 ```
 Output notes:
-* rdkit does not seem to preserve chirality when generating conformers even though by default `enforceChirality=True`. TODO: investigate whether there is a way to explicitly set stereocenters or if there is a bug in the rdkit conformer embedding.
-* Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Thresholds for uniqueness can be configured in `config.initial_rms_threshold` and `config.pre_xtb_rms_threshold`.
-* Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (10 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
+
+* Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Due to this, the number of output conformers may be only a small fraction of `config.initial_conformers` especially for smaller or more rigid molecules. Threshold for uniqueness can be configured with `config.pre_xtb_rms_threshold`.
+* Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (3 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
+* Current openbabel implementation may not maintain all types of stereochemistry such as atropisomerism.
+
+### Using your own ligand
+* Create a directory and copy an XYZ file of your ligand's structure into the directory.
+* Copy one of the slurm.py files from the examples folder into the directory.
+* If necessary or desired, customize the config and description of ligand binding
+
+Notes:
+* The conda environment containing py-conformational-sampling should be activated when using the library
+* Since openbabel is used to interpret the input file, any openbabel supported molecular file format can be used as input with slight modification (e.g. `stk_ligand = load_stk_mol(ligand_path, fmt='mol')` for a mol file)
+* Binding atoms may be alternatively supplied by specifying the element and index of binding atoms based on zero-indexed ordering in the ligand structure file (example excerpt below)
+```python
+functional_groups = [stk.SingleAtom(stk.C(73)), stk.SingleAtom(stk.O(22))]
+stk_ligand = stk.BuildingBlock.init_from_molecule(
+    stk_ligand,
+    functional_groups=functional_groups
+)
+```
