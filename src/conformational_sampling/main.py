@@ -102,6 +102,7 @@ class ConformerEnsembleOptimizer:
                 conformer.energies[XTB] = energies[i]
             
             # run dft calculator on conformers in parallel
+            unique_conformers[0] = dft_optimize(0, unique_conformers[0]) # DEBUGGING ONLY
             unique_conformers = list(executor.map(dft_optimize, range(len(unique_conformers)), unique_conformers))
             
             # update conformer list since parallel  unique conformers to conformer list
@@ -211,7 +212,7 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence) -> ConformerOptim
     trajectory = Trajectory('test.traj')
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
-    sequence.energies[DFT] = trajectory[-1].energy
+    sequence.energies[DFT] = trajectory[-1].get_potential_energy()
     return sequence
     
 def reperceive_bonds(stk_mol):

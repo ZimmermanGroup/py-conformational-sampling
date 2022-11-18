@@ -20,7 +20,7 @@ functional_group_factory = stk.SmartsFunctionalGroupFactory(
 stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
 
 # py-conformational-sampling configuration object
-config = Config(initial_conformers=100, xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb')
+config = Config(initial_conformers=2, xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb')
 
 # generates conformers, performs multiple step optimization and uniqueness filtering
 gen_ligand_library_entry(stk_ligand, config)
