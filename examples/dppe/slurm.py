@@ -1,10 +1,13 @@
 #!/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/python
-#SBATCH -p guest --job-name=conformational_sampling
-#SBATCH -c16
+#SBATCH -p zim2080 --job-name=conformational_sampling
+#SBATCH -c30
 #SBATCH -o output.txt
 
+import os
 from pathlib import Path
 import stk
+from ase.calculators.qchem import QChem
+
 from conformational_sampling.main import load_stk_mol, gen_ligand_library_entry
 from conformational_sampling.config import Config
 
@@ -19,8 +22,21 @@ functional_group_factory = stk.SmartsFunctionalGroupFactory(
 )
 stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
 
+# qchem ase calculator setup
+os.environ['QCSCRATCH'] = 'qc_scratch'
+ase_calculator = QChem(
+    method='PBE',
+    # basis='6-31G',
+    basis='STO-3G',
+    nt=15
+)
+
 # py-conformational-sampling configuration object
-config = Config(initial_conformers=2, xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb')
+config = Config(
+    initial_conformers=2,
+    xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
+    ase_calculator=ase_calculator,
+)
 
 # generates conformers, performs multiple step optimization and uniqueness filtering
 gen_ligand_library_entry(stk_ligand, config)

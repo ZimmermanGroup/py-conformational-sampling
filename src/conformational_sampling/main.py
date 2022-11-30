@@ -1,3 +1,4 @@
+from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
@@ -11,11 +12,11 @@ import stko
 from openbabel import pybel as pb
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
-from xtb.ase.calculator import XTB as XTBCalc
 
 from conformational_sampling.metal_complexes import (
     OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar)
 from conformational_sampling.utils import num_cpus
+from conformational_sampling.config import Config
 
 UNOPTIMIZED = 0
 MC_HAMMER = 1
@@ -75,7 +76,7 @@ class ConformerEnsembleOptimizer:
         return unique_indices
 
     def optimize(self):
-        with ProcessPoolExecutor(max_workers=num_cpus()) as executor:
+        with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             for i, conformer in enumerate(self.conformers):
@@ -102,8 +103,11 @@ class ConformerEnsembleOptimizer:
                 conformer.energies[XTB] = energies[i]
             
             # run dft calculator on conformers in parallel
-            unique_conformers[0] = dft_optimize(0, unique_conformers[0]) # DEBUGGING ONLY
-            unique_conformers = list(executor.map(dft_optimize, range(len(unique_conformers)), unique_conformers))
+            # unique_conformers[0] = dft_optimize(0, unique_conformers[0], self.config) # DEBUGGING ONLY
+            unique_conformers = list(executor.map(dft_optimize,
+                                                  range(len(unique_conformers)),
+                                                  unique_conformers,
+                                                  repeat(self.config)))
             
             # update conformer list since parallel  unique conformers to conformer list
             for i, conformer in zip(unique_ids, unique_conformers):
@@ -198,13 +202,14 @@ def xtb_energy(idx, complex, xtb_path):
         output_dir=f'scratch/xtb_energy_{idx}',
     ).get_energy(complex)
     
-def dft_optimize(idx, sequence: ConformerOptimizationSequence) -> ConformerOptimizationSequence:
+def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -> ConformerOptimizationSequence:
     stk_mol = sequence.stages[XTB]
     ase_mol = ase.Atoms(
         positions=list(stk_mol.get_atomic_positions()),
         numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
     )
-    calc = XTBCalc()
+    calc = deepcopy(config.ase_calculator)
+    calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
     ase_mol.calc = calc
     
     opt = QuasiNewton(ase_mol, trajectory='test.traj')
