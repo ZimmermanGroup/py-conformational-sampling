@@ -37,7 +37,7 @@ class ConformerOptimizationSequence:
                 self.stages[UNOPTIMIZED],
                 reperceive_bonds(self.stages[DFT])
             )
-        except ValueError: # FIGURE OUT WHAT THE ACTUAL ERROR IS
+        except KeyError: # FIGURE OUT WHAT THE ACTUAL ERROR IS
             return None
     
 class ConformerEnsembleOptimizer:
@@ -213,9 +213,11 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
     ase_mol.calc = calc
     
-    opt = BFGS(ase_mol, trajectory=f'test_{idx}.traj')
+    trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
+    trajectory_file.parent.mkdir(parents=True, exist_ok=True)
+    opt = BFGS(ase_mol, trajectory=str(trajectory_file))
     opt.run(steps=2)
-    trajectory = Trajectory(f'test_{idx}.traj')
+    trajectory = Trajectory(trajectory_file)
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
     sequence.energies[DFT] = trajectory[-1].get_potential_energy()
