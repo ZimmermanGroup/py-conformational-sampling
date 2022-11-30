@@ -4,7 +4,7 @@ from itertools import repeat
 from pathlib import Path
 
 import ase
-from ase.optimize import QuasiNewton
+from ase.optimize import BFGS
 from ase.io.trajectory import Trajectory
 
 import stk
@@ -101,6 +101,7 @@ class ConformerEnsembleOptimizer:
             for i, conformer in enumerate(unique_conformers):
                 conformer.stages[XTB] = xtb_complexes[i]
                 conformer.energies[XTB] = energies[i]
+            self.write()
             
             # run dft calculator on conformers in parallel
             # unique_conformers[0] = dft_optimize(0, unique_conformers[0], self.config) # DEBUGGING ONLY
@@ -109,7 +110,7 @@ class ConformerEnsembleOptimizer:
                                                   unique_conformers,
                                                   repeat(self.config)))
             
-            # update conformer list since parallel  unique conformers to conformer list
+            # update conformer list since parallel processes modified copied conformer objects
             for i, conformer in zip(unique_ids, unique_conformers):
                 self.conformers[i] = conformer
             
@@ -212,9 +213,9 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
     ase_mol.calc = calc
     
-    opt = QuasiNewton(ase_mol, trajectory='test.traj')
-    opt.run()
-    trajectory = Trajectory('test.traj')
+    opt = BFGS(ase_mol, trajectory=f'test_{idx}.traj')
+    opt.run(steps=2)
+    trajectory = Trajectory(f'test_{idx}.traj')
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
     sequence.energies[DFT] = trajectory[-1].get_potential_energy()
