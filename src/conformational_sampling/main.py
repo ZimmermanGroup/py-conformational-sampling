@@ -76,7 +76,7 @@ class ConformerEnsembleOptimizer:
         return unique_indices
 
     def optimize(self):
-        with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
+        with ProcessPoolExecutor(max_workers=self.config.num_cpus//2) as executor:
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             for i, conformer in enumerate(self.conformers):

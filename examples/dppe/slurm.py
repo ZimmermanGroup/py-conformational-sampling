@@ -1,6 +1,6 @@
 #!/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/python
-#SBATCH -p zim2080 --job-name=conformational_sampling
-#SBATCH -c30
+#SBATCH -p zimintel --job-name=conformational_sampling
+#SBATCH -c16
 #SBATCH -o output.txt
 
 import os
@@ -23,17 +23,20 @@ functional_group_factory = stk.SmartsFunctionalGroupFactory(
 stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
 
 # qchem ase calculator setup
-os.environ['QCSCRATCH'] = 'qc_scratch'
+os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
 ase_calculator = QChem(
     method='PBE',
     # basis='6-31G',
-    basis='STO-3G',
-    nt=15
+    # basis='STO-3G',
+    basis='LANL2DZ',
+    ecp='fit-LANL2DZ',
+    SCF_CONVERGENCE='5',
+    nt=2
 )
 
 # py-conformational-sampling configuration object
 config = Config(
-    initial_conformers=2,
+    initial_conformers=8,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
     ase_calculator=ase_calculator,
 )
