@@ -36,7 +36,7 @@ ase_calculator = QChem(
 
 # py-conformational-sampling configuration object
 config = Config(
-    initial_conformers=8,
+    initial_conformers=100,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
     ase_calculator=ase_calculator,
 )

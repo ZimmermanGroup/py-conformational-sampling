@@ -216,7 +216,8 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
     trajectory_file.parent.mkdir(parents=True, exist_ok=True)
     opt = BFGS(ase_mol, trajectory=str(trajectory_file))
-    opt.run(steps=2)
+    # opt.run(steps=2) # can shorten optimization for debugging purposes
+    opt.run()
     trajectory = Trajectory(trajectory_file)
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
