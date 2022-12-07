@@ -8,17 +8,33 @@ The user provides a bidentate ancillary ligand structure file which this library
 ## Draft installation instructions
 Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using anaconda and pip for management of python and other dependencies. Portability to other platforms is not yet tested.
 
+### Venv (built in virtual environment) installation
+* Clone GitHub repository.
+
+* Navigate to the root directory of this project (py-conformational-sampling).
+
+Create a python virtual environment using the built in python module [venv](https://docs.python.org/3/library/venv.html#module-venv) as an isolated environment in which to install this library and its dependencies.
+```
+python -m venv .venv
+```
+
+* Activate the newly created environment. The environment must be activated whenever this library will be executed. Activation can be manual or automated through a job submission script or shell configuration file (e.g. .bashrc) as desired.
+```
+source ./.venv/bin/activate
+```
+
+* Use pip to install py-conformational-sampling and its dependencies.
+```
+pip install .
+```
+
+### Conda installation
 * Clone GitHub repository.
 
 * Create a conda environment in which to install this library (links to more information on [anaconda installation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and [anaconda environments](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)). The following command creates a new conda environment with python and a couple dependencies that the author was unable to install automatically using pip (see below).
 ```
 conda create -c conda-forge --name conformational-sampling python openbabel xtb-python
 ```
-
-ALTERNATIVE PIP INSTALLATION
-conda create --name conformational-sampling python
-
-
 
 Note: in the author's environment, manually compiling a version of xTB was found to run a few times faster than the precompiled binary from conda used in these instructions.
 
@@ -31,11 +47,11 @@ conda activate conformational-sampling
 
 * Use pip to install py-conformational-sampling and its dependencies.
 ```
-pip install -e .
+pip install .
 ```
 
 ### For developers:
-To install with extra packages for development and testing within visual studio code, use:
+To install in editable mode with extra packages for development and testing within visual studio code, substitute the following during the pip installation:
 ```
 pip install -e .[dev,vscode]
 ```
