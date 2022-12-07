@@ -1,6 +1,7 @@
 #!/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/python
 #SBATCH -p zimintel --job-name=conformational_sampling
 #SBATCH -c16
+#SBATCH --time=1-0
 #SBATCH -o output.txt
 
 import os
@@ -30,8 +31,8 @@ ase_calculator = QChem(
     # basis='STO-3G',
     basis='LANL2DZ',
     ecp='fit-LANL2DZ',
-    SCF_CONVERGENCE='5',
-    nt=2
+    SCF_CONVERGENCE='6',
+    nt=4
 )
 
 # py-conformational-sampling configuration object

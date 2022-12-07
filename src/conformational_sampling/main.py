@@ -76,7 +76,7 @@ class ConformerEnsembleOptimizer:
         return unique_indices
 
     def optimize(self):
-        with ProcessPoolExecutor(max_workers=self.config.num_cpus//2) as executor:
+        with ProcessPoolExecutor(max_workers=self.config.num_cpus//4) as executor:
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             for i, conformer in enumerate(self.conformers):
@@ -217,7 +217,7 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     trajectory_file.parent.mkdir(parents=True, exist_ok=True)
     opt = BFGS(ase_mol, trajectory=str(trajectory_file))
     # opt.run(steps=2) # can shorten optimization for debugging purposes
-    opt.run()
+    opt.run(steps=100)
     trajectory = Trajectory(trajectory_file)
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
