@@ -57,8 +57,8 @@ class ConformerEnsembleOptimizer:
                 xtb_conformers.append(conformer)
             else: # only made it to metal optimizer stage
                 metal_optimized_conformers.append(conformer)
-        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
-        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
+        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])
         self.conformers += metal_optimized_conformers
     
     def get_unique_conformer_ids(self, stage):
@@ -216,8 +216,8 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
     trajectory_file.parent.mkdir(parents=True, exist_ok=True)
     opt = BFGS(ase_mol, trajectory=str(trajectory_file))
-    # opt.run(steps=2) # can shorten optimization for debugging purposes
-    opt.run(steps=100)
+    opt.run(steps=2) # can shorten optimization for debugging purposes
+    # opt.run(steps=100)
     trajectory = Trajectory(trajectory_file)
     stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
     sequence.stages[DFT] = stk_trajectory[-1]
