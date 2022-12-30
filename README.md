@@ -9,7 +9,7 @@ The user provides a bidentate ancillary ligand structure file which this library
 Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform.
 
 ### Venv (built in virtual environment) installation
-Note: as of Dec 2022, [on Windows the dependency openbabel may be difficult to install with this method](https://github.com/openbabel/openbabel/issues/2408#issuecomment-1288847122)
+This method assumes a separately installed [xTB](https://github.com/grimme-lab/xtb) which as of Dec 2022 is not installable using pip. [On Windows, the dependency openbabel may be difficult to install](https://github.com/openbabel/openbabel/issues/2408#issuecomment-1288847122).
 * Use [git](https://git-scm.com/) to clone GitHub repository into a directory location of your choice.
 ```
 git clone https://github.com/ZimmermanGroup/py-conformational-sampling.git
