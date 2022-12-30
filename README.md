@@ -16,7 +16,7 @@ git clone https://github.com/ZimmermanGroup/py-conformational-sampling.git
 
 * From the command line, navigate to the root directory of this project (py-conformational-sampling).
 
-Create a python virtual environment using the built in python module [venv](https://docs.python.org/3/library/venv.html#module-venv) as an isolated environment in which to install this library and its dependencies.
+Create a [python](https://www.python.org/downloads/) virtual environment using the built in python module [venv](https://docs.python.org/3/library/venv.html#module-venv) as an isolated environment in which to install this library and its dependencies.
 ```
 python -m venv .venv
 ```
