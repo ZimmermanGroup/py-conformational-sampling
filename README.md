@@ -9,7 +9,7 @@ The user provides a bidentate ancillary ligand structure file which this library
 Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using anaconda and pip for management of python and other dependencies. Portability to other platforms is not yet tested.
 
 ### Venv (built in virtual environment) installation
-* Clone GitHub repository.
+* Use [git](https://git-scm.com/) to clone GitHub repository.
 
 * Navigate to the root directory of this project (py-conformational-sampling).
 
