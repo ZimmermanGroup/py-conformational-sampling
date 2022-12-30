@@ -6,9 +6,10 @@ py-conformational-sampling is an experimental python library for sampling confor
 The user provides a bidentate ancillary ligand structure file which this library reads and stores as an [stk (supramolecular toolkit) object](https://stk.readthedocs.io/en/stable/stk.molecular.molecules.building_block.html). The user also provides a description of binding atoms. The library generates an ensemble of conformers for the ligand, binds each to a Pd(CH3)2 metal template, and performs an optimization and filtering funnel to refine the conformer ensemble.
 
 ## Draft installation instructions
-Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by operating system. Portability to other platforms is not yet tested.
+Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform.
 
 ### Venv (built in virtual environment) installation
+Note: as of Dec 2022, [on Windows the dependency openbabel may be difficult to install with this method](https://github.com/openbabel/openbabel/issues/2408#issuecomment-1288847122)
 * Use [git](https://git-scm.com/) to clone GitHub repository into a directory location of your choice.
 ```
 git clone https://github.com/ZimmermanGroup/py-conformational-sampling.git
