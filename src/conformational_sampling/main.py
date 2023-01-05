@@ -1,6 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
+from importlib.metadata import version
 
 from openbabel import pybel as pb
 from rdkit import Chem
@@ -19,6 +20,8 @@ METAL_OPTIMIZER = 2
 XTB = 3
 
 NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb'}
+
+print(f'py-conformational-sampling {version("py-conformational-sampling")}')
 
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
