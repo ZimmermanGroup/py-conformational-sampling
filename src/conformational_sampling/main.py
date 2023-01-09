@@ -24,7 +24,8 @@ XTB = 3
 NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb'}
 
 print(f'py-conformational-sampling {version("py-conformational-sampling")}')
-logging.debug([f'{p.project_name}={p.version}' for p in reversed(pkg_resources.working_set)])
+logging.debug('Installed packages:')
+logging.debug([f'{p.project_name}={p.version}' for p in pkg_resources.working_set]) # JOSH - RESUME HERE
 
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
