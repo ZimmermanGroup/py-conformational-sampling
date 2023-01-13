@@ -2,6 +2,7 @@ from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
 import logging
+import sys, platform
 from importlib.metadata import version
 import pkg_resources
 
@@ -24,6 +25,9 @@ XTB = 3
 NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb'}
 
 print(f'py-conformational-sampling {version("py-conformational-sampling")}')
+logging.debug(sys.executable)
+logging.debug(f'python {sys.version}')
+logging.debug(f'Platform: {platform.platform()}')
 logging.debug('Installed packages:')
 logging.debug('\n\t'.join(reversed(list(f'{p.project_name}={p.version}' for p in pkg_resources.working_set))))
 
@@ -50,9 +54,9 @@ class ConformerEnsembleOptimizer:
                 xtb_conformers.append(conformer)
             else: # only made it to metal optimizer stage
                 metal_optimized_conformers.append(conformer)
-        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
-        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
-        self.conformers += metal_optimized_conformers
+        self.final_conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.other_xtb_conformers = sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.conformers += self.final_conformers + self.other_xtb_conformers + metal_optimized_conformers
     
     def get_unique_conformer_ids(self, stage):
         rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol())
