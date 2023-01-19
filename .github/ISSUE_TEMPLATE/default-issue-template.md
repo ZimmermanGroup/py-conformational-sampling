@@ -1,6 +1,6 @@
 ---
-name: Custom issue template
-about: Default template for new issues
+name: Default issue template
+about: Contains standard todo checklist for making changes
 title: ''
 labels: ''
 assignees: joshkamm
