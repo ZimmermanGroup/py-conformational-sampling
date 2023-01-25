@@ -54,9 +54,9 @@ class ConformerEnsembleOptimizer:
                 xtb_conformers.append(conformer)
             else: # only made it to metal optimizer stage
                 metal_optimized_conformers.append(conformer)
-        self.final_conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
-        self.other_xtb_conformers = sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
-        self.conformers += self.final_conformers + self.other_xtb_conformers + metal_optimized_conformers
+        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[XTB])
+        self.conformers += metal_optimized_conformers
     
     def get_unique_conformer_ids(self, stage):
         rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol())
