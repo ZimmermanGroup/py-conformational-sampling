@@ -2,6 +2,10 @@ from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
+import logging
+import sys, platform
+from importlib.metadata import version
+import pkg_resources
 
 import ase
 from ase.optimize import BFGS
@@ -25,6 +29,13 @@ XTB = 3
 DFT = 4
 
 NAMES = {UNOPTIMIZED: 'unoptimized', MC_HAMMER: 'mc_hammer', METAL_OPTIMIZER: 'metal_optimizer', XTB: 'xtb', DFT: 'dft'}
+
+print(f'py-conformational-sampling {version("py-conformational-sampling")}')
+logging.debug(sys.executable)
+logging.debug(f'python {sys.version}')
+logging.debug(f'Platform: {platform.platform()}')
+logging.debug('Installed packages:')
+logging.debug('\n\t'.join(reversed(list(f'{p.project_name}={p.version}' for p in pkg_resources.working_set))))
 
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:
