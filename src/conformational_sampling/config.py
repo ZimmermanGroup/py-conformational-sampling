@@ -12,6 +12,8 @@ class Config:
     # initial_rms_threshold: float = 0.6 # NOT NEEDED IN OPENBABEL IMPLEMENTATION
     max_connectivity_changes: int = 2
     pre_xtb_rms_threshold: float = 2.0
+    # max number of BFGS geometry optimization steps; low default for debugging speed
+    max_dft_opt_steps: int = 2
     num_cpus: int = field(default_factory=utils.num_cpus)
     # ase_calculator: Calculator = XTBCalc()
     ase_calculator: Calculator = None

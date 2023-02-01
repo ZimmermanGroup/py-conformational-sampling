@@ -42,6 +42,7 @@ ase_calculator = QChem(
 config = Config(
     initial_conformers=10,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
+    max_dft_opt_steps=3,
     ase_calculator=ase_calculator,
 )
 
