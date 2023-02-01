@@ -31,7 +31,7 @@ ase_calculator = QChem(
     # basis='STO-3G',
     basis='LANL2DZ',
     ecp='fit-LANL2DZ',
-    SCF_CONVERGENCE='6',
+    SCF_CONVERGENCE='5',
     nt=4
 )
 

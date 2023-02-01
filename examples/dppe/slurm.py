@@ -1,11 +1,14 @@
-#!/export/zimmerman/joshkamm/apps/mambaforge/envs/conformational-sampling/bin/python
+#!/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv/bin/python
 #SBATCH -p zimintel --job-name=conformational_sampling
-#SBATCH -c16
+#SBATCH -c28
 #SBATCH --time=1-0
 #SBATCH -o output.txt
 
 import os
 from pathlib import Path
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 import stk
 from ase.calculators.qchem import QChem
 
@@ -31,13 +34,13 @@ ase_calculator = QChem(
     # basis='STO-3G',
     basis='LANL2DZ',
     ecp='fit-LANL2DZ',
-    SCF_CONVERGENCE='6',
+    SCF_CONVERGENCE='5',
     nt=4
 )
 
 # py-conformational-sampling configuration object
 config = Config(
-    initial_conformers=100,
+    initial_conformers=10,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
     ase_calculator=ase_calculator,
 )
