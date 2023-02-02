@@ -10,3 +10,8 @@ src/*.egg-info
 
 #vscode utility files
 .vscode
+
+#scratch files from the examples
+/examples/*/scratch/*
+/examples/*/conformers*
+/examples/*/output.txt
