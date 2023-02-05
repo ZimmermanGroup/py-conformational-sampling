@@ -26,24 +26,25 @@ functional_group_factory = stk.SmartsFunctionalGroupFactory(
 )
 stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
 
+# py-conformational-sampling configuration object
+config = Config(
+    initial_conformers=20,
+    xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
+    max_dft_opt_steps=3,
+    # num_cpus=16,
+    dft_cpus_per_opt=4,
+)
+
 # qchem ase calculator setup
 os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
-ase_calculator = QChem(
+config.ase_calculator = QChem(
     method='PBE',
     # basis='6-31G',
     # basis='STO-3G',
     basis='LANL2DZ',
     ecp='fit-LANL2DZ',
     SCF_CONVERGENCE='5',
-    nt=4
-)
-
-# py-conformational-sampling configuration object
-config = Config(
-    initial_conformers=10,
-    xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-    max_dft_opt_steps=3,
-    ase_calculator=ase_calculator,
+    nt=config.dft_cpus_per_opt,
 )
 
 # generates conformers, performs multiple step optimization and uniqueness filtering

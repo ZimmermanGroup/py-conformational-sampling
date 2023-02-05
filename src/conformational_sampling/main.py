@@ -55,6 +55,7 @@ class ConformerEnsembleOptimizer:
     def __init__(self, unoptimized_conformers, config) -> None:
         self.conformers = [ConformerOptimizationSequence(conformer) for conformer in unoptimized_conformers]
         self.config = config
+        logging.debug(f'{config = }')
     
     def order_conformers(self):
         metal_optimized_conformers = []
@@ -87,7 +88,7 @@ class ConformerEnsembleOptimizer:
         return unique_indices
 
     def optimize(self):
-        with ProcessPoolExecutor(max_workers=self.config.num_cpus//4) as executor:
+        with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             for i, conformer in enumerate(self.conformers):
@@ -114,6 +115,7 @@ class ConformerEnsembleOptimizer:
                 conformer.energies[XTB] = energies[i]
             self.write()
             
+        with ProcessPoolExecutor(max_workers=self.config.num_cpus//self.config.dft_cpus_per_opt) as executor:
             # run dft calculator on conformers in parallel
             # unique_conformers[0] = dft_optimize(0, unique_conformers[0], self.config) # DEBUGGING ONLY
             unique_conformers = list(executor.map(dft_optimize,
