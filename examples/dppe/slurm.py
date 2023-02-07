@@ -1,7 +1,7 @@
 #!/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv/bin/python
 #SBATCH -p zimintel --job-name=conformational_sampling
 #SBATCH -c28
-#SBATCH --time=1-0
+#SBATCH --time=2-0
 #SBATCH -o output.txt
 
 import os

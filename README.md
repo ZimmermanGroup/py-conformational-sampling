@@ -83,6 +83,7 @@ python ./slurm.py
 ```
 Output notes:
 
+* For brevity of testing the workflow on the examples, `config.max_dft_opt_steps = 2` which is sufficient to test the integration and configuration of the DFT calculator. For fully optimized structures, increase to a larger number (e.g. 100) to allow most geometry optimizations to fully converge.
 * Duplicate conformers are filtered out before and during the optimization pipeline to reduce the computational burden of higher level optimizations. Due to this, the number of output conformers may be only a small fraction of `config.initial_conformers` especially for smaller or more rigid molecules. Threshold for uniqueness can be configured with `config.pre_xtb_rms_threshold`.
 * Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (3 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
 * Current openbabel implementation may not maintain all types of stereochemistry such as atropisomerism.
