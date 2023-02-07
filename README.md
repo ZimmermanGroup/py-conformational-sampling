@@ -93,7 +93,7 @@ Output notes:
 * If necessary or desired, customize the config and description of ligand binding
 
 Notes:
-* The conda environment containing py-conformational-sampling should be activated when using the library
+* The venv or conda environment containing py-conformational-sampling should be activated when using the library
 * Since openbabel is used to interpret the input file, any openbabel supported molecular file format can be used as input with slight modification (e.g. `stk_ligand = load_stk_mol(ligand_path, fmt='mol')` for a mol file)
 * Binding atoms may be alternatively supplied by specifying the element and index of binding atoms based on zero-indexed ordering in the ligand structure file (example excerpt below)
 ```python
