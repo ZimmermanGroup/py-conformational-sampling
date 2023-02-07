@@ -69,9 +69,13 @@ class ConformerEnsembleOptimizer:
                 xtb_conformers.append(conformer)
             else: # only made it to metal optimizer stage
                 metal_optimized_conformers.append(conformer)
+        logging.debug(f'{len(metal_optimized_conformers) = } (pruned before xtb stage)')
+        logging.debug(f'{len(xtb_conformers) = } (pruned after xtb stage)')
+        logging.debug(f'{len(final_conformers) = } (had <= {self.config.max_connectivity_changes} connectivity changes)')
         self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
         self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])
         self.conformers += metal_optimized_conformers
+        logging.debug(f'{len(self.conformers) = } (total conformers generated)')
     
     def get_unique_conformer_ids(self, stage):
         rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol())
@@ -91,9 +95,11 @@ class ConformerEnsembleOptimizer:
         with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
+            logging.debug(f'{len(mc_hammer_complexes) = }')
             for i, conformer in enumerate(self.conformers):
                 conformer.stages[MC_HAMMER] = mc_hammer_complexes[i]
             metal_optimizer_complexes = list(executor.map(stko.MetalOptimizer().optimize, mc_hammer_complexes))
+            logging.debug(f'{len(metal_optimizer_complexes) = }')
             for i, conformer in enumerate(self.conformers):
                 conformer.stages[METAL_OPTIMIZER] = metal_optimizer_complexes[i]
             self.write()
@@ -101,6 +107,7 @@ class ConformerEnsembleOptimizer:
             # remove duplicate molecules before running xTB
             unique_ids = self.get_unique_conformer_ids(METAL_OPTIMIZER)
             unique_conformers = [self.conformers[i] for i in unique_ids]
+            logging.debug(f'{len(unique_conformers) = }')
             metal_optimizer_complexes = [conformer.stages[METAL_OPTIMIZER] for conformer in unique_conformers]
 
             # run xTB on conformers in parallel
@@ -271,3 +278,4 @@ def gen_ligand_library_entry(stk_ligand, config):
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
+    logging.debug('Finished generating ligand library entry')

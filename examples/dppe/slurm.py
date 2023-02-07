@@ -7,10 +7,10 @@
 import os
 from pathlib import Path
 import logging
-logging.basicConfig(level=logging.DEBUG)
+FORMAT = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s]%(levelname)s: %(message)s"
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 import stk
-from ase.calculators.qchem import QChem
 
 from conformational_sampling.main import load_stk_mol, gen_ligand_library_entry
 from conformational_sampling.config import Config
@@ -30,12 +30,13 @@ stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=
 config = Config(
     initial_conformers=20,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-    max_dft_opt_steps=3,
+    max_dft_opt_steps=2,
     # num_cpus=16,
     dft_cpus_per_opt=4,
 )
 
 # qchem ase calculator setup
+from ase.calculators.qchem import QChem
 os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
 config.ase_calculator = QChem(
     method='PBE',
@@ -46,6 +47,15 @@ config.ase_calculator = QChem(
     SCF_CONVERGENCE='5',
     nt=config.dft_cpus_per_opt,
 )
+
+# guess of gaussian ase calculator setup
+# from ase.calculators.gaussian import Gaussian
+# config.ase_calculator = Gaussian(
+#     method='PBE',
+#     basis='LANL2DZ',
+#     # HAVEN'T FOUND KEYWORD FOR NUMBER OF THREADS / CPUS TO USE
+# )
+
 
 # generates conformers, performs multiple step optimization and uniqueness filtering
 gen_ligand_library_entry(stk_ligand, config)
