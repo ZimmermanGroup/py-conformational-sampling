@@ -1,6 +1,6 @@
 #!/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv/bin/python
 #SBATCH -p zimintel --job-name=conformational_sampling
-#SBATCH -c28
+#SBATCH -c20
 #SBATCH --time=2-0
 #SBATCH -o output.txt
 
@@ -28,7 +28,7 @@ stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=
 
 # py-conformational-sampling configuration object
 config = Config(
-    initial_conformers=20,
+    initial_conformers=50,
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
     max_dft_opt_steps=2,
     # num_cpus=16,
