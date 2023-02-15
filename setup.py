@@ -5,7 +5,7 @@ README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 setuptools.setup(
     name="py-conformational-sampling",
-    version="0.1.3",
+    version="0.2.0",
     # description="",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -28,6 +28,7 @@ setuptools.setup(
         'openbabel-wheel',
         'stk',
         'stko',
+        'ase',
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
