@@ -124,7 +124,6 @@ class ConformerEnsembleOptimizer:
             
         with ProcessPoolExecutor(max_workers=self.config.num_cpus//self.config.dft_cpus_per_opt) as executor:
             # run dft calculator on conformers in parallel
-            # unique_conformers[0] = dft_optimize(0, unique_conformers[0], self.config) # DEBUGGING ONLY
             unique_conformers = list(executor.map(dft_optimize,
                                                   range(len(unique_conformers)),
                                                   unique_conformers,

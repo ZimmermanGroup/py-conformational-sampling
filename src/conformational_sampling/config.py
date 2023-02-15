@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 
 from ase.calculators.calculator import Calculator
-# from xtb.ase.calculator import XTB as XTBCalc
 
 from conformational_sampling import utils
 
@@ -18,5 +17,4 @@ class Config:
     # the number of simultaneous conformers that can be optimized is num_cpus//dft_cpus_per_opt
     dft_cpus_per_opt: int = 1
     num_cpus: int = field(default_factory=utils.num_cpus)
-    # ase_calculator: Calculator = XTBCalc()
     ase_calculator: Calculator = None
