@@ -1,4 +1,4 @@
-from conformational_sampling import main
+import conformational_sampling
 
 def test_imports():
     assert True
