@@ -29,6 +29,7 @@ setuptools.setup(
         'stk',
         'stko',
         'ase',
+        'pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git',
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
