@@ -78,6 +78,9 @@
 API example modified for an ASE calculator.
 The result is meaningless, apart from showing that the code runs, because of using a Morse potential.
 """
+import sys
+sys.path.append('/export/zimmerman/joshkamm/Lilly/pyGSM/pygsm')
+
 import ase.io
 import numpy as np
 from ase.calculators.morse import MorsePotential
@@ -141,7 +144,7 @@ def main(geom):
     geoms, energies = optimizer.optimize(
         molecule=reactant,
         refE=reactant.energy,
-        opt_steps=500,
+        opt_steps=5,
         verbose=True,
     )
 
@@ -150,7 +153,7 @@ def main(geom):
 
 
 if __name__ == '__main__':
-    diels_adler = ase.io.read("/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/ligand.xyz", ":")
+    diels_adler = ase.io.read("/export/zimmerman/joshkamm/Lilly/pyGSM/data/diels_alder.xyz", ":")
     xyz = diels_adler[0].positions
 
     # this is a hack
