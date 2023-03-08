@@ -83,6 +83,7 @@ sys.path.append('/export/zimmerman/joshkamm/Lilly/pyGSM/pygsm')
 
 import ase.io
 import numpy as np
+from xtb.ase.calculator import XTB
 from ase.calculators.morse import MorsePotential
 
 from pygsm.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Topology
@@ -98,7 +99,8 @@ from pygsm.wrappers.main import get_driving_coord_prim, Distance
 
 def main(geom):
     nifty.printcool(" Building the LOT")
-    lot = ASELoT.from_options(MorsePotential(), geom=geom)
+    # lot = ASELoT.from_options(MorsePotential(), geom=geom)
+    lot = ASELoT.from_options(XTB(method='GFN2-xTB'), geom=geom)
 
     nifty.printcool(" Building the PES")
     pes = PES.from_options(
@@ -114,7 +116,6 @@ def main(geom):
     top = Topology.build_topology(
         xyz,
         atoms,
-        add_bond=[(4,12),(1,11)],
     )
 
     driving_coordinates = [['ADD',4,12],['ADD',1,11]]
@@ -179,6 +180,7 @@ def main(geom):
         reactant=reactant,
         nnodes=7,
         optimizer=optimizer,
+        xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=[['ADD',4,12],['ADD',1,11]],        
     )
     

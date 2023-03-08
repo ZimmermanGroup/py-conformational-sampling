@@ -29,6 +29,7 @@ setuptools.setup(
         'stk',
         'stko',
         'ase',
+        'xtb',
         'pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git',
     ),
     extras_require={
