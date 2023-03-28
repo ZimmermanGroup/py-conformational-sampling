@@ -1,4 +1,4 @@
-name: Test Tmate
+name: Tmate debugging
 on: [push]
 jobs:
   build:
