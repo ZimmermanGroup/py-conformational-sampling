@@ -29,7 +29,7 @@ source ./.venv/bin/activate
 
 * Use pip to install py-conformational-sampling and its dependencies.
 ```
-pip install .
+pip install -e .
 ```
 
 ### Conda (alternative) installation
@@ -51,7 +51,7 @@ conda activate conformational-sampling
 
 * Use pip to install py-conformational-sampling and its dependencies.
 ```
-pip install .
+pip install -e .
 ```
 
 ### For developers:
