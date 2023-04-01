@@ -181,7 +181,7 @@ def main(geom):
         nnodes=7,
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
-        driving_coords=[['ADD',4,12],['ADD',1,11]],        
+        driving_coords=driving_coordinates,        
     )
     
     se_gsm.go_gsm()
