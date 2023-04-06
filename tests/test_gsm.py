@@ -26,7 +26,7 @@ def test_gsm():
     driving_coordinates = [['BREAK',1,54],['BREAK',1,58],['ADD',54,58]]
     config = Config(
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-
+        ase_calculator=XTB(method='GFN2-xTB'),
     )
     stk_gsm(
         stk_mol=stk_mol,
