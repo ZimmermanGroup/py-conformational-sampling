@@ -1,6 +1,8 @@
+from pathlib import Path
 import sys
-# sys.path.append('/export/zimmerman/joshkamm/Lilly/pyGSM/pygsm')
-
+import pygsm
+# workaround for issue with pygsm installation
+sys.path.append(str(Path(pygsm.__file__).parent))
 import ase.io
 import numpy as np
 from ase.calculators.morse import MorsePotential
