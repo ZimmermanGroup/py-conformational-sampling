@@ -1,4 +1,5 @@
 from pathlib import Path
+from xtb.ase.calculator import XTB
 
 import stk
 from conformational_sampling.config import Config
