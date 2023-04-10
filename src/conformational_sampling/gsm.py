@@ -27,9 +27,9 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     atoms = [ELEMENT_TABLE.from_atomic_number(atom.get_atomic_number())
              for atom in stk_mol.get_atoms()]
     xyz = stk_mol.get_position_matrix()
-    atom_symbols = np.array(atom.symbol for atom in atoms)
+    atom_symbols = np.array(list(atom.symbol for atom in atoms))
     geom = np.column_stack([atom_symbols, xyz]).tolist()
-    lot = ASELoT.from_options(config.ase_calculator, geom)
+    lot = ASELoT.from_options(config.ase_calculator, geom=geom)
 
     nifty.printcool(" Building the PES")
     pes = PES.from_options(

@@ -2,10 +2,11 @@ from pathlib import Path
 from xtb.ase.calculator import XTB
 
 import stk
+import stko
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_gsm
 
-from conformational_sampling.main import bind_to_dimethyl_Pd, load_stk_mol
+from conformational_sampling.main import bind_to_dimethyl_Pd, load_stk_mol, stk_list_to_xyz_file
 
 
 def test_gsm():
@@ -21,7 +22,11 @@ def test_gsm():
     )
     stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
     stk_mol = bind_to_dimethyl_Pd(stk_ligand)
-    
+    stk_list_to_xyz_file([stk_mol], Path('test.xyz'))
+    optimizer_sequence = stko.OptimizerSequence(stk.MCHammer(), stko.MetalOptimizer())
+    stk_mol = optimizer_sequence.optimize(stk_mol)
+    stk_list_to_xyz_file([stk_mol], Path('test.xyz'))
+
     # run gsm to eliminate ethane
     # driving coordinates are 1-indexed
     driving_coordinates = [['BREAK',1,54],['BREAK',1,58],['ADD',54,58]]
