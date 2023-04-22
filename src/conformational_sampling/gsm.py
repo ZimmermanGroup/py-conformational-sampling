@@ -86,7 +86,7 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     )
 
     nifty.printcool("Creating optimizer")
-    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.0005, DMAX=0.5, abs_max_step=0.5,
+    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.005, DMAX=0.5, abs_max_step=0.5,
                                                 conv_Ediff=0.5)
 
     nifty.printcool("initial energy is {:5.4f} kcal/mol".format(reactant.energy))
