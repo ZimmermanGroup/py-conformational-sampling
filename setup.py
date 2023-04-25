@@ -5,7 +5,7 @@ README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 setuptools.setup(
     name="py-conformational-sampling",
-    version="0.2.1",
+    version="0.2.2",
     # description="",
     long_description=README,
     long_description_content_type="text/markdown",
