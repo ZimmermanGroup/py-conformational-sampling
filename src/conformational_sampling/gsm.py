@@ -22,12 +22,13 @@ from conformational_sampling.config import Config
 
 def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     nifty.printcool(" Building the LOT")
-    # lot = ASELoT.from_options(MorsePotential(), geom=geom)
     ELEMENT_TABLE = elements.ElementData()
     atoms = [ELEMENT_TABLE.from_atomic_number(atom.get_atomic_number())
              for atom in stk_mol.get_atoms()]
     xyz = stk_mol.get_position_matrix()
     atom_symbols = np.array(list(atom.symbol for atom in atoms))
+    
+    # geom is an aggregate ndarray with the structure of the body of an XYZ file
     geom = np.column_stack([atom_symbols, xyz]).tolist()
     lot = ASELoT.from_options(config.ase_calculator, geom=geom)
 
@@ -90,17 +91,7 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
                                                 conv_Ediff=0.5)
 
     nifty.printcool("initial energy is {:5.4f} kcal/mol".format(reactant.energy))
-    # geoms, energies = optimizer.optimize(
-    #     molecule=reactant,
-    #     refE=reactant.energy,
-    #     opt_steps=5,
-    #     verbose=True,
-    # )
 
-    # nifty.printcool("Final energy is {:5.4f}".format(reactant.energy))
-    # manage_xyz.write_xyz('minimized.xyz', geoms[-1], energies[-1], scale=1.)
-    
-    # trying out GSM
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
         nnodes=7,
@@ -109,5 +100,6 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         driving_coords=driving_coordinates,        
     )
     
+    # run pyGSM
     se_gsm.go_gsm()
     gsm_plot(se_gsm.energies, x=range(len(se_gsm.energies)), title=0)

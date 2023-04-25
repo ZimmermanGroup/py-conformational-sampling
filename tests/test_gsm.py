@@ -1,34 +1,15 @@
-from dataclasses import dataclass
 from pathlib import Path
 import subprocess as sp
 import pytest
-import ase
-from ase.calculators.calculator import Calculator
-from ase.optimize import BFGS
 from xtb.ase.calculator import XTB
 
 import stk
 import stko
+from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_gsm
 
 from conformational_sampling.main import bind_to_dimethyl_Pd, load_stk_mol, stk_list_to_xyz_file, xtb_optimize
-
-@dataclass
-class ASE(stko.optimizers.Optimizer):
-    calculator: Calculator
-        
-    def optimize(self, stk_mol):
-        ase_mol = ase.Atoms(
-            positions=list(stk_mol.get_atomic_positions()),
-            numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
-        )
-        ase_mol.calc = self.calculator
-        opt = BFGS(ase_mol)
-        opt.run(fmax=0.2)
-        stk_mol.with_position_matrix(opt.atoms.get_positions())
-        return stk_mol
-            
 
 @pytest.mark.xfail(raises=RuntimeError)
 def test_gsm():
@@ -64,7 +45,7 @@ def test_gsm():
     # driving coordinates are 1-indexed
     driving_coordinates = [['BREAK',1,54],['BREAK',1,58],['ADD',54,58]]
     config = Config(
-        # xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
+        xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
         # ase_calculator=XTB(method='GFN-FF'),
         ase_calculator=XTB(),
     )
@@ -75,3 +56,4 @@ def test_gsm():
         config=config,
     )
     # assert str(excinfo) == "TS node shouldn't be the first or last node"        
+
