@@ -41,3 +41,27 @@ def test_gsm():
         driving_coordinates=driving_coordinates,
         config=config,
     )
+
+
+def test_suzuki():
+    stk_ancillary_ligand = load_stk_mol(Path('tests/test_data/example2_L1.xyz'))
+    stk_ligand_5a = load_stk_mol(Path('tests/test_data/example2_5a.xyz'))
+    stk_ligand_6a = load_stk_mol(Path('tests/test_data/example2_6a.xyz'))
+
+    # specifies atoms of the ligand that bind to the metal, in this case as a smarts string
+    functional_group_factory = stk.SmartsFunctionalGroupFactory(
+        smarts='P',
+        bonders=(0,),
+        deleters=(),
+    )
+    stk_ancillary_ligand = stk.BuildingBlock.init_from_molecule(stk_ancillary_ligand, functional_groups=[functional_group_factory])
+    stk_mol = bind_to_dimethyl_Pd(stk_ancillary_ligand)
+
+    config = Config(
+        xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
+        ase_calculator=XTB(),
+    )
+
+    optimizer_sequence = stko.OptimizerSequence(stk.MCHammer(), stko.MetalOptimizer(), ASE(XTB()))
+    stk_mol = optimizer_sequence.optimize(stk_mol)
+    assert True

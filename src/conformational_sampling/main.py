@@ -7,6 +7,7 @@ import sys, platform
 from importlib.metadata import version
 import pkg_resources
 
+from xtb.ase import calculator
 import ase
 from ase.optimize import BFGS
 from ase.io.trajectory import Trajectory
@@ -15,11 +16,12 @@ import stk
 import stko
 from openbabel import pybel as pb
 from rdkit import Chem
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock, MolToXYZBlock
+from rdkit.Chem.rdmolfiles import MolToXYZBlock
 
+from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.metal_complexes import (
     OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar)
-from conformational_sampling.utils import num_cpus
+from conformational_sampling.utils import num_cpus, pybel_mol_to_stk_mol, stk_mol_to_pybel_mol
 from conformational_sampling.config import Config
 
 UNOPTIMIZED = 0
@@ -112,8 +114,7 @@ class ConformerEnsembleOptimizer:
 
             # run xTB on conformers in parallel
             (Path.cwd() / 'scratch').mkdir(exist_ok=True)
-            xtb_complexes = list(executor.map(xtb_optimize, range(len(metal_optimizer_complexes)),
-                                            metal_optimizer_complexes, repeat(self.config.xtb_path)))
+            xtb_complexes = list(executor.map(ASE(calculator.XTB()).optimize, metal_optimizer_complexes))
             # compute energies
             energies = list(executor.map(xtb_energy, range(len(xtb_complexes)),
                                          xtb_complexes, repeat(self.config.xtb_path)))
@@ -150,23 +151,11 @@ class ConformerEnsembleOptimizer:
                     file.write(MolToXYZBlock(rdkit_mol))
 
 
-def pybel_mol_to_stk_mol(pybel_mol):
-    rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
-    Chem.rdmolops.Kekulize(rdkit_mol)
-    stk_mol = stk.BuildingBlock.init_from_rdkit_mol(rdkit_mol)
-    return stk_mol
-
-def stk_mol_to_pybel_mol(stk_mol, reperceive_bonds=False):
-    if reperceive_bonds:
-        return pb.readstring('xyz', MolToXYZBlock(stk_mol.to_rdkit_mol()))
-    else:
-        return pb.readstring('mol', MolToMolBlock(stk_mol.to_rdkit_mol()))
-    
-
 def load_stk_mol(molecule_path, fmt='xyz'):
     'loads a molecule from a file via pybel into an stk Molecule object'
     pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
     return pybel_mol_to_stk_mol(pybel_mol)
+
 
 def bind_to_dimethyl_Pd(ligand):
     metal = stk.BuildingBlock(
@@ -207,16 +196,11 @@ def stk_list_to_xyz_file(stk_mol_list, file_path):
             rdkit_mol = stk_mol.to_rdkit_mol()
             file.write(MolToXYZBlock(rdkit_mol))
 
-def xtb_optimize(idx, complex, xtb_path):
-    return stko.XTB(
-        xtb_path,
-        output_dir=f'scratch/xtb_optimize_{idx}',
-        calculate_hessian=False,
-        max_runs=1,
-        charge=0
-    ).optimize(complex)
+def xtb_optimize(complex):
+    return ASE(calculator.XTB()).optimize(complex)
 
 def xtb_energy(idx, complex, xtb_path):
+    # return ASE(calculator.XTB()).
     return stko.XTBEnergy(
         xtb_path,
         output_dir=f'scratch/xtb_energy_{idx}',
@@ -278,3 +262,5 @@ def gen_ligand_library_entry(stk_ligand, config):
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
     logging.debug('Finished generating ligand library entry')
+
+
