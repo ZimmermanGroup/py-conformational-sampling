@@ -21,7 +21,7 @@ from rdkit.Chem.rdmolfiles import MolToXYZBlock
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.metal_complexes import (
     OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar)
-from conformational_sampling.utils import num_cpus, pybel_mol_to_stk_mol, stk_mol_to_pybel_mol
+from conformational_sampling.utils import num_cpus, pybel_mol_to_stk_mol, stk_metal, stk_mol_to_ase_atoms, stk_mol_to_pybel_mol
 from conformational_sampling.config import Config
 
 UNOPTIMIZED = 0
@@ -116,8 +116,7 @@ class ConformerEnsembleOptimizer:
             (Path.cwd() / 'scratch').mkdir(exist_ok=True)
             xtb_complexes = list(executor.map(ASE(calculator.XTB()).optimize, metal_optimizer_complexes))
             # compute energies
-            energies = list(executor.map(xtb_energy, range(len(xtb_complexes)),
-                                         xtb_complexes, repeat(self.config.xtb_path)))
+            energies = list(executor.map(xtb_energy, xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
                 conformer.stages[XTB] = xtb_complexes[i]
                 conformer.energies[XTB] = energies[i]
@@ -158,33 +157,36 @@ def load_stk_mol(molecule_path, fmt='xyz'):
 
 
 def bind_to_dimethyl_Pd(ligand):
-    metal = stk.BuildingBlock(
-        smiles='[Pd]',
-        functional_groups=(
-            stk.SingleAtom(stk.Pd(0))
-            for i in range(6)
-        ),
-        position_matrix=[[0, 0, 0]],
-    )
-
+    metal = stk_metal('Pd')
     methyl = stk.BuildingBlock(
         smiles='[CH3]',
         functional_groups=[
             stk.SingleAtom(stk.C(0))
         ]
     )
+
+    return bind_ligands(metal, ligand, methyl, methyl)    
     
-    if ligand.get_num_functional_groups() == 1: #monodentate
+
+def bind_ligands(
+    metal: stk.Molecule,
+    ancillary_ligand: stk.Molecule,
+    reactive_ligand_1: stk.Molecule,
+    reactive_ligand_2: stk.Molecule
+) -> stk.ConstructedMolecule:
+    
+    if ancillary_ligand.get_num_functional_groups() == 1: #monodentate
         MetalComplexClass = OneLargeTwoSmallMonodentateTrigonalPlanar
-    elif ligand.get_num_functional_groups() == 2: #bidentate
+    elif ancillary_ligand.get_num_functional_groups() == 2: #bidentate
         MetalComplexClass = TwoMonoOneBidentateSquarePlanar
         
     return stk.ConstructedMolecule(
         topology_graph=MetalComplexClass(
             metals=metal,
             ligands={
-                ligand: (0, ),
-                methyl: (1, 2),
+                ancillary_ligand: (0, ),
+                reactive_ligand_1: (1, ),
+                reactive_ligand_2: (2, ),
             },
         ),
     )
@@ -199,19 +201,12 @@ def stk_list_to_xyz_file(stk_mol_list, file_path):
 def xtb_optimize(complex):
     return ASE(calculator.XTB()).optimize(complex)
 
-def xtb_energy(idx, complex, xtb_path):
-    # return ASE(calculator.XTB()).
-    return stko.XTBEnergy(
-        xtb_path,
-        output_dir=f'scratch/xtb_energy_{idx}',
-    ).get_energy(complex)
+def xtb_energy(complex):
+    return calculator.XTB().get_potential_energy(stk_mol_to_ase_atoms(complex))
     
 def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -> ConformerOptimizationSequence:
     stk_mol = sequence.stages[XTB]
-    ase_mol = ase.Atoms(
-        positions=list(stk_mol.get_atomic_positions()),
-        numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
-    )
+    ase_mol = stk_mol_to_ase_atoms(stk_mol)
     calc = deepcopy(config.ase_calculator)
     calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
     ase_mol.calc = calc

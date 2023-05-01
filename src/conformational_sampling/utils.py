@@ -1,7 +1,7 @@
 import os
 import ase
 from openbabel import pybel as pb
-from rdkit.Chem.rdmolfiles import MolToXYZBlock, MolFromMolBlock
+from rdkit.Chem.rdmolfiles import MolToXYZBlock, MolFromMolBlock, MolToMolBlock
 
 import stk
 from rdkit import Chem
@@ -33,3 +33,13 @@ def stk_mol_to_ase_atoms(stk_mol: stk.Molecule) -> ase.Atoms:
         numbers=[atom.get_atomic_number() for atom in stk_mol.get_atoms()]
     )
     
+
+def stk_metal(metal: str) -> stk.BuildingBlock:
+    return stk.BuildingBlock(
+        smiles=f'[{metal}]',
+        functional_groups=(
+            stk.SingleAtom(stk.Pd(0))
+            for i in range(6)
+        ),
+        position_matrix=[[0, 0, 0]],
+    )
