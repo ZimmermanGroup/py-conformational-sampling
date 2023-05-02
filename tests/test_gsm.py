@@ -79,16 +79,16 @@ def test_suzuki():
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
         ase_calculator=XTB(),
     )
-    # ConformerEnsembleOptimizer([stk_mol], config).optimize()
+    ConformerEnsembleOptimizer([stk_mol], config).optimize()
 
     # driving coordinates are 1-indexed
     # JOSH - look up if I already wrote an atom map from constructed molecule to building block
     # JOSH - try to generate the driving coordinates for the elimination reaction from stk or maybe just try to hardcode them for
     # the purpose of having something to demo
-    func_group = list(stk_ligand_5a.get_functional_groups())[0]
-    list(func_group.get_atom_ids())[0]
-    for atom_info in 
-    driving_coordinates = [['BREAK',1,54],['BREAK',1,58],['ADD',54,58]]
+    # func_group = list(stk_ligand_5a.get_functional_groups())[0]
+    # list(func_group.get_atom_ids())[0]
+    # for atom_info in 
+    driving_coordinates = [['BREAK',1,56],['BREAK',1,80],['ADD',56,80]]
     stk_gsm(
         stk_mol=stk_mol,
         driving_coordinates=driving_coordinates,
