@@ -79,7 +79,8 @@ def test_suzuki():
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
         ase_calculator=XTB(),
     )
-    ConformerEnsembleOptimizer([stk_mol], config).optimize()
+    conformer_ensemble_optimizer = ConformerEnsembleOptimizer([stk_mol], config)
+    optimized_stk_mol = conformer_ensemble_optimizer.optimize()[0]
 
     # driving coordinates are 1-indexed
     # JOSH - look up if I already wrote an atom map from constructed molecule to building block
@@ -90,7 +91,7 @@ def test_suzuki():
     # for atom_info in 
     driving_coordinates = [['BREAK',1,56],['BREAK',1,80],['ADD',56,80]]
     stk_gsm(
-        stk_mol=stk_mol,
+        stk_mol=optimized_stk_mol,
         driving_coordinates=driving_coordinates,
         config=config,
     )

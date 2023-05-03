@@ -136,6 +136,8 @@ class ConformerEnsembleOptimizer:
             # order conformers with the most relevant first and write to output file
             self.order_conformers()
             self.write()
+            
+        return [conformer.stages[DFT] for conformer in self.conformers]
     
     def write(self):
         for i, name in NAMES.items():
