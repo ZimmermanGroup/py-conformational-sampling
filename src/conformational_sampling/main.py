@@ -74,8 +74,9 @@ class ConformerEnsembleOptimizer:
         logging.debug(f'{len(metal_optimized_conformers) = } (pruned before xtb stage)')
         logging.debug(f'{len(xtb_conformers) = } (pruned after xtb stage)')
         logging.debug(f'{len(final_conformers) = } (had <= {self.config.max_connectivity_changes} connectivity changes)')
-        self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
-        self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])
+        if DFT in conformer.stages:
+            self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
+            self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])
         self.conformers += metal_optimized_conformers
         logging.debug(f'{len(self.conformers) = } (total conformers generated)')
     
@@ -115,11 +116,14 @@ class ConformerEnsembleOptimizer:
             # run xTB on conformers in parallel
             (Path.cwd() / 'scratch').mkdir(exist_ok=True)
             xtb_complexes = list(executor.map(ASE(calculator.XTB()).optimize, metal_optimizer_complexes))
+            xtb_complexes = [complex for complex in xtb_complexes if complex is not None]
+            
             # compute energies
             energies = list(executor.map(xtb_energy, xtb_complexes))
             for i, conformer in enumerate(unique_conformers):
-                conformer.stages[XTB] = xtb_complexes[i]
-                conformer.energies[XTB] = energies[i]
+                if i < len(xtb_complexes):
+                    conformer.stages[XTB] = xtb_complexes[i]
+                    conformer.energies[XTB] = energies[i]
             self.write()
             
         with ProcessPoolExecutor(max_workers=self.config.num_cpus//self.config.dft_cpus_per_opt) as executor:
@@ -129,6 +133,8 @@ class ConformerEnsembleOptimizer:
                                                   unique_conformers,
                                                   repeat(self.config)))
             
+            unique_conformers = [complex for complex in unique_conformers if complex is not None]
+            
             # update conformer list since parallel processes modified copied conformer objects
             for i, conformer in zip(unique_ids, unique_conformers):
                 self.conformers[i] = conformer
@@ -137,7 +143,7 @@ class ConformerEnsembleOptimizer:
             self.order_conformers()
             self.write()
             
-        return [conformer.stages[DFT] for conformer in self.conformers]
+        return [conformer.stages[DFT] for conformer in self.conformers if DFT in conformer.stages]
     
     def write(self):
         for i, name in NAMES.items():
@@ -156,6 +162,11 @@ def load_stk_mol(molecule_path, fmt='xyz'):
     'loads a molecule from a file via pybel into an stk Molecule object'
     pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
     return pybel_mol_to_stk_mol(pybel_mol)
+
+def load_stk_mol_list(molecule_path, fmt='xyz'):
+    'loads a list of molecules from a file via pybel into an stk Molecule object'
+    pybel_mols = list(pb.readfile(fmt, str(molecule_path)))
+    return [pybel_mol_to_stk_mol(pybel_mol) for pybel_mol in pybel_mols]
 
 
 def bind_to_dimethyl_Pd(ligand):
@@ -216,12 +227,15 @@ def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -
     trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
     trajectory_file.parent.mkdir(parents=True, exist_ok=True)
     opt = BFGS(ase_mol, trajectory=str(trajectory_file))
-    opt.run(steps=config.max_dft_opt_steps)
-    trajectory = Trajectory(trajectory_file)
-    stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
-    sequence.stages[DFT] = stk_trajectory[-1]
-    sequence.energies[DFT] = trajectory[-1].get_potential_energy()
-    return sequence
+    try:
+        opt.run(steps=config.max_dft_opt_steps)
+        trajectory = Trajectory(trajectory_file)
+        stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
+        sequence.stages[DFT] = stk_trajectory[-1]
+        sequence.energies[DFT] = trajectory[-1].get_potential_energy()
+        return sequence
+    except:
+        return None
     
 def reperceive_bonds(stk_mol):
     # output to xyz and read in with pybel to reperceive bonding
@@ -260,4 +274,11 @@ def gen_ligand_library_entry(stk_ligand, config):
     ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
     logging.debug('Finished generating ligand library entry')
 
-
+def suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config):
+    stk_ligand_5a_conformers = gen_confs_openbabel(stk_ligand_5a, config)
+    stk_ligand_6a_conformers = gen_confs_openbabel(stk_ligand_6a, config)
+    stk_ancillary_ligand_conformers = gen_confs_openbabel(stk_ancillary_ligand, config)
+    unoptimized_complexes = [bind_ligands(stk_metal('Pd'), ligand1, ligand2, ligand3) for ligand1 in stk_ancillary_ligand_conformers for ligand2 in stk_ligand_5a_conformers for ligand3 in stk_ligand_6a_conformers]
+    optimized_complexes = ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
+    stk_list_to_xyz_file(optimized_complexes, 'suzuki_conformers.xyz')
+    logging.debug('Finished generating ligand library entry')

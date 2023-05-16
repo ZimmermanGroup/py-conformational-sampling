@@ -94,10 +94,11 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
-        nnodes=7,
+        nnodes=20,
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
-        driving_coords=driving_coordinates,        
+        driving_coords=driving_coordinates,
+        DQMAG_MAX=0.6,
     )
     
     # run pyGSM
