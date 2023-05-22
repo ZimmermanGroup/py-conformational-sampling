@@ -49,7 +49,7 @@ def conf_gsm():
 
     # py-conformational-sampling configuration object
     config = Config(
-        initial_conformers=10,
+        initial_conformers=30,
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
         ase_calculator=XTB(),
         max_dft_opt_steps=2,
@@ -93,8 +93,8 @@ def conf_gsm():
     conformer_path = Path('suzuki_conformers.xyz')
     conformer_mols = load_stk_mol_list(conformer_path)
 
-    # subprocess.run(['sbatch', f'--array=0-{len(conformer_mols-1)}', './tests/gsm_job_array.py'])
-    subprocess.run(['sbatch', f'--array=0', './tests/gsm_job_array.py'])
+    subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', './tests/gsm_job_array.py'])
+    # subprocess.run(['sbatch', f'--array=0', './tests/gsm_job_array.py'])
 
 if __name__ == '__main__':
     conf_gsm()

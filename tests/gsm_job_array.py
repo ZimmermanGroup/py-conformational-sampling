@@ -1,7 +1,7 @@
 #!/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv39/bin/python
 #SBATCH -p zimgpu --job-name=py_gsm
 #SBATCH -c1
-#SBATCH --time=1:00:00
+#SBATCH --time=5-00:00:00
 #SBATCH -o scratch/pystring_%a/output.txt
 #SBATCH --array=0
 
@@ -13,7 +13,7 @@ from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_gsm
 from conformational_sampling.main import load_stk_mol_list
 
-job_index = os.environ['SLURM_ARRAY_TASK_ID']
+job_index = int(os.environ['SLURM_ARRAY_TASK_ID'])
 
 conformer_path = Path('suzuki_conformers.xyz')
 conformer_mols = load_stk_mol_list(conformer_path)
