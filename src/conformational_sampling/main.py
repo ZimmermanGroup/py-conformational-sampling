@@ -163,7 +163,7 @@ def load_stk_mol(molecule_path, fmt='xyz'):
     pybel_mol = next(pb.readfile(fmt, str(molecule_path)))
     return pybel_mol_to_stk_mol(pybel_mol)
 
-def load_stk_mol_list(molecule_path, fmt='xyz'):
+def load_stk_mol_list(molecule_path: Path, fmt='xyz'):
     'loads a list of molecules from a file via pybel into an stk Molecule object'
     pybel_mols = list(pb.readfile(fmt, str(molecule_path)))
     return [pybel_mol_to_stk_mol(pybel_mol) for pybel_mol in pybel_mols]
