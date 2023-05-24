@@ -52,6 +52,7 @@ for file in file_list:
             en_list.append(float(flines[line]))
             line += nlines
         
+        # todo: improve mechanism for determining which node is the TS
         if max(en_list) != 0.0:
 
             pybel_product = list(pb.readfile(format='xyz', filename=file))[-1]

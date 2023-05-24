@@ -22,7 +22,7 @@ driving_coordinates = [('ADD',56,80),('BREAK',1,56),('BREAK',1,80)]
 
 
 # create a directory for each specific job instance in the array
-path = Path(f'scratch/pystring_{job_index}')
+path = Path.cwd() / f'scratch/pystring_{job_index}'
 path.mkdir(exist_ok=True)
 os.chdir(path)
 
@@ -50,8 +50,15 @@ config = Config(
 #     SCF_ALGORITHM='DIIS',
 # )
 
-stk_gsm(
-    stk_mol=conformer_mols[job_index],
-    driving_coordinates=driving_coordinates,
-    config=config,
-)
+# look for a partially completed string from which to restart pygsm
+if not (path / 'opt_converged_000.xyz').exists():
+    try:
+        config.restart_gsm = sorted(path.glob('scratch/opt_iters_000_*.xyz'))[-1]
+    except IndexError: # no pygsm opt iters files exist, which should always occur in an initial run
+        pass
+        
+    stk_gsm(
+        stk_mol=conformer_mols[job_index],
+        driving_coordinates=driving_coordinates,
+        config=config,
+    )

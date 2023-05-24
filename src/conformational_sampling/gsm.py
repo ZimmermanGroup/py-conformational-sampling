@@ -1,6 +1,8 @@
 from pathlib import Path
 import sys
 import pygsm
+
+from conformational_sampling.main import load_stk_mol_list
 # workaround for issue with pygsm installation
 sys.path.append(str(Path(pygsm.__file__).parent))
 import ase.io
@@ -20,16 +22,36 @@ import stk
 
 from conformational_sampling.config import Config
 
-def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
-    nifty.printcool(" Building the LOT")
+def stk_mol_to_gsm_objects(stk_mol: stk.Molecule):
     ELEMENT_TABLE = elements.ElementData()
+    # atoms is a list of pygsm element objects
     atoms = [ELEMENT_TABLE.from_atomic_number(atom.get_atomic_number())
-             for atom in stk_mol.get_atoms()]
+            for atom in stk_mol.get_atoms()]
+    # xyz is a numpy array of the position matrix
     xyz = stk_mol.get_position_matrix()
     atom_symbols = np.array(list(atom.symbol for atom in atoms))
-    
+
     # geom is an aggregate ndarray with the structure of the body of an XYZ file
     geom = np.column_stack([atom_symbols, xyz]).tolist()
+    return atoms, xyz, geom
+
+
+def stk_mol_list_to_gsm_objects(stk_mol_list):
+    atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol_list[0])
+    geoms = [stk_mol_to_gsm_objects(stk_mol)[2] for stk_mol in stk_mol_list]
+    return atoms, xyz, geoms
+
+
+def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
+    nifty.printcool(" Building the LOT")
+    
+    if config.restart_gsm:
+        stk_string = load_stk_mol_list(config.restart_gsm)
+        atoms, xyz, geoms = stk_mol_list_to_gsm_objects(stk_string)
+        geom = geoms[0]
+    else:
+        atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol)
+    
     lot = ASELoT.from_options(config.ase_calculator, geom=geom)
 
     nifty.printcool(" Building the PES")
@@ -101,6 +123,8 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         DQMAG_MAX=0.6,
     )
     
-    # run pyGSM
+    # run pyGSM, setting up restart if necessary
+    if config.restart_gsm:
+        se_gsm.setup_from_geometries(geoms, reparametrize=True, restart_energies=False)
     se_gsm.go_gsm()
     gsm_plot(se_gsm.energies, x=range(len(se_gsm.energies)), title=0)
