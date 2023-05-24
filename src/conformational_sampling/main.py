@@ -218,23 +218,26 @@ def xtb_energy(complex):
     return calculator.XTB().get_potential_energy(stk_mol_to_ase_atoms(complex))
     
 def dft_optimize(idx, sequence: ConformerOptimizationSequence, config: Config) -> ConformerOptimizationSequence:
-    stk_mol = sequence.stages[XTB]
-    ase_mol = stk_mol_to_ase_atoms(stk_mol)
-    calc = deepcopy(config.ase_calculator)
-    calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
-    ase_mol.calc = calc
-    
-    trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
-    trajectory_file.parent.mkdir(parents=True, exist_ok=True)
-    opt = BFGS(ase_mol, trajectory=str(trajectory_file))
-    try:
-        opt.run(steps=config.max_dft_opt_steps)
-        trajectory = Trajectory(trajectory_file)
-        stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
-        sequence.stages[DFT] = stk_trajectory[-1]
-        sequence.energies[DFT] = trajectory[-1].get_potential_energy()
-        return sequence
-    except:
+    if XTB in sequence.stages:
+        stk_mol = sequence.stages[XTB]
+        ase_mol = stk_mol_to_ase_atoms(stk_mol)
+        calc = deepcopy(config.ase_calculator)
+        calc.set_label(f'scratch/dft_optimize_{idx}/ase_generated')
+        ase_mol.calc = calc
+        
+        trajectory_file = Path('scratch', f'dft_optimize_{idx}', 'ase.traj')
+        trajectory_file.parent.mkdir(parents=True, exist_ok=True)
+        opt = BFGS(ase_mol, trajectory=str(trajectory_file))
+        try:
+            opt.run(steps=config.max_dft_opt_steps)
+            trajectory = Trajectory(trajectory_file)
+            stk_trajectory = [stk_mol.with_position_matrix(atoms.get_positions()) for atoms in trajectory]
+            sequence.stages[DFT] = stk_trajectory[-1]
+            sequence.energies[DFT] = trajectory[-1].get_potential_energy()
+            return sequence
+        except:
+            return None
+    else:
         return None
     
 def reperceive_bonds(stk_mol):
