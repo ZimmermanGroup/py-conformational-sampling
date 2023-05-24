@@ -1,8 +1,9 @@
-#!/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv39/bin/python
-#SBATCH -p zimgpu --job-name=py_gsm
-#SBATCH -c1
-#SBATCH --time=5-00:00:00
+#!/export/zimmerman/soumikd/py-conformational-sampling/.venv/bin/python
+#SBATCH -p zimintel --job-name=py_gsm
+#SBATCH -c4
+#SBATCH --time=7-00:00:00
 #SBATCH -o scratch/pystring_%a/output.txt
+#SBATCH -e scratch/pystring_%a/error.txt
 #SBATCH --array=0
 
 import os
@@ -29,26 +30,26 @@ os.chdir(path)
 # py-GSM configuration object
 config = Config(
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-    ase_calculator=XTB(),
-    #max_dft_opt_steps=2,
-    num_cpus=1,
-    #dft_cpus_per_opt=4,
+    #ase_calculator=XTB(),
+    max_dft_opt_steps=2,
+    num_cpus=4,
+    dft_cpus_per_opt=4,
 )
 
 # qchem ase calculator setup
-# from ase.calculators.qchem import QChem
-# os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
-# config.ase_calculator = QChem(
-#     method='PBE',
-#     # basis='6-31G',
-#     # basis='STO-3G',
-#     basis='LANL2DZ',
-#     ecp='fit-LANL2DZ',
-#     SCF_CONVERGENCE='5',
-#     nt=config.dft_cpus_per_opt,
-#     SCF_MAX_CYCLES='300',
-#     SCF_ALGORITHM='DIIS',
-# )
+from ase.calculators.qchem import QChem
+os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
+config.ase_calculator = QChem(
+    method='PBE',
+    # basis='6-31G',
+    # basis='STO-3G',
+    basis='LANL2DZ',
+    ecp='fit-LANL2DZ',
+    SCF_CONVERGENCE='5',
+    nt=config.dft_cpus_per_opt,
+    SCF_MAX_CYCLES='200',
+    SCF_ALGORITHM='DIIS',
+)
 
 # look for a partially completed string from which to restart pygsm
 if not (path / 'opt_converged_000.xyz').exists():
