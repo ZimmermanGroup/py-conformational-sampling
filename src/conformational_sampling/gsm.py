@@ -107,6 +107,13 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         coord_obj=coord_obj1,
         Form_Hessian=True,
     )
+    if config.restart_gsm:
+        product = Molecule.from_options(
+            geom=geoms[-1],
+            PES=pes,
+            coord_obj=coord_obj1,
+            Form_Hessian=True,
+        )
 
     nifty.printcool("Creating optimizer")
     optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.005, DMAX=0.5, abs_max_step=0.5,
@@ -116,7 +123,8 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
-        nnodes=20,
+        product=product if config.restart_gsm else None,
+        nnodes=len(geoms) if config.restart_gsm else 20,
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=driving_coordinates,
