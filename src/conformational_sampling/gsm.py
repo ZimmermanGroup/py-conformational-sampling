@@ -15,6 +15,7 @@ from pygsm.optimizers import eigenvector_follow
 from pygsm.potential_energy_surfaces import PES
 from pygsm.utilities import elements, manage_xyz, nifty
 from pygsm.wrappers import Molecule
+from pygsm.wrappers.main import main
 from pygsm.growing_string_methods import SE_GSM
 from pygsm.wrappers.main import plot as gsm_plot
 from pygsm.wrappers.main import get_driving_coord_prim, Distance
@@ -136,3 +137,20 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         se_gsm.setup_from_geometries(geoms, reparametrize=True, restart_energies=False)
     se_gsm.go_gsm()
     gsm_plot(se_gsm.energies, x=range(len(se_gsm.energies)), title=0)
+    
+def stk_gsm_command_line(stk_mol: stk.Molecule, driving_coordinates, config: Config):
+    # guessing a command line simulation
+    import sys
+    sys.argv = [
+        "-coordinate_type", "DLC",
+        "-xyzfile", "WOULD NEED TO CREATE THIS.................",
+        "-mode", "SE_GSM",
+        "-package", "ase",
+        "--ase-class", "ase.calculators.qchem.QChem",
+        "--ase-kwargs", '{"method":"PBE", "basis":"LANL2DZ",............................}',
+        "-DQMAG_MAX", "0.6",
+        "num_nodes", "15",
+        "-isomers", "FILL IN HERE...................................",
+    ]
+    main()
+    
