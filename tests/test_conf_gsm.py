@@ -51,29 +51,29 @@ def conf_gsm():
     config = Config(
         initial_conformers=30,
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        ase_calculator=XTB(),
-        max_dft_opt_steps=2,
-        num_cpus=20,
-        dft_cpus_per_opt=4,
+        #ase_calculator=XTB(),
+        max_dft_opt_steps=10,
+        num_cpus=28,
+        dft_cpus_per_opt=8,
     )
 
     # qchem ase calculator setup
-    # from ase.calculators.qchem import QChem
-    # os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
-    # config.ase_calculator = QChem(
-    #     method='PBE',
-    #     # basis='6-31G',
-    #     # basis='STO-3G',
-    #     basis='LANL2DZ',
-    #     ecp='fit-LANL2DZ',
-    #     SCF_CONVERGENCE='5',
-    #     nt=config.dft_cpus_per_opt,
-    #     SCF_MAX_CYCLES='300',
-    #     SCF_ALGORITHM='DIIS',
-    # )
+    from ase.calculators.qchem import QChem
+    os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
+    config.ase_calculator = QChem(
+        method='PBE',
+        # basis='6-31G',
+        # basis='STO-3G',
+        basis='LANL2DZ',
+        ecp='fit-LANL2DZ',
+        SCF_CONVERGENCE='5',
+        nt=config.dft_cpus_per_opt,
+        SCF_MAX_CYCLES='200',
+        SCF_ALGORITHM='DIIS',
+    )
 
     # generates conformers, performs multiple step optimization and uniqueness filtering
-    suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
+    # suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
 
     ##############################################
     #####  py-GSM run on all the conformers  #####
@@ -93,8 +93,12 @@ def conf_gsm():
     conformer_path = Path('suzuki_conformers.xyz')
     conformer_mols = load_stk_mol_list(conformer_path)
 
+    for i in range(len(conformer_mols)):
+        path = Path.cwd() / f'scratch/pystring_{i}'
+        path.mkdir(exist_ok=True)
+
     subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', './tests/gsm_job_array.py'])
-    # subprocess.run(['sbatch', f'--array=0', './tests/gsm_job_array.py'])
+    # subprocess.run(['sbatch', f'--array=2', './tests/gsm_job_array.py'])
 
 if __name__ == '__main__':
     conf_gsm()

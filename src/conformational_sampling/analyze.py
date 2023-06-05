@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from itertools import combinations
 import os
 from pathlib import Path
 import re
@@ -19,8 +20,8 @@ for name in os.listdir(path):
     if name.startswith("pystring"):
         #dir_list.append(names)
         in_path = path / f'{name}'
-        if 'grown_string1_000.xyz' in os.listdir(in_path):
-            file_list.append(str(in_path)+"/grown_string1_000.xyz")
+        if 'opt_converged_000.xyz' in os.listdir(in_path):
+            file_list.append(str(in_path)+"/opt_converged_000.xyz")
         # new_path = Path(f'scratch/{names}/scratch')
         # for name in os.listdir(new_path):
         #     if name.startswith("pystring"):
@@ -31,7 +32,7 @@ for name in os.listdir(path):
 # print(sorted(file_list))
 
 infofile = open('TS_and_stereo.txt', 'w')
-infofile.write("   Conformers      TS_Energy     Stereochemistry   Torsion angle (deg)\n")
+infofile.write("   Conformers      TS_Energy_Barrier     Stereochemistry   Torsion angle (deg)\n")
 
 ensemble_TS = open('ensemble_TS.xyz', 'w')
 
@@ -39,23 +40,63 @@ ensemble_TS = open('ensemble_TS.xyz', 'w')
 # -180 to 0 --> R and 0 to 180 --> S
 
 
+# Function to determine the existence and position of a unique TS node along the string
+ 
+def ts_node(en_list):
+    
+    res_list = list(combinations(en_list, 2))
+
+    max_diff = 0.0
+    ts_node_energy = None
+    ts_barrier = 0.0
+    for item in res_list:
+        tmp = item[1] - item[0]
+        if tmp > max_diff:
+            max_diff = tmp
+            ts_node_energy = item[1]
+            ts_barrier = max_diff
+            
+    return (max_diff, ts_node_energy, ts_barrier)
+
+
 for file in file_list:
     with open(file, 'r') as f:
         flines = f.read().splitlines()
 
-        natoms = int(flines[0])
-        nlines = natoms + 2
+        try:
+            natoms = int(flines[0])
+            nlines = natoms + 2
 
-        line = 1
-        en_list = []
-        while line < len(flines):
-            en_list.append(float(flines[line]))
-            line += nlines
+            line = 1
+            en_list = []
+            while line < len(flines):
+                en_list.append(float(flines[line]))
+                line += nlines
         
-        # todo: improve mechanism for determining which node is the TS
-        if max(en_list) != 0.0:
+        except:
+            natoms = int(flines[2])
+            nlines = natoms + 2
 
-            pybel_product = list(pb.readfile(format='xyz', filename=file))[-1]
+            start_index = flines.index('energy')
+            end_index = flines.index('max-force')
+
+            en_list = []
+
+            for i in range(start_index+1, end_index):
+                en_list.append(float(flines[i]))
+
+            with open('file_xyz.xyz', 'w') as f_xyz:
+                f_xyz.write('\n'.join(flines[2:start_index-1]))    
+        
+        if ts_node(en_list)[0] != 0.0:
+
+            try:
+                pybel_product = list(pb.readfile(format='xyz', filename='file_xyz.xyz'))[-1]
+                TS_index = en_list.index(ts_node(en_list)[1])*nlines + 2
+            except:
+                pybel_product = list(pb.readfile(format='xyz', filename=file))[-1]
+                TS_index = en_list.index(ts_node(en_list)[1])*nlines
+
             rdkit_product = pybel_mol_to_rdkit_mol(pybel_product)
             torsion_deg = rdMolTransforms.GetDihedralDeg(rdkit_product.GetConformer(), 56, 55, 79, 78)
             if torsion_deg >= 0:
@@ -65,14 +106,16 @@ for file in file_list:
             # 
             idx = re.search(r"pystring_(\d+)", file).groups()[0]
             
-            infofile.write(f"  Conformer_{idx}     {max(en_list)}      {stereochem}           {torsion_deg}\n")
-
-            TS_index = en_list.index(max(en_list))*nlines
+            infofile.write(f"  Conformer_{idx}     {ts_node(en_list)[2]:.6f}      {stereochem}           {torsion_deg:.3f}\n")
 
             ensemble_TS.write('\n'.join(flines[TS_index:TS_index+nlines]))
             ensemble_TS.write('\n')
 
 ensemble_TS.close()
+try:
+    os.remove('file_xyz.xyz')
+except:
+    pass
     
 ## Script for submitting the TS jobs
 ## subprocess.run(['sbatch', f'--array=0-{len(file_list)-1}', './tests/ts_job_array.py'])

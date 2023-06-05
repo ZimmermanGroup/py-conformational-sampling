@@ -1,6 +1,6 @@
 #!/export/zimmerman/soumikd/py-conformational-sampling/.venv/bin/python
-#SBATCH -p zimintel --job-name=py_gsm
-#SBATCH -c4
+#SBATCH -p zimintel --job-name=py_gsm_test_cmd
+#SBATCH -c8
 #SBATCH --time=7-00:00:00
 #SBATCH -o scratch/pystring_%a/output.txt
 #SBATCH -e scratch/pystring_%a/error.txt
@@ -11,7 +11,7 @@ from pathlib import Path
 from xtb.ase.calculator import XTB
 from conformational_sampling.config import Config
 
-from conformational_sampling.gsm import stk_gsm
+from conformational_sampling.gsm import stk_gsm, stk_gsm_command_line
 from conformational_sampling.main import load_stk_mol_list
 
 job_index = int(os.environ['SLURM_ARRAY_TASK_ID'])
@@ -32,8 +32,8 @@ config = Config(
     xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
     #ase_calculator=XTB(),
     max_dft_opt_steps=2,
-    num_cpus=4,
-    dft_cpus_per_opt=4,
+    num_cpus=8,
+    dft_cpus_per_opt=8,
 )
 
 # qchem ase calculator setup
@@ -45,10 +45,11 @@ config.ase_calculator = QChem(
     # basis='STO-3G',
     basis='LANL2DZ',
     ecp='fit-LANL2DZ',
-    SCF_CONVERGENCE='5',
+    SCF_CONVERGENCE='6',
     nt=config.dft_cpus_per_opt,
-    SCF_MAX_CYCLES='200',
-    SCF_ALGORITHM='DIIS',
+    SCF_MAX_CYCLES='500',
+    SCF_ALGORITHM='RCA_DIIS',
+    THRESH_RCA_SWITCH='4',
 )
 
 # look for a partially completed string from which to restart pygsm
@@ -57,9 +58,15 @@ if not (path / 'opt_converged_000.xyz').exists():
         config.restart_gsm = sorted(path.glob('scratch/opt_iters_000_*.xyz'))[-1]
     except IndexError: # no pygsm opt iters files exist, which should always occur in an initial run
         pass
-        
+
     stk_gsm(
         stk_mol=conformer_mols[job_index],
         driving_coordinates=driving_coordinates,
         config=config,
     )
+
+    # stk_gsm_command_line(
+    #     stk_mol=conformer_mols[job_index],
+    #     driving_coordinates=driving_coordinates,
+    #     config=config,
+    # )

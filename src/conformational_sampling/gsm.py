@@ -122,6 +122,14 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
     nifty.printcool("initial energy is {:5.4f} kcal/mol".format(reactant.energy))
 
+    nifty.printcool("REACTANT GEOMETRY NOT FIXED!!! OPTIMIZING")
+    optimizer.optimize(
+            molecule=reactant,
+            refE=reactant.energy,
+            opt_steps=50,
+            # path=path
+        )
+
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
         product=product if config.restart_gsm else None,
@@ -129,7 +137,8 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=driving_coordinates,
-        DQMAG_MAX=0.6,
+        DQMAG_MAX=0.5, #default value is 0.8
+        ADD_NODE_TOL=0.01 #default value is 0.1
     )
     
     # run pyGSM, setting up restart if necessary
@@ -141,16 +150,20 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 def stk_gsm_command_line(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     # guessing a command line simulation
     import sys
-    sys.argv = [
-        "-coordinate_type", "DLC",
-        "-xyzfile", "WOULD NEED TO CREATE THIS.................",
+    stk_mol.write('initial0001.xyz') #### to xyz
+    with open('isomers0001.txt', 'w') as f:
+        f.write('ADD 56 80\n BREAK 1 56\n BREAK 1 80\n')
+
+    sys.argv = ["gsm",
+        "-coordinate_type", "TRIC",
+        "-xyzfile", "initial0001.xyz",
         "-mode", "SE_GSM",
         "-package", "ase",
         "--ase-class", "ase.calculators.qchem.QChem",
-        "--ase-kwargs", '{"method":"PBE", "basis":"LANL2DZ",............................}',
+        "--ase-kwargs", '{"method":"PBE", "basis":"LANL2DZ", "ecp":"fit-LANL2DZ", "SCF_CONVERGENCE": "5", "nt": 8, "SCF_MAX_CYCLES": "200", "SCF_ALGORITHM":"DIIS"}',
         "-DQMAG_MAX", "0.6",
-        "num_nodes", "15",
-        "-isomers", "FILL IN HERE...................................",
+        "-num_nodes", "15",
+        "-isomers", "isomers0001.txt",
     ]
     main()
     
