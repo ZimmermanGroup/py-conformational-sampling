@@ -89,7 +89,7 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     p1 = PrimitiveInternalCoordinates.from_options(
         xyz=xyz,
         atoms=atoms,
-        addtr=False,  # Add TRIC
+        addtr=True,  # Add TRIC
         topology=top,
     )
 
@@ -97,7 +97,7 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     coord_obj1 = DelocalizedInternalCoordinates.from_options(
         xyz=xyz,
         atoms=atoms,
-        addtr=False,  # Add TRIC
+        addtr=True,  # Add TRIC
         primitives=p1,
     )
 
@@ -117,8 +117,8 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         )
 
     nifty.printcool("Creating optimizer")
-    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.005, DMAX=0.5, abs_max_step=0.5,
-                                                conv_Ediff=0.5)
+    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.0005, DMAX=0.5, abs_max_step=0.5,
+                                                conv_Ediff=0.1)
 
     nifty.printcool("initial energy is {:5.4f} kcal/mol".format(reactant.energy))
 
@@ -138,7 +138,8 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=driving_coordinates,
         DQMAG_MAX=0.5, #default value is 0.8
-        ADD_NODE_TOL=0.01 #default value is 0.1
+        ADD_NODE_TOL=0.01, #default value is 0.1
+        CONV_TOL = 0.0005,
     )
     
     # run pyGSM, setting up restart if necessary
