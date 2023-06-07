@@ -85,6 +85,19 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
                 print(" Adding bond {} to top1".format(bond))
                 top.add_edge(bond[0], bond[1])
 
+    # testing whether adding any edges near to a transition metal to the topology will help with
+    # internal coordinate stability
+    # HARDCODED TO SPECIFIC TEST MOLECULE
+    metal_connections = ((0,11), (0,12), (0,79), (0,55), (0,65))
+    for metal_connection in metal_connections:
+        if metal_connection in top.edges:
+            pass
+        elif tuple(reversed(metal_connection)) in top.edges():
+            pass
+        else:
+            print(" Adding bond {} to top1".format(metal_connection))
+            top.add_edge(*metal_connection)
+
     nifty.printcool("Building Primitive Internal Coordinates")
     p1 = PrimitiveInternalCoordinates.from_options(
         xyz=xyz,
