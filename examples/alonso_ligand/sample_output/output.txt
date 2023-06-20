@@ -1,0 +1,474 @@
+[2023-02-07 02:02:21,374 __init__.py->wrapper():281]DEBUG: matplotlib data path: /export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv/lib/python3.8/site-packages/matplotlib/mpl-data
+[2023-02-07 02:02:21,408 __init__.py->wrapper():281]DEBUG: CONFIGDIR=/export/zimmerman/joshkamm/.config/matplotlib
+[2023-02-07 02:02:21,410 __init__.py-><module>():1456]DEBUG: interactive is False
+[2023-02-07 02:02:21,410 __init__.py-><module>():1457]DEBUG: platform is linux
+[2023-02-07 02:02:21,513 __init__.py->wrapper():281]DEBUG: CACHEDIR=/export/zimmerman/joshkamm/.cache/matplotlib
+[2023-02-07 02:02:21,517 font_manager.py->_load_fontmanager():1629]DEBUG: Using fontManager instance from /export/zimmerman/joshkamm/.cache/matplotlib/fontlist-v330.json
+[2023-02-07 02:02:24,466 pyplot.py->switch_backend():316]DEBUG: Loaded backend agg version v2.2.
+[2023-02-07 02:02:24,471 pyplot.py->switch_backend():316]DEBUG: Loaded backend agg version v2.2.
+[2023-02-07 02:02:25,649 main.py-><module>():34]DEBUG: /export/zimmerman/joshkamm/Lilly/py-conformational-sampling/.venv/bin/python
+[2023-02-07 02:02:25,649 main.py-><module>():35]DEBUG: python 3.8.8 (default, Apr 13 2021, 19:58:26) 
+[GCC 7.3.0]
+[2023-02-07 02:02:25,763 main.py-><module>():36]DEBUG: Platform: Linux-3.10.0-862.14.4.el7.x86_64-x86_64-with-glibc2.10
+[2023-02-07 02:02:25,763 main.py-><module>():37]DEBUG: Installed packages:
+[2023-02-07 02:02:25,764 main.py-><module>():38]DEBUG: py-conformational-sampling=0.1.3
+	anyio=3.6.2
+	argon2-cffi-bindings=21.2.0
+	argon2-cffi=21.3.0
+	ase=3.22.1
+	astroid=2.12.13
+	asttokens=2.2.1
+	attrs=22.1.0
+	backcall=0.2.0
+	beautifulsoup4=4.11.1
+	bleach=5.0.1
+	bokeh=3.0.2
+	certifi=2022.9.24
+	cffi=1.15.1
+	charset-normalizer=2.1.1
+	click=8.1.3
+	cloudpickle=2.2.0
+	colorcet=3.0.1
+	contourpy=1.0.6
+	cycler=0.11.0
+	dask-jobqueue=0.8.1
+	dask=2022.12.0
+	debugpy=1.6.4
+	decorator=5.1.1
+	defusedxml=0.7.1
+	dill=0.3.6
+	distributed=2022.12.0
+	dnspython=2.2.1
+	entrypoints=0.4
+	exceptiongroup=1.1.0
+	executing=1.2.0
+	fastjsonschema=2.16.2
+	fonttools=4.38.0
+	fsspec=2022.11.0
+	HeapDict=1.0.1
+	holoviews=1.15.2
+	hvplot=0.8.2
+	idna=3.4
+	importlib-metadata=5.1.0
+	importlib-resources=5.10.1
+	iniconfig=2.0.0
+	ipykernel=6.17.1
+	ipython-genutils=0.2.0
+	ipython=8.7.0
+	ipywidgets=8.0.2
+	isort=5.10.1
+	jedi=0.18.2
+	Jinja2=3.1.2
+	jsonschema=4.17.3
+	jupyter-client=7.4.8
+	jupyter-console=6.4.4
+	jupyter-core=5.1.0
+	jupyter-events=0.5.0
+	jupyter-server-terminals=0.4.2
+	jupyter-server=2.0.0
+	jupyter=1.0.0
+	jupyterlab-pygments=0.2.2
+	jupyterlab-widgets=3.0.3
+	kiwisolver=1.4.4
+	lazy-object-proxy=1.8.0
+	locket=1.0.0
+	Markdown=3.4.1
+	MarkupSafe=2.1.1
+	matplotlib-inline=0.1.6
+	matplotlib=3.6.2
+	mccabe=0.7.0
+	MCHammer=1.0.4
+	mistune=2.0.4
+	msgpack=1.0.4
+	multiprocess=0.70.14
+	nbclassic=0.4.8
+	nbclient=0.7.2
+	nbconvert=7.2.6
+	nbformat=5.7.0
+	nest-asyncio=1.5.6
+	networkx=2.8.8
+	notebook-shim=0.2.2
+	notebook=6.5.2
+	numpy=1.23.5
+	openbabel-wheel=3.1.1.16
+	packaging=21.3
+	pandas=1.5.2
+	pandocfilters=1.5.0
+	panel-chemistry=0.2.2
+	panel=0.14.1
+	param=1.12.2
+	parso=0.8.3
+	partd=1.3.0
+	pathos=0.3.0
+	pexpect=4.8.0
+	pickleshare=0.7.5
+	Pillow=9.3.0
+	pip=20.2.3
+	pkgutil-resolve-name=1.3.10
+	platformdirs=2.6.0
+	pluggy=1.0.0
+	pox=0.3.2
+	ppft=1.7.6.6
+	prometheus-client=0.15.0
+	prompt-toolkit=3.0.36
+	psutil=5.9.4
+	ptyprocess=0.7.0
+	pure-eval=0.2.2
+	pycparser=2.21
+	pyct=0.4.8
+	Pygments=2.13.0
+	pylint=2.15.8
+	pymongo=4.3.3
+	pyparsing=3.0.9
+	pyrsistent=0.19.2
+	pytest=7.2.1
+	python-dateutil=2.8.2
+	python-json-logger=2.0.4
+	pytz=2022.6
+	pyviz-comms=2.2.1
+	PyYAML=6.0
+	pyzmq=24.0.1
+	qtconsole=5.4.0
+	QtPy=2.3.0
+	rdkit=2022.9.2
+	requests=2.28.1
+	scipy=1.9.3
+	seaborn=0.12.1
+	Send2Trash=1.8.0
+	setuptools=49.2.1
+	six=1.16.0
+	snakeviz=2.1.1
+	sniffio=1.3.0
+	sortedcontainers=2.4.0
+	soupsieve=2.3.2.post1
+	SpinDry=0.0.91
+	stack-data=0.6.2
+	stk=2021.8.2.0
+	stko=0.0.40
+	tblib=1.7.0
+	terminado=0.17.1
+	tinycss2=1.2.1
+	tomli=2.0.1
+	tomlkit=0.11.6
+	toolz=0.12.0
+	tornado=6.2
+	tqdm=4.64.1
+	traitlets=5.6.0
+	typing-extensions=4.4.0
+	urllib3=1.26.13
+	vabene=0.0.5
+	wcwidth=0.2.5
+	webencodings=0.5.1
+	websocket-client=1.4.2
+	widgetsnbextension=4.0.3
+	wrapt=1.14.1
+	xyzservices=2022.9.0
+	zict=2.2.0
+	zipp=3.11.0
+Initial conformer does not pass filter!
+Initial conformer count: 50
+315 attempts,  13 duplicates, 252 failed filter.
+9 0 0 8 3 5 0 0 
+9 0 0 8 3 5 0 4 
+9 0 2 8 3 5 0 4 
+9 1 2 8 3 5 0 5 
+9 1 0 8 3 5 0 5 
+1 2 1 3 3 0 2 3 
+6 2 0 5 0 2 5 1 
+6 2 2 5 0 2 5 1 
+6 1 2 5 0 2 5 5 
+6 1 0 5 0 2 3 5 
+6 1 2 5 0 2 3 5 
+6 1 2 5 1 2 3 5 
+6 1 2 5 1 2 1 5 
+6 1 2 5 2 2 1 5 
+4 0 2 3 5 0 2 2 
+6 1 0 5 5 0 3 2 
+4 0 2 8 5 3 5 2 
+4 2 1 8 5 3 5 2 
+4 2 1 8 0 3 3 2 
+6 2 1 8 5 3 3 2 
+6 2 1 8 5 3 4 2 
+10 2 1 8 5 3 5 2 
+10 2 1 8 0 3 3 2 
+6 2 1 8 0 3 3 2 
+6 2 1 5 2 4 3 2 
+6 2 0 5 2 4 2 2 
+6 2 0 5 2 4 3 2 
+1 0 0 3 2 0 2 2 
+1 2 0 3 2 0 2 2 
+1 2 0 5 3 4 0 2 
+1 1 0 5 5 4 0 2 
+9 2 0 8 3 4 0 2 
+9 2 0 8 3 2 0 1 
+9 1 0 8 2 3 5 5 
+4 0 0 3 5 0 2 2 
+7 0 1 8 5 0 2 3 
+11 0 1 5 1 2 2 3 
+9 0 0 5 3 5 2 4 
+2 0 1 11 5 4 3 0 
+1 0 2 3 3 0 5 3 
+1 2 2 3 3 0 5 3 
+1 2 2 5 3 4 2 3 
+1 0 2 3 3 0 2 3 
+11 2 1 8 3 0 2 3 
+11 2 1 5 1 2 2 3 
+11 0 2 5 5 0 4 3 
+9 1 0 8 1 5 3 5 
+9 1 0 8 3 5 0 2 
+9 1 0 8 5 5 0 2 
+9 2 0 5 3 5 0 4 
+
+=====> Starting conformers search with a Genetic Algorithm <=====
+Perform elitist generation replacement with mutation only
+Mutation probability: 0.2
+Will stop after 5 generations without improvement.
+
+Generation #1  0.949548
+Generation #2  0.967678
+Generation #3  0.967678
+Generation #4  0.967678
+Generation #5  0.998629
+Generation #6  0.998629
+Generation #7  0.998629
+Generation #8  0.998629
+Generation #9  0.998629
+Generation #10  0.998629
+Generation #11  0.998629
+5 0 0 9 0 3 4 2 
+1 1 2 5 1 0 2 5 
+9 2 0 8 3 5 3 0 
+3 2 0 8 0 3 5 2 
+3 2 0 3 3 0 2 2 
+2 2 1 8 5 0 3 3 
+4 0 0 8 0 0 3 2 
+3 2 0 5 3 4 4 5 
+1 2 1 9 5 1 3 2 
+1 2 1 8 5 0 2 3 
+4 1 0 5 0 2 5 2 
+11 2 0 8 1 3 0 5 
+5 0 0 8 4 5 0 2 
+3 1 0 5 3 5 0 2 
+3 1 0 5 3 0 2 0 
+9 1 0 8 2 2 1 5 
+6 0 0 9 4 3 4 2 
+3 0 0 9 5 5 0 0 
+2 0 1 5 3 5 0 3 
+2 0 0 5 3 0 4 3 
+3 2 0 8 3 5 4 0 
+2 1 0 8 3 4 2 3 
+11 2 1 8 5 4 3 3 
+10 1 0 5 5 0 2 4 
+4 2 1 3 3 0 2 2 
+6 0 2 9 5 1 3 2 
+4 0 0 8 3 5 2 4 
+0 2 0 5 2 5 0 2 
+6 2 1 9 3 1 0 2 
+11 0 0 5 0 2 3 5 
+6 1 0 5 5 2 0 3 
+9 1 0 5 3 5 0 2 
+11 1 2 5 2 2 4 5 
+6 1 0 5 4 2 3 5 
+9 2 1 8 1 2 0 3 
+6 1 0 8 2 4 0 2 
+6 0 1 9 0 2 4 2 
+4 0 0 5 3 0 5 1 
+4 1 0 8 3 2 4 5 
+6 0 0 5 0 2 4 3 
+3 2 0 8 3 0 2 3 
+6 2 0 8 5 0 2 2 
+10 2 0 8 2 0 5 2 
+10 0 0 11 0 0 5 2 
+6 2 0 5 3 2 3 1 
+8 2 0 8 3 4 2 2 
+11 0 1 5 5 2 4 3 
+1 0 0 5 1 5 2 5 
+9 2 0 5 3 5 2 3 
+0 0 0 5 5 5 2 0 
+GetConformers:
+5 0 0 9 0 3 4 2 
+1 1 2 5 1 0 2 5 
+9 2 0 8 3 5 3 0 
+3 2 0 8 0 3 5 2 
+3 2 0 3 3 0 2 2 
+2 2 1 8 5 0 3 3 
+4 0 0 8 0 0 3 2 
+3 2 0 5 3 4 4 5 
+1 2 1 9 5 1 3 2 
+1 2 1 8 5 0 2 3 
+4 1 0 5 0 2 5 2 
+11 2 0 8 1 3 0 5 
+5 0 0 8 4 5 0 2 
+3 1 0 5 3 5 0 2 
+3 1 0 5 3 0 2 0 
+9 1 0 8 2 2 1 5 
+6 0 0 9 4 3 4 2 
+3 0 0 9 5 5 0 0 
+2 0 1 5 3 5 0 3 
+2 0 0 5 3 0 4 3 
+3 2 0 8 3 5 4 0 
+2 1 0 8 3 4 2 3 
+11 2 1 8 5 4 3 3 
+10 1 0 5 5 0 2 4 
+4 2 1 3 3 0 2 2 
+6 0 2 9 5 1 3 2 
+4 0 0 8 3 5 2 4 
+0 2 0 5 2 5 0 2 
+6 2 1 9 3 1 0 2 
+11 0 0 5 0 2 3 5 
+6 1 0 5 5 2 0 3 
+9 1 0 5 3 5 0 2 
+11 1 2 5 2 2 4 5 
+6 1 0 5 4 2 3 5 
+9 2 1 8 1 2 0 3 
+6 1 0 8 2 4 0 2 
+6 0 1 9 0 2 4 2 
+4 0 0 5 3 0 5 1 
+4 1 0 8 3 2 4 5 
+6 0 0 5 0 2 4 3 
+3 2 0 8 3 0 2 3 
+6 2 0 8 5 0 2 2 
+10 2 0 8 2 0 5 2 
+10 0 0 11 0 0 5 2 
+6 2 0 5 3 2 3 1 
+8 2 0 8 3 4 2 2 
+11 0 1 5 5 2 4 3 
+1 0 0 5 1 5 2 5 
+9 2 0 5 3 5 2 3 
+0 0 0 5 5 5 2 0 
+[2023-02-07 02:02:36,455 main.py->__init__():58]DEBUG: config = Config(xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb', initial_conformers=50, max_connectivity_changes=2, pre_xtb_rms_threshold=2.0, max_dft_opt_steps=2, dft_cpus_per_opt=4, num_cpus=20, ase_calculator=<ase.calculators.qchem.QChem object at 0x2ac55d9a1130>)
+py-conformational-sampling 0.1.3
+[2023-02-07 02:02:38,400 main.py->optimize():98]DEBUG: len(mc_hammer_complexes) = 50
+[2023-02-07 02:02:39,466 main.py->optimize():102]DEBUG: len(metal_optimizer_complexes) = 50
+[2023-02-07 02:02:40,875 main.py->optimize():110]DEBUG: len(unique_conformers) = 18
+grep: Invalid range end
+grep: grep: Invalid range end
+grep: Invalid range end
+grep: Invalid range end
+Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:08:48   -55203.554187        1.7802
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:08:58   -55203.718494        1.7759
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:09:04   -55203.071724        1.8066
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:09:06   -55203.728442        1.7809
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:09:26   -55203.101989        1.7838
+grep: Invalid range end
+BFGS:    1 02:12:32   -55203.941719        0.7414
+grep: Invalid range end
+BFGS:    1 02:12:39   -55204.113884        1.0086
+grep: Invalid range end
+BFGS:    1 02:12:45   -55204.094735        0.7388
+grep: Invalid range end
+BFGS:    1 02:12:54   -55203.439437        0.7245
+grep: Invalid range end
+BFGS:    1 02:13:21   -55203.477670        0.7242
+grep: Invalid range end
+BFGS:    2 02:16:15   -55204.222430        0.8451
+grep: Invalid range end
+BFGS:    2 02:16:23   -55204.411648        0.8976
+grep: Invalid range end
+BFGS:    2 02:16:26   -55204.361398        0.8536
+grep: Invalid range end
+BFGS:    2 02:16:47   -55203.720027        0.9249
+grep: Invalid range end
+BFGS:    2 02:17:11   -55203.750833        0.9041
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:20:02   -55203.093331        1.7862
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:20:04   -55203.253336        1.7331
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:20:16   -55203.097393        1.7835
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:20:37   -55203.471548        1.7577
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:21:03   -55203.924724        1.7922
+grep: Invalid range end
+BFGS:    1 02:23:51   -55203.467686        0.7187
+grep: Invalid range end
+BFGS:    1 02:24:03   -55203.646968        0.9489
+grep: Invalid range end
+BFGS:    1 02:24:25   -55203.469459        0.7297
+grep: Invalid range end
+BFGS:    1 02:24:25   -55203.866584        0.8562
+grep: Invalid range end
+BFGS:    1 02:24:46   -55204.295021        0.6970
+grep: Invalid range end
+BFGS:    2 02:27:39   -55203.742170        0.9109
+grep: Invalid range end
+BFGS:    2 02:27:48   -55203.956896        0.9328
+grep: Invalid range end
+BFGS:    2 02:28:08   -55203.742383        0.9056
+grep: Invalid range end
+BFGS:    2 02:28:31   -55204.566933        0.9384
+grep: Invalid range end
+BFGS:    2 02:28:37   -55204.165269        0.8942
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:31:35   -55203.485721        1.7626
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:31:47   -55201.655927        1.6893
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:32:03   -55203.075709        1.7720
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:32:22   -55203.007458        1.8302
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:32:42   -55203.088688        1.7716
+grep: Invalid range end
+BFGS:    1 02:35:26   -55203.883058        0.8795
+grep: Invalid range end
+BFGS:    1 02:35:43   -55202.040694        1.1660
+grep: Invalid range end
+BFGS:    1 02:36:08   -55203.447785        0.7015
+grep: Invalid range end
+BFGS:    1 02:36:12   -55203.363129        0.7063
+grep: Invalid range end
+BFGS:    1 02:36:29   -55203.457533        0.7304
+grep: Invalid range end
+BFGS:    2 02:39:12   -55204.176850        0.8904
+grep: Invalid range end
+BFGS:    2 02:39:42   -55202.350128        0.9562
+grep: Invalid range end
+BFGS:    2 02:39:55   -55203.721523        0.9051
+grep: Invalid range end
+BFGS:    2 02:40:01   -55203.626125        0.9967
+BFGS:    2 02:40:38   -55203.738594        0.9199
+      Step     Time          Energy         fmax
+BFGS:    0 02:42:47   -55203.038598        1.8711
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:43:36   -55203.937514        1.7519
+grep: Invalid range end
+      Step     Time          Energy         fmax
+BFGS:    0 02:43:37   -55203.517643        1.7837
+grep: Invalid range end
+BFGS:    1 02:46:22   -55203.453466        1.0413
+grep: Invalid range end
+BFGS:    1 02:47:15   -55204.311052        0.6908
+grep: Invalid range end
+BFGS:    1 02:47:40   -55203.905095        0.8052
+grep: Invalid range end
+BFGS:    2 02:49:59   -55203.737546        0.8760
+BFGS:    2 02:51:06   -55204.576414        0.9385
+BFGS:    2 02:51:18   -55204.188753        0.8352
+[2023-02-07 02:51:19,045 main.py->order_conformers():72]DEBUG: len(metal_optimized_conformers) = 32 (pruned before xtb stage)
+[2023-02-07 02:51:19,046 main.py->order_conformers():73]DEBUG: len(xtb_conformers) = 11 (pruned after xtb stage)
+[2023-02-07 02:51:19,046 main.py->order_conformers():74]DEBUG: len(final_conformers) = 7 (had <= 2 connectivity changes)
+[2023-02-07 02:51:19,046 main.py->order_conformers():78]DEBUG: len(self.conformers) = 50 (total conformers generated)
+[2023-02-07 02:51:19,455 main.py->gen_ligand_library_entry():281]DEBUG: Finished generating ligand library entry

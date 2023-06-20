@@ -5,7 +5,7 @@ README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 setuptools.setup(
     name="py-conformational-sampling",
-    version="0.1.1",
+    version="0.2.2",
     # description="",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -17,6 +17,7 @@ setuptools.setup(
     packages = setuptools.find_packages(where="src"),
     python_requires=">=3.8",
     install_requires=(
+        'pytest',
         'numpy',
         'pandas',
         'param',
@@ -24,9 +25,13 @@ setuptools.setup(
         'panel>=0.13.1',
         'nglview',
         'panel-chemistry',
-        'rdkit-pypi',
+        'rdkit',
+        'openbabel-wheel',
         'stk',
         'stko',
+        'ase',
+        'xtb',
+        'pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git',
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],

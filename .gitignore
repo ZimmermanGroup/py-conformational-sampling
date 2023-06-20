@@ -1,3 +1,7 @@
+#python venv environment
+.venv
+.venv39
+
 #python utility files
 __pycache__
 .ipynb_checkpoints
@@ -7,3 +11,8 @@ src/*.egg-info
 
 #vscode utility files
 .vscode
+
+#scratch files from the examples
+/examples/*/scratch/*
+/examples/*/conformers*
+/examples/*/output.txt
