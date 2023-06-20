@@ -58,7 +58,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
             return mol_confs
         
-        paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/ligand_library/').glob('*/conformers_3_xtb.xyz'))
+        paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/ligand_library/').glob('*/conformers_3_xtb.xyz'))
         mols = {path.parts[-2] : setup_mol(path) for path in paths}
         self.mols = mols
     
