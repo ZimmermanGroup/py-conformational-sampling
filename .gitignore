@@ -1,5 +1,6 @@
 #python venv environment
 .venv
+.venv39
 
 #python utility files
 __pycache__
