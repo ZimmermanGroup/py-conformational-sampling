@@ -1,6 +1,8 @@
 # %%
-# %reload_ext autoreload
-# %autoreload 2
+%reload_ext autoreload
+%autoreload 2
+from dataclasses import dataclass
+import re
 from IPython.display import display
 import numpy as np
 import pandas as pd
@@ -32,15 +34,27 @@ import openbabel as ob
 from openbabel import pybel as pb
 import nglview
 
+from conformational_sampling.analyze import ts
+
     
 # setup_mol()
+@dataclass
+class Conformer:
+    string_path: Path
+    
+    def __post_init__(self):
+        string_nodes = list(pb.readfile('xyz', str(self.string_path)))
+        self.string_nodes = [MolFromMolBlock(node.write('mol'), removeHs=False)
+                             for node in string_nodes] # convert to rdkit
+        self.string_energies = [MolToMolBlock(node).split()[0] for node in self.string_nodes]
+        self.ts_energy = max(self.string_energies)
+        return string_nodes
+        
+        self.ts_node_num
+        self.ts_energy
+        self.ts_rdkit_mol
 
 class ConformationalSamplingDashboard(param.Parameterized):
-    # mechanism = param.Selector(['Pericylic', 'Maccoll'])
-    # mechanism = param.ObjectSelector(default=LigninPericyclicCalculator,
-    #                                  objects=[LigninPericyclicCalculator, LigninMaccollCalculator])
-    # func_group_factories = {LigninPericyclicCalculator: LigninPericyclicFunctionalGroupFactory,
-    #                         LigninMaccollCalculator: LigninMaccollFunctionalGroupFactory}
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
 
@@ -53,14 +67,18 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('refresh', watch=True)
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
-        def setup_mol(path):
-            mol_confs = list(pb.readfile('xyz', str(path)))
-            mol_confs = [MolFromMolBlock(conf.write('mol'), removeHs=False) for conf in mol_confs]
-            return mol_confs
         
-        paths = tuple(Path('/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/ligand_library/').glob('*/conformers_3_xtb.xyz'))
-        mols = {path.parts[-2] : setup_mol(path) for path in paths}
-        self.mols = mols
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8/')
+        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_000.xyz'))
+        self.mol_confs = []
+            # get the conformer index for this string
+            int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
+            setup_mol(string_path)
+            for string_path in string_paths
+        
+        self.mols = {'ligand_l8': self.mol_confs} # molecule name -> conformer index -> rdkit Mol
+        
+        self
     
     @param.depends('setup_mols', watch=True)
     def dataframe(self):
@@ -68,16 +86,12 @@ class ConformationalSamplingDashboard(param.Parameterized):
             energies = [MolToMolBlock(conf).split()[0] for conf in mol_confs]
             energies = pd.Series(energies, name='energies (kcal/mol)')
             energies = pd.to_numeric(energies, errors='coerce')
-            energies -= energies.min()
             energies = energies.where(energies <= 100) * 627.5 #hartree -> kcal/mol
-            # indices = pd.Series(range(len(energies), name='conf_index'))
             return energies
         
         df = pd.concat({name : mol_dataframe(mol_confs) for (name, mol_confs) in self.mols.items()},
                        names=['mol_name', 'idx'])
         self.df = df.reset_index()
-    #     distances = self.mechanism().calculate_distances(self.mol)
-    #     self.df = distances.to_dataframe().reset_index().astype({FUNC_GROUP_ID_1: 'str'})
     
     @param.depends('dataframe')
     def scatter_plot(self):
@@ -92,25 +106,13 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.stream.update(index=[])
         self.stream.source = plot
         return plot
-    #     if self.mechanism == LigninMaccollCalculator:
-    #         points = self.df.hvplot.scatter(x='Lignin Maccoll mechanism distances', y='Energies', c='func_group_id_1')
-    #     elif self.mechanism == LigninPericyclicCalculator:
-    #         points = self.df.hvplot.scatter(x='Lignin retro-ene mechanism distances',
-    #                                         y='Inhibition distance differences')
-    #     return points
     
-    # param.depends('display_mol', 'scatter_plot', 'index_conf', 'disp_mechanism', 'mechanism')
+    
     param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf')
     def app(self):
         return pn.Row(pn.Column(self.param.refresh, self.scatter_plot), self.display_mol)
     
-    # @param.depends('mechanism', watch=True)
-    # def setup_stk_mol(self):
-    #     return init_stk_from_rdkit(
-    #         self.mol,
-    #         functional_groups=(self.func_group_factories[self.mechanism](),),
-    #     )
-        
+    
     @param.depends('stream.index', 'scatter_plot', watch=True)
     def display_mol(self):
         index = self.stream.index
@@ -120,9 +122,9 @@ class ConformationalSamplingDashboard(param.Parameterized):
         mol_name = self.df.iloc[index]['mol_name']
         conf_index = int(self.df.iloc[index]['idx'])
         pdb_block = MolToPDBBlock(self.mols[mol_name][conf_index])
-        # pdb_block = MolToPDBBlock(self.highlighted_mol(self.df.iloc[index][FUNC_GROUP_ID_1]), confId=conf_id)
         viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=800, sizing_mode="stretch_both")
         return viewer
+
 
     @param.depends('stream.index', watch=True)
     def index_conf(self):
@@ -130,27 +132,6 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # return index
         return f'{self.stream.index = }\n{repr(dashboard) = }'
     
-    # @param.depends('mechanism', watch=True)
-    # def disp_mechanism(self):
-    #     return f'{self.param.mechanism = }'
-
-    # def highlighted_mol(self, func_group_id):
-    #     mol = setup_mol()
-    #     for i, f_group in enumerate(self.setup_stk_mol().get_functional_groups()):
-    #         if self.mechanism == LigninMaccollCalculator:
-    #             atom_1 = mol.GetAtomWithIdx(f_group.H.get_id())
-    #             atom_2 = mol.GetAtomWithIdx(f_group.O.get_id())
-    #             if i == int(func_group_id):
-    #                 atom_1.SetAtomicNum(9)
-    #                 atom_2.SetAtomicNum(15)
-    #             else: # gently highlight other functional groups in the same conformer
-    #                 atom_1.SetAtomicNum(2)
-    #         elif self.mechanism == LigninPericyclicCalculator:
-    #             atom_1 = mol.GetAtomWithIdx(f_group.H_phenyl.get_id())
-    #             atom_2 = mol.GetAtomWithIdx(f_group.H_alkyl.get_id())
-    #             atom_1.SetAtomicNum(10)
-    #             atom_2.SetAtomicNum(10)
-    #     return mol
 
 dashboard = ConformationalSamplingDashboard()
 try: # reboot server if already running in interactive mode
