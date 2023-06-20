@@ -1,6 +1,7 @@
 import numpy as np
 import stk
-from conformational_sampling.main import pybel_mol_to_stk_mol, stk_mol_to_pybel_mol
+from conformational_sampling.utils import stk_mol_to_pybel_mol
+from conformational_sampling.utils import pybel_mol_to_stk_mol
 
 def test_imports():
     assert True
