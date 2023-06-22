@@ -5,6 +5,7 @@ import pytest
 import stk
 import stko
 from xtb.ase.calculator import XTB
+import os
 
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.config import Config
@@ -46,7 +47,7 @@ def test_gsm():
 
 
 def test_suzuki():
-    stk_ancillary_ligand = load_stk_mol(Path('tests/test_data/example2_L1.xyz'))
+    stk_ancillary_ligand = load_stk_mol(Path('tests/test_data/example2_L9.xyz'))
     stk_ligand_5a = load_stk_mol(Path('tests/test_data/example2_5a.xyz'))
     stk_ligand_6a = load_stk_mol(Path('tests/test_data/example2_6a.xyz'))
 
@@ -77,8 +78,26 @@ def test_suzuki():
     
     config = Config(
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        ase_calculator=XTB(),
+        #ase_calculator=XTB(),
+        max_dft_opt_steps=30,
+        # num_cpus=16,
+        dft_cpus_per_opt=20,
     )
+
+    from ase.calculators.qchem import QChem
+    os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
+    config.ase_calculator = QChem(
+        method='PBE',
+        # basis='6-31G',
+        #basis='STO-3G',
+        basis='LANL2DZ',
+        ecp='fit-LANL2DZ',
+        SCF_CONVERGENCE='5',
+        SCF_MAX_CYCLES='300',
+        SCF_ALGORITHM='DIIS',
+        nt=config.dft_cpus_per_opt,
+    )
+
     conformer_ensemble_optimizer = ConformerEnsembleOptimizer([stk_mol], config)
     optimized_stk_mol = conformer_ensemble_optimizer.optimize()[0]
 
@@ -89,7 +108,7 @@ def test_suzuki():
     # func_group = list(stk_ligand_5a.get_functional_groups())[0]
     # list(func_group.get_atom_ids())[0]
     # for atom_info in 
-    driving_coordinates = [['BREAK',1,56],['BREAK',1,80],['ADD',56,80]]
+    driving_coordinates = [('ADD',78,102),('BREAK',1,78),('BREAK',1,102)]
     stk_gsm(
         stk_mol=optimized_stk_mol,
         driving_coordinates=driving_coordinates,
@@ -109,3 +128,6 @@ def test_suzuki():
     # complex = bind_ligands(stk_metal('Pd'), stk_ancillary_ligand, stk_ligand_5a, stk_ligand_6a)
     # stk_list_to_xyz_file([complex], 'test_Pd_complex.xyz')
     assert True
+
+if __name__ == "__main__":
+    test_suzuki()

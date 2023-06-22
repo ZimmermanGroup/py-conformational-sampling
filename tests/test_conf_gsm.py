@@ -49,12 +49,12 @@ def conf_gsm():
 
     # py-conformational-sampling configuration object
     config = Config(
-        initial_conformers=30,
+        initial_conformers=50,
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
         #ase_calculator=XTB(),
         max_dft_opt_steps=10,
         num_cpus=28,
-        dft_cpus_per_opt=8,
+        dft_cpus_per_opt=4,
     )
 
     # qchem ase calculator setup
@@ -66,10 +66,11 @@ def conf_gsm():
         # basis='STO-3G',
         basis='LANL2DZ',
         ecp='fit-LANL2DZ',
-        SCF_CONVERGENCE='5',
+        SCF_CONVERGENCE='6',
         nt=config.dft_cpus_per_opt,
-        SCF_MAX_CYCLES='200',
-        SCF_ALGORITHM='DIIS',
+        SCF_MAX_CYCLES='500',
+        SCF_ALGORITHM='RCA_DIIS',
+        THRESH_RCA_SWITCH='4',
     )
 
     # generates conformers, performs multiple step optimization and uniqueness filtering
