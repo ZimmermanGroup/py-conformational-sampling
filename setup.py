@@ -22,7 +22,7 @@ setuptools.setup(
         'pandas',
         'param',
         'hvplot',
-        'panel>=0.13.1',
+        'panel<1.0',
         'nglview',
         'panel-chemistry',
         'rdkit',

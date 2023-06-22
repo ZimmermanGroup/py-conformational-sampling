@@ -10,12 +10,6 @@ import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
 
-import stk
-# from conformer_rl.analysis.lignin_contacts import CONF_ID, FUNC_GROUP_ID_1, setup_mol
-# from conformer_rl.analysis.lignin_pericyclic import \
-#     LigninPericyclicCalculator, LigninPericyclicFunctionalGroupFactory, \
-#     LigninMaccollCalculator, LigninMaccollFunctionalGroupFactory, init_stk_from_rdkit
-
 import param
 import hvplot.pandas # noqa
 import holoviews as hv
@@ -32,12 +26,12 @@ from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 import openbabel as ob
 from openbabel import pybel as pb
-import nglview
 
 from pygsm.utilities.units import KCAL_MOL_PER_AU
 from conformational_sampling.analyze import ts_node
 
     
+print('Starting!')
 # setup_mol()
 @dataclass
 class Conformer:
@@ -62,6 +56,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.setup_mols()
         self.dataframe()
         self.stream = Selection1D()
+        self.attribute_error = 0
     
     @param.depends('refresh', watch=True)
     def setup_mols(self):
@@ -90,6 +85,28 @@ class ConformationalSamplingDashboard(param.Parameterized):
                 })
         self.df = pd.DataFrame(conformer_rows)
     
+    
+    @param.depends('stream.index', watch=True)
+    def current_conformer(self):
+        index = self.stream.index
+        if not index:
+            index = [0]
+            return None
+        index = index[0]
+        mol_name = self.df.iloc[index]['mol_name']
+        conf_index = int(self.df.iloc[index]['conf_idx'])
+        return self.mols[mol_name][conf_index]
+    
+    @param.depends('current_conformer', watch=True)
+    def conf_dataframe(self):
+        conformer = self.current_conformer()
+        if not conformer:
+            return None
+        self.conf_df = pd.DataFrame(
+            {'node_num': i, 'energy (kcal/mol)': energy}
+            for i, energy in enumerate(conformer.string_energies)
+        )
+    
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
@@ -104,22 +121,33 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.stream.source = plot
         return plot
     
+    @param.depends('conf_dataframe', watch=True)
+    def string_plot(self):
+        try:
+            self.current_conformer()
+            self.conf_dataframe()
+            plot = self.conf_df.hvplot.scatter(
+                y='energy (kcal/mol)',
+                x='node_num',
+                c='blue'
+            ).opts()
+            return plot
+        except AttributeError as error:
+            self.attribute_error += 1
+            return f'Attribute Error {self.attribute_error}:\n{error}'
+
     
-    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf')
+    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot')
     def app(self):
-        return pn.Row(pn.Column(self.param.refresh, self.scatter_plot, self.index_conf), self.display_mol)
+        return pn.Row(pn.Column(self.param.refresh, self.scatter_plot, self.string_plot), self.display_mol)
     
     
-    @param.depends('stream.index', 'scatter_plot', watch=True)
+    @param.depends('current_conformer', 'scatter_plot', watch=True)
     def display_mol(self):
-        index = self.stream.index
-        if not index: # abort if nothing is selected
-            index = [0]
-            # return None
-        index = index[0]
-        mol_name = self.df.iloc[index]['mol_name']
-        conf_index = int(self.df.iloc[index]['conf_idx'])
-        pdb_block = MolToPDBBlock(self.mols[mol_name][conf_index].ts_rdkit_mol)
+        conformer = self.current_conformer()
+        if not conformer:
+            return None
+        pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
         viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=800, sizing_mode="stretch_both")
         return viewer
 
