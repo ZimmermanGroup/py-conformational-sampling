@@ -322,7 +322,10 @@ def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         nnodes=15,
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
+        ID=1,
     )
 
     de_gsm.go_gsm()
+
+    gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)
 
