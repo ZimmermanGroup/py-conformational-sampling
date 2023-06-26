@@ -19,7 +19,7 @@ def ts_node(en_list):
     res_list = list(combinations(en_list, 2))
 
     max_diff = 0.0
-    ts_node_energy = None
+    ts_node_energy = 0.0
     ts_barrier = 0.0
     for item in res_list:
         tmp = item[1] - item[0]

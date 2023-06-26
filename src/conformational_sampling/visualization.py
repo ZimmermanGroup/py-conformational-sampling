@@ -2,6 +2,7 @@
 %reload_ext autoreload
 %autoreload 2
 from dataclasses import dataclass
+import os
 import re
 from IPython.display import display
 import numpy as np
@@ -9,6 +10,7 @@ import pandas as pd
 
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
+from rdkit.Chem import rdMolTransforms
 
 import param
 import hvplot.pandas # noqa
@@ -21,6 +23,7 @@ from panel_chemistry.pane import \
 from panel_chemistry.pane.ngl_viewer import EXTENSIONS
 pn.extension('bokeh')
 pn.extension(comms='vscode')
+pn.extension('tabulator')
 pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
@@ -31,7 +34,6 @@ from pygsm.utilities.units import KCAL_MOL_PER_AU
 from conformational_sampling.analyze import ts_node
 
     
-print('Starting!')
 # setup_mol()
 @dataclass
 class Conformer:
@@ -43,9 +45,24 @@ class Conformer:
                              for node in string_nodes] # convert to rdkit
         self.string_energies = [float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
                                 for node in self.string_nodes]
-        max_diff, self.ts_energy, activation_barrier = ts_node(self.string_energies)
+        max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies)
         self.ts_node_num = self.string_energies.index(self.ts_energy)
         self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
+        
+        # compute properties of the transition state
+        self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
+            self.ts_rdkit_mol.GetConformer(), 74, 73, 97, 96
+        )
+        self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
+            # self.ts_rdkit_mol.GetConformer(), 47, 8, 74, 83
+            self.ts_rdkit_mol.GetConformer(), 47, 9, 73, 83
+        )
+        self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
+        # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
+        # if distal, the relationship is reversed
+        self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
+        self.syn_anti = 'syn' if -90 <= self.forming_bond_torsion <= 90 else 'anti'
+
 
 class ConformationalSamplingDashboard(param.Parameterized):
 
@@ -62,7 +79,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/')
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8')
         string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_000.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
@@ -81,9 +98,15 @@ class ConformationalSamplingDashboard(param.Parameterized):
                 conformer_rows.append({
                     'mol_name': mol_name,
                     'conf_idx': conf_idx,
-                    'ts energy (kcal/mol)': conformer.ts_energy,
+                    'activation energy (kcal/mol)': conformer.activation_energy,
+                    'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
+                    'pro_dis_torsion': conformer.pro_dis_torsion,
+                    'pro_dis': conformer.pro_dis,
+                    'exo_endo': conformer.endo_exo,
+                    'syn_anti': conformer.syn_anti,
                 })
         self.df = pd.DataFrame(conformer_rows)
+        return pn.widgets.Tabulator(self.df)
     
     
     @param.depends('stream.index', watch=True)
@@ -110,8 +133,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='ts energy (kcal/mol)', c='orange', title='Conformer Energies', height=800, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='ts energy (kcal/mol)', x='mol_name', c='blue').opts(jitter=0.5)
+        plot = df.hvplot.box(by='mol_name', y='activation energy (kcal/mol)', c='orange', title='Conformer Energies', height=800, width=400, legend=False) 
+        plot *= df.hvplot.scatter(y='activation energy (kcal/mol)', x='mol_name', c='blue', hover_cols='all').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
@@ -139,7 +162,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot')
     def app(self):
-        return pn.Row(pn.Column(self.param.refresh, self.scatter_plot, self.string_plot), self.display_mol)
+        return pn.Row(pn.Column(self.param.refresh, self.dataframe, self.scatter_plot, self.string_plot), self.display_mol)
     
     
     @param.depends('current_conformer', 'scatter_plot', watch=True)
@@ -164,5 +187,5 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=45350)
+bokeh_server = dashboard.app().show(port=40000+os.getuid())
 # dashboard.app()
