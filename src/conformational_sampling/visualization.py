@@ -48,6 +48,7 @@ class Conformer:
         max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies)
         self.ts_node_num = self.string_energies.index(self.ts_energy)
         self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
+        self.pdt_rdkit_mol = self.string_nodes[-1]
         
         # compute properties of the transition state
         self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
@@ -57,11 +58,17 @@ class Conformer:
             # self.ts_rdkit_mol.GetConformer(), 47, 8, 74, 83
             self.ts_rdkit_mol.GetConformer(), 47, 9, 73, 83
         )
+        #compute properties of the product 
+        self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
+            self.pdt_rdkit_mol.GetConformer(), 74, 73, 97, 96
+        )
+
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
         # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
         # if distal, the relationship is reversed
         self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
         self.syn_anti = 'syn' if -90 <= self.forming_bond_torsion <= 90 else 'anti'
+        self.pdt_stereo = 'R' if self.formed_bond_torsion <= 0 else 'S'
 
 
 class ConformationalSamplingDashboard(param.Parameterized):
@@ -100,10 +107,12 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'conf_idx': conf_idx,
                     'activation energy (kcal/mol)': conformer.activation_energy,
                     'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
+                    'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
                     'pro_dis_torsion': conformer.pro_dis_torsion,
                     'pro_dis': conformer.pro_dis,
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
+                    'pdt_stereo': conformer.pdt_stereo,
                 })
         self.df = pd.DataFrame(conformer_rows)
         return pn.widgets.Tabulator(self.df)
@@ -187,5 +196,7 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=40000+os.getuid())
+bokeh_server = dashboard.app().show(port=65450)
 # dashboard.app()
+
+# %%
