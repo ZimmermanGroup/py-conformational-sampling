@@ -55,7 +55,6 @@ class Conformer:
             self.ts_rdkit_mol.GetConformer(), 74, 73, 97, 96
         )
         self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
-            # self.ts_rdkit_mol.GetConformer(), 47, 8, 74, 83
             self.ts_rdkit_mol.GetConformer(), 47, 9, 73, 83
         )
         #compute properties of the product 
@@ -142,7 +141,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='activation energy (kcal/mol)', c='orange', title='Conformer Energies', height=800, width=400, legend=False) 
+        plot = df.hvplot.box(by='mol_name', y='activation energy (kcal/mol)', c='orange', title='Conformer Energies', height=500, width=400, legend=False) 
         plot *= df.hvplot.scatter(y='activation energy (kcal/mol)', x='mol_name', c='blue', hover_cols='all').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
@@ -171,7 +170,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot')
     def app(self):
-        return pn.Row(pn.Column(self.param.refresh, self.dataframe, self.scatter_plot, self.string_plot), self.display_mol)
+        return pn.Column(self.param.refresh, pn.Row(self.scatter_plot, self.display_mol), self.string_plot, self.dataframe)
     
     
     @param.depends('current_conformer', 'scatter_plot', watch=True)
@@ -180,7 +179,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         if not conformer:
             return None
         pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
-        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=800, sizing_mode="stretch_both")
+        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=500, sizing_mode="stretch_both")
         return viewer
 
 
@@ -196,7 +195,7 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=65450)
+bokeh_server = dashboard.app().show(port=65451)
 # dashboard.app()
 
 # %%
