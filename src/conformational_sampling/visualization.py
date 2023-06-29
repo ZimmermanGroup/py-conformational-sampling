@@ -43,7 +43,9 @@ class Conformer:
         string_nodes = list(pb.readfile('xyz', str(self.string_path)))
         self.string_nodes = [MolFromMolBlock(node.write('mol'), removeHs=False)
                              for node in string_nodes] # convert to rdkit
-        self.string_energies = [float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
+        raw_dft_energy_path = self.string_path.parent / 'scratch' / '000' / 'E_0.txt'
+        raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
+        self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
                                 for node in self.string_nodes]
         max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies)
         self.ts_node_num = self.string_energies.index(self.ts_energy)
@@ -85,8 +87,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8')
-        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_000.xyz'))
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
+        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
@@ -105,6 +107,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'mol_name': mol_name,
                     'conf_idx': conf_idx,
                     'activation energy (kcal/mol)': conformer.activation_energy,
+                    'absolute_reactant_energy (kcal/mol)': conformer.string_energies[0],
+                    'absolute_ts_energy (kcal/mol)': conformer.ts_energy,
                     'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
                     'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
                     'pro_dis_torsion': conformer.pro_dis_torsion,
@@ -114,6 +118,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'pdt_stereo': conformer.pdt_stereo,
                 })
         self.df = pd.DataFrame(conformer_rows)
+        self.df['relative_ts_energy (kcal/mol)'] = (self.df['absolute_ts_energy (kcal/mol)']
+                                                    - self.df['absolute_reactant_energy (kcal/mol)'].min())
         return pn.widgets.Tabulator(self.df)
     
     
@@ -137,12 +143,14 @@ class ConformationalSamplingDashboard(param.Parameterized):
             {'node_num': i, 'energy (kcal/mol)': energy}
             for i, energy in enumerate(conformer.string_energies)
         )
+        self.conf_df['relative_energy (kcal/mol)'] = (self.conf_df['energy (kcal/mol)']
+                                                      - conformer.string_energies[0])
     
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='activation energy (kcal/mol)', c='orange', title='Conformer Energies', height=500, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='activation energy (kcal/mol)', x='mol_name', c='blue', hover_cols='all').opts(jitter=0.5)
+        plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='orange', title='Conformer Energies', height=500, width=400, legend=False) 
+        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='blue', hover_cols='all').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
@@ -158,7 +166,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             self.current_conformer()
             self.conf_dataframe()
             plot = self.conf_df.hvplot.scatter(
-                y='energy (kcal/mol)',
+                y='relative_energy (kcal/mol)',
                 x='node_num',
                 c='blue'
             ).opts()
