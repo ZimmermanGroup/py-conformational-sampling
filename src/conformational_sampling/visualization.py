@@ -7,8 +7,8 @@ import re
 from IPython.display import display
 import numpy as np
 import pandas as pd
-
 from rdkit import Chem
+from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
 from rdkit.Chem import rdMolTransforms
 
@@ -81,6 +81,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.setup_mols()
         self.dataframe()
         self.stream = Selection1D()
+        self.stream_string = Selection1D()
         self.attribute_error = 0
     
     @param.depends('refresh', watch=True)
@@ -134,6 +135,18 @@ class ConformationalSamplingDashboard(param.Parameterized):
         conf_index = int(self.df.iloc[index]['conf_idx'])
         return self.mols[mol_name][conf_index]
     
+
+    @param.depends('stream_string.index', watch=True)
+    def current_string_mol(self) -> Mol:
+        index = self.stream_string.index
+        if not index:
+            index = [0]
+            return None
+        index = index[0]
+        conformer = self.current_conformer()
+        return conformer.string_nodes[index]
+    
+    
     @param.depends('current_conformer', watch=True)
     def conf_dataframe(self):
         conformer = self.current_conformer()
@@ -169,19 +182,40 @@ class ConformationalSamplingDashboard(param.Parameterized):
                 y='relative_energy (kcal/mol)',
                 x='node_num',
                 c='blue'
-            ).opts()
+            ).opts(
+                opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
+                            marker='circle', size=10, fontsize={'labels': 14}),                
+            )
+            self.stream_string.update(index=[])
+            self.stream_string.source = plot
             return plot
         except AttributeError as error:
             self.attribute_error += 1
             return f'Attribute Error {self.attribute_error}:\n{error}'
 
+
+    @param.depends('current_conformer', 'string_plot', 'current_string_mol', watch=True)
+    def display_string_mol(self):
+        mol = self.current_string_mol()
+        if not mol:
+            return None
+        
+        pdb_block = MolToPDBBlock(mol)
+        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=500, sizing_mode="stretch_both")
+        return viewer
+
     
-    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot')
+    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot', 'conf_dataframe', 'display_string_mol', 'stream_string.index')
     def app(self):
-        return pn.Column(self.param.refresh, pn.Row(self.scatter_plot, self.display_mol), self.string_plot, self.dataframe)
+        return pn.Column(
+            self.param.refresh,
+            pn.Row(self.scatter_plot, self.display_mol),
+            pn.Row(self.string_plot, self.display_string_mol),
+            self.dataframe
+        )
     
     
-    @param.depends('current_conformer', 'scatter_plot', watch=True)
+    @param.depends('current_conformer', 'scatter_plot', 'stream_string.index', watch=True)
     def display_mol(self):
         conformer = self.current_conformer()
         if not conformer:
@@ -203,7 +237,7 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=65451)
+bokeh_server = dashboard.app().show(port=65450)
 # dashboard.app()
 
 # %%
