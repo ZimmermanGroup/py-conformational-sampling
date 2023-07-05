@@ -1,21 +1,21 @@
 from pathlib import Path
 import sys
-import pygsm
-# workaround for issue with pygsm installation
-sys.path.append(str(Path(pygsm.__file__).parent))
+import pyGSM
+# workaround for issue with pyGSM installation
+sys.path.append(str(Path(pyGSM.__file__).parent))
 import ase.io
 import numpy as np
 from ase.calculators.morse import MorsePotential
 
-from pygsm.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Topology
-from pygsm.level_of_theories.ase import ASELoT
-from pygsm.optimizers import eigenvector_follow
-from pygsm.potential_energy_surfaces import PES
-from pygsm.utilities import elements, manage_xyz, nifty
-from pygsm.wrappers import Molecule
-from pygsm.growing_string_methods import SE_GSM
-from pygsm.wrappers.main import plot as gsm_plot
-from pygsm.wrappers.main import get_driving_coord_prim, Distance
+from pyGSM.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Distance, Topology
+from pyGSM.level_of_theories.ase import ASELoT
+from pyGSM.optimizers import eigenvector_follow
+from pyGSM.potential_energy_surfaces import PES
+from pyGSM.utilities import elements, manage_xyz, nifty
+from pyGSM.molecule import Molecule
+from pyGSM.growing_string_methods import SE_GSM
+from pyGSM.utilities.cli_utils import plot as gsm_plot
+from pyGSM.utilities.cli_utils import get_driving_coord_prim
 import stk
 
 from conformational_sampling.config import Config
