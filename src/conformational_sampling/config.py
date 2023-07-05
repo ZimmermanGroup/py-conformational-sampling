@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ase.calculators.calculator import Calculator
 
@@ -18,3 +19,4 @@ class Config:
     dft_cpus_per_opt: int = 1
     num_cpus: int = field(default_factory=utils.num_cpus)
     ase_calculator: Calculator = None
+    restart_gsm: Path = None
