@@ -162,8 +162,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='orange', title='Conformer Energies', height=500, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='blue', hover_cols='all').opts(jitter=0.5)
+        plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan', title='Conformer Energies', height=500, width=400, legend=False) 
+        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', hover_cols='all').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
@@ -237,7 +237,7 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=65450)
+bokeh_server = dashboard.app().show(port=65451)
 # dashboard.app()
 
 # %%
