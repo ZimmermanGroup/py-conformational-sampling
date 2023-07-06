@@ -181,7 +181,7 @@ def stk_gsm_command_line(stk_mol: stk.Molecule, driving_coordinates, config: Con
     ]
     main()
     
-def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
+def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     
     nifty.printcool(" Building the LOT")
     atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol)
@@ -306,17 +306,130 @@ def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     print(" SSM growth phase over")
     se_gsm.done_growing = True
 
-    product = se_gsm.nodes[se_gsm.nnodes-1]
+    # product = se_gsm.nodes[se_gsm.nnodes-1]
 
+    # nifty.printcool("OPTIMIZING PRODUCT GEOMETRY")
+    # optimizer.optimize(
+    #         molecule=product,
+    #         refE=reactant.energy,
+    #         opt_steps=50,
+    #         # path=path
+    #     )
+
+def stk_de_gsm(config: Config):
+
+    geoms = manage_xyz.read_xyzs('grown_string_000.xyz')
+    lot = ASELoT.from_options(config.ase_calculator, geom=geoms[0])
+
+    pes = PES.from_options(lot=lot, ad_idx=0, multiplicity=1)
+    
+    atom_symbols = manage_xyz.get_atoms(geoms[0])
+
+    ELEMENT_TABLE = elements.ElementData()
+    atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
+    xyz1 = manage_xyz.xyz_to_np(geoms[0])
+    xyz2 = manage_xyz.xyz_to_np(geoms[-1])
+
+    top1 = Topology.build_topology(
+        xyz1,
+        atoms,
+    )
+
+    # find union bonds
+    xyz2 = manage_xyz.xyz_to_np(geoms[-1])
+    top2 = Topology.build_topology(
+        xyz2,
+        atoms,
+    )
+
+    # Add bonds to top1 that are present in top2
+    # It's not clear if we should form the topology so the bonds
+    # are the same since this might affect the Primitives of the xyz1 (slightly)
+    # Later we stil need to form the union of bonds, angles and torsions
+    # However, I think this is important, the way its formulated, for identifiyin
+    # the number of fragments and blocks, which is used in hybrid TRIC.
+    for bond in top2.edges():
+        if bond in top1.edges:
+            pass
+        elif (bond[1], bond[0]) in top1.edges():
+            pass
+        else:
+            print(" Adding bond {} to top1".format(bond))
+            if bond[0] > bond[1]:
+                top1.add_edge(bond[0], bond[1])
+            else:
+                top1.add_edge(bond[1], bond[0])
+
+    addtr = True
+    connect = addcart = False
+    p1 = PrimitiveInternalCoordinates.from_options(
+        xyz=xyz1,
+        atoms=atoms,
+        connect=connect,
+        addtr=addtr,
+        addcart=addcart,
+        topology=top1,
+    )
+
+    p2 = PrimitiveInternalCoordinates.from_options(
+        xyz=xyz2,
+        atoms=atoms,
+        addtr=addtr,
+        addcart=addcart,
+        connect=connect,
+        topology=top1,  # Use the topology of 1 because we fixed it above
+    )
+
+    p1.add_union_primitives(p2)
+
+    coord_obj1 = DelocalizedInternalCoordinates.from_options(
+        xyz=xyz1,
+        atoms=atoms,
+        addtr=addtr,
+        addcart=addcart,
+        connect=connect,
+        primitives=p1,
+    )
+
+    # coord_obj2 = DelocalizedInternalCoordinates.from_options(
+    #     xyz=xyz2,
+    #     atoms=atoms,
+    #     addtr=addtr,
+    #     addcart=addcart,
+    #     connect=connect,
+    #     primitives=p2,
+    # )
+
+    reactant = Molecule.from_options(
+        geom=geoms[0],
+        PES=pes,
+        coord_obj=coord_obj1,
+        Form_Hessian=True,
+    )
+
+    product = Molecule.copy_from_options(
+        reactant,
+        xyz=xyz2,
+        new_node_id=len(geoms)-1,
+        copy_wavefunction=False,
+    )
+
+    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.0005, DMAX=0.5, abs_max_step=0.5,
+                                                conv_Ediff=0.1)
+
+    nifty.printcool("OPTIMIZING REACTANT GEOMETRY")
+    optimizer.optimize(
+            molecule=reactant,
+            refE=reactant.energy,
+            opt_steps=50,
+        )
+    
     nifty.printcool("OPTIMIZING PRODUCT GEOMETRY")
     optimizer.optimize(
             molecule=product,
             refE=reactant.energy,
             opt_steps=50,
-            # path=path
         )
-    
-    # separate the de-gsm run directories from se-gsm (hardcoded to 20 sub-directories)
 
     de_gsm_max_nodes = 20
     path = Path.cwd() / 'scratch/001'
@@ -325,7 +438,7 @@ def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     for item in range(de_gsm_max_nodes):
         path = Path.cwd() / f'scratch/001/{item}'
         path.mkdir(exist_ok=True)
-
+    
     de_gsm = DE_GSM.from_options(
         reactant=reactant,
         product=product,

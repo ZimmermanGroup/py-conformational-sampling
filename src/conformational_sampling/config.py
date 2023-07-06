@@ -7,7 +7,7 @@ from conformational_sampling import utils
 
 @dataclass
 class Config:
-    xtb_path: str
+    xtb_path: str = '/export/apps/CentOS7/xtb/xtb/bin/xtb'
     initial_conformers: int = 100
     # initial_rms_threshold: float = 0.6 # NOT NEEDED IN OPENBABEL IMPLEMENTATION
     max_connectivity_changes: int = 2
