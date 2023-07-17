@@ -32,6 +32,7 @@ from openbabel import pybel as pb
 
 from pygsm.utilities.units import KCAL_MOL_PER_AU
 from conformational_sampling.analyze import ts_node
+from conformational_sampling.utils import free_energy_diff
 
     
 # setup_mol()
@@ -88,7 +89,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
+        # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_dft')
         string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
@@ -205,12 +207,13 @@ class ConformationalSamplingDashboard(param.Parameterized):
         return viewer
 
     
-    param.depends('display_mol', 'dataframe', 'scatter_plot', 'index_conf', 'string_plot', 'conf_dataframe', 'display_string_mol', 'stream_string.index')
+    param.depends('display_mol', 'dataframe', 'scatter_plot', 'debug_data', 'string_plot', 'conf_dataframe', 'display_string_mol', 'stream_string.index')
     def app(self):
         return pn.Column(
             self.param.refresh,
             pn.Row(self.scatter_plot, self.display_mol),
             pn.Row(self.string_plot, self.display_string_mol),
+            self.debug_data,
             self.dataframe
         )
     
@@ -226,10 +229,16 @@ class ConformationalSamplingDashboard(param.Parameterized):
 
 
     @param.depends('stream.index', watch=True)
-    def index_conf(self):
+    def debug_data(self):
         # index = self.stream.index
         # return index
-        return f'{self.stream.index = }\n{repr(dashboard) = }'
+        return (f'{self.stream.index = }\n{repr(dashboard) = }\n'
+                + f'{self.free_energy_R_minus_S() = }')
+
+
+    def free_energy_R_minus_S(self):
+        group_by = self.df.groupby('pdt_stereo')['relative_ts_energy (kcal/mol)'].apply(list)
+        return free_energy_diff(group_by['S'], group_by['R'], temperature=358.15)
     
 
 dashboard = ConformationalSamplingDashboard()
@@ -238,6 +247,7 @@ try: # reboot server if already running in interactive mode
 except (NameError, AssertionError):
     pass
 bokeh_server = dashboard.app().show(port=65451)
+
 # dashboard.app()
 
 # %%
