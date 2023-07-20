@@ -1,7 +1,7 @@
 # py-conformational-sampling
 py-conformational-sampling is an experimental python library for sampling conformers of a ligand and binding it to a metal.
 
-![Conformational sampling](https://user-images.githubusercontent.com/5794446/184696183-d74131bb-960a-4632-805c-12e6ae92f536.png)
+![Conformational sampling](https://github.com/ZimmermanGroup/py-conformational-sampling/assets/5794446/bf1f4371-410b-4225-bce9-567373ed1d4b)
 
 The user provides a bidentate ancillary ligand structure file which this library reads and stores as an [stk (supramolecular toolkit) object](https://stk.readthedocs.io/en/stable/stk.molecular.molecules.building_block.html). The user also provides a description of binding atoms. The library generates an ensemble of conformers for the ligand, binds each to a Pd(CH3)2 metal template, and performs an optimization and filtering funnel to refine the conformer ensemble.
 
