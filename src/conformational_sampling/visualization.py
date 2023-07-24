@@ -55,14 +55,20 @@ class Conformer:
         
         # compute properties of the transition state
         self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(), 74, 73, 97, 96
+            # self.ts_rdkit_mol.GetConformer(), 74, 73, 97, 96          # For L8 ligand 
+            # self.ts_rdkit_mol.GetConformer(), 56, 55, 79, 78          # For L1 ligand
+            self.ts_rdkit_mol.GetConformer(), 36, 35, 59, 58          # For achiral ligand  
         )
         self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(), 47, 9, 73, 83
+            # self.ts_rdkit_mol.GetConformer(), 47, 9, 73, 83           # For L8 ligand
+            # self.ts_rdkit_mol.GetConformer(), 21, 11, 55, 65          # For L1 ligand
+            self.ts_rdkit_mol.GetConformer(), 21, 11, 35, 45          # For achiral ligand
         )
         #compute properties of the product 
         self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
-            self.pdt_rdkit_mol.GetConformer(), 74, 73, 97, 96
+            # self.pdt_rdkit_mol.GetConformer(), 74, 73, 97, 96         # For L8 ligand
+            # self.pdt_rdkit_mol.GetConformer(), 56, 55, 79, 78         # For L1 ligand
+            self.pdt_rdkit_mol.GetConformer(), 36, 35, 59, 58         # For achiral ligand
         )
 
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
@@ -90,7 +96,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # extract the conformers for a molecule from an xyz file
         
         # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_dft')
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm')
         string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
