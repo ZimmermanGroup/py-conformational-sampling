@@ -96,7 +96,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # extract the conformers for a molecule from an xyz file
         
         # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm')
+        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
         string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
@@ -171,7 +171,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def scatter_plot(self):
         df = self.df
         plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan', title='Conformer Energies', height=500, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', hover_cols='all').opts(jitter=0.5)
+        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', ylim=(0,100), hover_cols='all').opts(jitter=0.5)
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
@@ -252,7 +252,7 @@ try: # reboot server if already running in interactive mode
     bokeh_server.stop()
 except (NameError, AssertionError):
     pass
-bokeh_server = dashboard.app().show(port=65451)
+bokeh_server = dashboard.app().show()
 
 # dashboard.app()
 
