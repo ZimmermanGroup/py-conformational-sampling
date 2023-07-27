@@ -234,7 +234,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         return viewer
 
 
-    @param.depends('stream.index', watch=True)
+    @param.depends('refresh', 'stream.index', watch=True)
     def debug_data(self):
         # index = self.stream.index
         # return index
