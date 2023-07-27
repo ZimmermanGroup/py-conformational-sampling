@@ -1,24 +1,23 @@
 from pathlib import Path
 import sys
-import pygsm
+import pyGSM
 
 from conformational_sampling.main import load_stk_mol_list
-# workaround for issue with pygsm installation
-sys.path.append(str(Path(pygsm.__file__).parent))
+# workaround for issue with pyGSM installation
+sys.path.append(str(Path(pyGSM.__file__).parent))
 import ase.io
 import numpy as np
 from ase.calculators.morse import MorsePotential
 
-from pygsm.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Topology
-from pygsm.level_of_theories.ase import ASELoT
-from pygsm.optimizers import eigenvector_follow
-from pygsm.potential_energy_surfaces import PES
-from pygsm.utilities import elements, manage_xyz, nifty
-from pygsm.wrappers import Molecule
-from pygsm.wrappers.main import main
-from pygsm.growing_string_methods import SE_GSM, DE_GSM
-from pygsm.wrappers.main import plot as gsm_plot
-from pygsm.wrappers.main import get_driving_coord_prim, Distance
+from pyGSM.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Distance, Topology
+from pyGSM.level_of_theories.ase import ASELoT
+from pyGSM.optimizers import eigenvector_follow
+from pyGSM.potential_energy_surfaces import PES
+from pyGSM.utilities import elements, manage_xyz, nifty
+from pyGSM.molecule import Molecule
+from pyGSM.growing_string_methods import SE_GSM, DE_GSM
+from pyGSM.utilities.cli_utils import plot as gsm_plot
+from pyGSM.utilities.cli_utils import get_driving_coord_prim
 import stk
 
 from conformational_sampling.config import Config
@@ -179,7 +178,11 @@ def stk_gsm_command_line(stk_mol: stk.Molecule, driving_coordinates, config: Con
         "-num_nodes", "15",
         "-isomers", "isomers0001.txt",
     ]
-    main()
+    # main()
+    raise NotImplementedError(
+        'the way to access the pyGSM command line functionality from python has changed'
+    )
+    
     
 def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     
