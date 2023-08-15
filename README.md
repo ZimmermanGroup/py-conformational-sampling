@@ -1,4 +1,7 @@
 # py-conformational-sampling
+
+Note for ACS poster viewers: GSM and visualization work are still being developed in branches (https://github.com/ZimmermanGroup/py-conformational-sampling/tree/joshkamm/issue45 and https://github.com/ZimmermanGroup/py-conformational-sampling/tree/joshkamm/issue21)
+
 py-conformational-sampling is an experimental python library for sampling conformers of a ligand and binding it to a metal.
 
 ![Conformational sampling](https://user-images.githubusercontent.com/5794446/184696183-d74131bb-960a-4632-805c-12e6ae92f536.png)
