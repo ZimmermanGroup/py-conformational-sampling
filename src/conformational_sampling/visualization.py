@@ -31,7 +31,7 @@ import openbabel as ob
 from openbabel import pybel as pb
 
 from pygsm.utilities.units import KCAL_MOL_PER_AU
-from conformational_sampling.analyze import ts_node
+from conformational_sampling.analyze import ts_node, truncate_string_at_bond_formation
 from conformational_sampling.utils import free_energy_diff
 
     
@@ -48,7 +48,10 @@ class Conformer:
         raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
         self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
                                 for node in self.string_nodes]
-        max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies)
+        self.truncated_string = truncate_string_at_bond_formation(self.string_nodes, 35, 59) # For achiral ligand
+        if not self.truncated_string:
+            return
+        max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies[:len(self.truncated_string)])
         self.ts_node_num = self.string_energies.index(self.ts_energy)
         self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
         self.pdt_rdkit_mol = self.string_nodes[-1]
@@ -101,8 +104,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.mol_confs = {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
-            Conformer(string_path)
+            mol_conf
             for string_path in string_paths
+            # remove any reactant structures that have already optimized to the product
+            if (mol_conf := Conformer(string_path)).truncated_string # ignore conf if reactant optimized to product
         }
         
         self.mols = {'ligand_l8': self.mol_confs} # molecule name -> conformer index -> Conformer
