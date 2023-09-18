@@ -135,6 +135,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             # remove any reactant structures that have already optimized to the product
             if (mol_conf := Conformer(string_path)).truncated_string # ignore conf if reactant optimized to product
         }
+        self.mol_path = mol_path
         
         self.mols = {'ligand_l8': self.mol_confs} # molecule name -> conformer index -> Conformer
         
@@ -160,6 +161,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.df = pd.DataFrame(conformer_rows)
         self.df['relative_ts_energy (kcal/mol)'] = (self.df['absolute_ts_energy (kcal/mol)']
                                                     - self.df['absolute_reactant_energy (kcal/mol)'].min())
+        self.df.to_csv(self.mol_path / 'df.csv')
         return pn.widgets.Tabulator(self.df)
     
     
