@@ -57,10 +57,23 @@ class Conformer:
         string_nodes = list(pb.readfile('xyz', str(self.string_path)))
         self.string_nodes = [MolFromMolBlock(node.write('mol'), removeHs=False)
                              for node in string_nodes] # convert to rdkit
-        raw_dft_energy_path = self.string_path.parent / 'scratch' / '000' / 'E_0.txt'
-        raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
-        self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
+        
+        # previous way of getting reactant energy
+        # raw_dft_energy_path = self.string_path.parent / 'scratch' / '000' / 'E_0.txt'
+        # raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
+        # self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
+        #                         for node in self.string_nodes]
+        
+        # getting reactant energy
+        raw_dft_energy_path = self.string_path.parent / 'de_dft_output.txt'
+        with open(raw_dft_energy_path) as file:
+            while line := file.readline():
+                if line.startswith(' Energy of the end points are'):
+                    # extracting energy from output file formatting
+                    raw_dft_energy_kcal_mol = float(line.split()[-2][:-1])
+        self.string_energies = [raw_dft_energy_kcal_mol + float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
                                 for node in self.string_nodes]
+        
         self.truncated_string = truncate_string_at_bond_formation(
             self.string_nodes,
             *system.reductive_elim_torsion[1:3]
@@ -113,7 +126,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         
         # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
         mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
-        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
+        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_002.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
