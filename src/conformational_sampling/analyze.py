@@ -31,7 +31,7 @@ def ts_node(en_list):
     return (max_diff, ts_node_energy, ts_barrier)
 
 
-def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_1: int, atom_2: int, thresh=1.8):
+def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_1: int, atom_2: int, thresh=1.7):
     for idx, node in enumerate(string_nodes):
         dist_matrix = rdmolops.Get3DDistanceMatrix(node)
         if dist_matrix[atom_1][atom_2] < thresh:
