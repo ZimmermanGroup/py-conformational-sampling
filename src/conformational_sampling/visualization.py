@@ -65,7 +65,7 @@ class Conformer:
         #                         for node in self.string_nodes]
         
         # getting reactant energy
-        raw_dft_energy_path = self.string_path.parent / 'de_dft_output.txt'
+        raw_dft_energy_path = self.string_path.parent / 'de_output.txt'
         with open(raw_dft_energy_path) as file:
             while line := file.readline():
                 if line.startswith(' Energy of the end points are'):
@@ -126,7 +126,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         
         # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
         mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
-        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_002.xyz'))
+        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         self.mol_confs = {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
@@ -161,7 +161,9 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.df = pd.DataFrame(conformer_rows)
         self.df['relative_ts_energy (kcal/mol)'] = (self.df['absolute_ts_energy (kcal/mol)']
                                                     - self.df['absolute_reactant_energy (kcal/mol)'].min())
-        self.df.to_csv(self.mol_path / 'df.csv')
+        
+        # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
+        # self.to_csv(Path.home() / 'df.csv')
         return pn.widgets.Tabulator(self.df)
     
     
