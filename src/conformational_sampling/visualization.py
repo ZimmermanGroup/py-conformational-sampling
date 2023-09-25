@@ -46,8 +46,8 @@ systems = {
     'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
     'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
 }
-
-system = systems['ligand_achiral']
+ligand_name = 'ligand_achiral'
+system = systems[ligand_name]
 
 @dataclass
 class Conformer:
@@ -124,10 +124,21 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        # mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
-        mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
-        string_paths = tuple(mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
-        self.mol_confs = {
+        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
+        self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
+        xtb_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
+        dft_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_002.xyz'))
+        xtb_mol_confs = self.get_mol_confs(xtb_string_paths)
+        dft_mol_confs = self.get_mol_confs(dft_string_paths)
+        
+        self.mols = { # molecule name -> conformer index -> Conformer
+            f'{ligand_name}_xtb': xtb_mol_confs,
+            f'{ligand_name}_dft': dft_mol_confs
+        }
+
+    
+    def get_mol_confs(self, string_paths):
+        return {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
             mol_conf
@@ -135,9 +146,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             # remove any reactant structures that have already optimized to the product
             if (mol_conf := Conformer(string_path)).truncated_string # ignore conf if reactant optimized to product
         }
-        self.mol_path = mol_path
         
-        self.mols = {'ligand_l8': self.mol_confs} # molecule name -> conformer index -> Conformer
         
     @param.depends('setup_mols', watch=True)
     def dataframe(self):
