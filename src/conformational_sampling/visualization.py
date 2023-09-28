@@ -10,6 +10,7 @@ import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
+from rdkit.Chem.rdMolAlign import AlignMol
 from rdkit.Chem import rdMolTransforms
 
 import param
@@ -135,6 +136,48 @@ class ConformationalSamplingDashboard(param.Parameterized):
             f'{ligand_name}_xtb': xtb_mol_confs,
             f'{ligand_name}_dft': dft_mol_confs
         }
+        
+        # try out getting distances between xtb and dft conformers
+        conformer_rows = []
+        for conf_idx, dft_conf in dft_mol_confs.items():
+            xtb_conf = xtb_mol_confs[conf_idx]
+            id_list = [[i,i] for i in range(dft_conf.ts_rdkit_mol.GetNumAtoms())]
+            rms = AlignMol(
+                dft_conf.ts_rdkit_mol,
+                xtb_conf.ts_rdkit_mol,
+                atomMap=id_list
+            )
+            print(rms)
+            
+            conformer_rows.append({
+                'conf_idx': conf_idx,
+                # 'dft activation energy (kcal/mol)': dft_conf.activation_energy,
+                # 'xtb activation energy (kcal/mol)': xtb_conf.activation_energy,
+                'absolute_reactant_xtb_energy (kcal/mol)': xtb_conf.string_energies[0],
+                'absolute_ts_xtb_energy (kcal/mol)': xtb_conf.ts_energy,
+                'absolute_reactant_dft_energy (kcal/mol)': dft_conf.string_energies[0],
+                'absolute_ts_dft_energy (kcal/mol)': dft_conf.ts_energy,
+                'rmsd': rms,
+            })
+
+        df = pd.DataFrame(conformer_rows)
+        df['relative_ts_xtb_energy (kcal/mol)'] = (df['absolute_ts_xtb_energy (kcal/mol)']
+                                                    - df['absolute_reactant_xtb_energy (kcal/mol)'].min())
+        df['relative_ts_dft_energy (kcal/mol)'] = (df['absolute_ts_dft_energy (kcal/mol)']
+                                                    - df['absolute_reactant_dft_energy (kcal/mol)'].min())
+        df['relative_ts_energy_diff (kcal/mol)'] = (df['relative_ts_dft_energy (kcal/mol)']
+                                                       - df['relative_ts_xtb_energy (kcal/mol)'])
+      
+        plot = df.hvplot.scatter(y='rmsd', x='relative_ts_energy_diff (kcal/mol)', hover_cols='all')
+        # plot.opts(
+        #     opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
+        #                 # width=600, height=600,
+        #                 marker='triangle', size=10, fontsize={'labels': 14}),
+        # )
+        self.rmsd_plot = plot
+
+        print(df)
+           
 
     
     def get_mol_confs(self, string_paths):
@@ -216,6 +259,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         df = self.df
         plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan', title='Conformer Energies', height=500, width=400, legend=False) 
         plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', ylim=(0,100), hover_cols='all').opts(jitter=0.5)
+        plot += self.rmsd_plot
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
