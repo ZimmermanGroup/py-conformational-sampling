@@ -1,7 +1,6 @@
 # %%
 %reload_ext autoreload
 %autoreload 2
-from dataclasses import dataclass
 import os
 import re
 from IPython.display import display
@@ -11,11 +10,9 @@ from rdkit import Chem
 from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
 from rdkit.Chem.rdMolAlign import AlignMol
-from rdkit.Chem import rdMolTransforms
 
 import param
 import hvplot.pandas # noqa
-import holoviews as hv
 from holoviews import opts
 from holoviews.streams import Selection1D
 import panel as pn
@@ -27,88 +24,12 @@ pn.extension(comms='vscode')
 pn.extension('tabulator')
 pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 import openbabel as ob
-from openbabel import pybel as pb
 
-from pygsm.utilities.units import KCAL_MOL_PER_AU
-from conformational_sampling.analyze import ts_node, truncate_string_at_bond_formation
+from conformational_sampling.analyze import Conformer, ligand_name
 from conformational_sampling.utils import free_energy_diff
 
     
-# setup_mol()
-@dataclass
-class System:
-    reductive_elim_torsion: tuple
-    pro_dis_torsion: tuple
-
-systems = {
-    'ligand_l1': System(reductive_elim_torsion=(56, 55, 79, 78), pro_dis_torsion=(21, 11, 55, 65)),
-    'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
-    'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
-}
-ligand_name = 'ligand_achiral'
-system = systems[ligand_name]
-
-@dataclass
-class Conformer:
-    string_path: Path
-    
-    def __post_init__(self):
-        string_nodes = list(pb.readfile('xyz', str(self.string_path)))
-        self.string_nodes = [MolFromMolBlock(node.write('mol'), removeHs=False)
-                             for node in string_nodes] # convert to rdkit
-        
-        # previous way of getting reactant energy
-        # raw_dft_energy_path = self.string_path.parent / 'scratch' / '000' / 'E_0.txt'
-        # raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
-        # self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
-        #                         for node in self.string_nodes]
-        
-        # getting reactant energy
-        raw_dft_energy_path = self.string_path.parent / 'de_output.txt'
-        with open(raw_dft_energy_path) as file:
-            while line := file.readline():
-                if line.startswith(' Energy of the end points are'):
-                    # extracting energy from output file formatting
-                    raw_dft_energy_kcal_mol = float(line.split()[-2][:-1])
-        self.string_energies = [raw_dft_energy_kcal_mol + float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
-                                for node in self.string_nodes]
-        
-        self.truncated_string = truncate_string_at_bond_formation(
-            self.string_nodes,
-            *system.reductive_elim_torsion[1:3] # middle atoms of torsion
-        )
-        if not self.truncated_string:
-            return
-        max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies[:len(self.truncated_string)])
-        self.ts_node_num = self.string_energies.index(self.ts_energy)
-        self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
-        self.pdt_rdkit_mol = self.string_nodes[-1]
-        
-        # compute properties of the transition state
-        self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
-            *system.reductive_elim_torsion
-        )
-        self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
-            *system.pro_dis_torsion
-        )
-        #compute properties of the product 
-        self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
-            self.pdt_rdkit_mol.GetConformer(),
-            *system.reductive_elim_torsion
-        )
-
-        self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
-        # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
-        # if distal, the relationship is reversed
-        self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
-        self.syn_anti = 'syn' if -90 <= self.forming_bond_torsion <= 90 else 'anti'
-        self.pdt_stereo = 'R' if self.formed_bond_torsion <= 0 else 'S'
-
-
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
