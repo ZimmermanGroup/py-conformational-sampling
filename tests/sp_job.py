@@ -21,7 +21,11 @@ from pygsm.utilities import elements, manage_xyz, nifty
 from pygsm.wrappers import Molecule
 from conformational_sampling.analyze import ts_node, truncate_string_at_bond_formation
 
+from openbabel import pybel as pb
 from rdkit.Chem import rdmolfiles
+
+from conformational_sampling.analyze import Conformer
+from conformational_sampling.utils import rdkit_mol_to_stk_mol, stk_mol_to_ase_atoms
 
 job_index = int(os.environ['SLURM_ARRAY_TASK_ID'])
 
@@ -60,9 +64,35 @@ config3.ase_calculator = QChem(
 )
 
 def sp_from_xyz():
+    
+    # read the xTB string from the pystring directory
+    
+    # string_nodes = list(pb.readfile('xyz', 'opt_converged_001.xyz'))
+    # string_nodes = [rdmolfiles.MolFromMolBlock(node.write('mol'), removeHs=False)
+    #                 for node in string_nodes] # convert to rdkit
+    # truncated_string = truncate_string_at_bond_formation(
+    #     string_nodes,
+    #     *system.reductive_elim_torsion[1:3] # middle atoms of torsion
+    # )
+    # max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies[:len(self.truncated_string)])
+    # self.ts_node_num = self.string_energies.index(self.ts_energy)
+    # self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
 
-    geoms = manage_xyz.read_xyzs('opt_converged_001.xyz')
-    energies = []
+    # find the transition state ignoring post reaction rearrangements
+    ts_rdkit_mol = Conformer(Path.cwd() / 'opt_converged_001.xyz').ts_rdkit_mol
+    ts_ase_atoms = stk_mol_to_ase_atoms(rdkit_mol_to_stk_mol(ts_rdkit_mol))
+    
+    # use ASE to compute a DFT single point energy of the transition state
+    ts_ase_atoms.calc = config3.ase_calculator
+    energy = ts_ase_atoms.get_potential_energy()
+    
+    # write the energy to a file in the pystring directory
+    with open('dft_energy_xtb_ts.txt', 'w') as file:
+        file.write(str(energy))
+    
+    
+    # geoms = manage_xyz.read_xyzs('opt_converged_001.xyz')
+    # energies = []
 
     # class System:
     #     reductive_elim_torsion: tuple
@@ -85,102 +115,102 @@ def sp_from_xyz():
     #     rdmolfiles.MolToXYZFile(mol, 'opt_converged_001_mod.xyz')
 
 
-    with open('opt_converged_001.xyz') as f:
-        lines = f.readlines()
-        natoms = int(lines[0])
-        total_lines = len(lines)
-        num_geoms = total_lines/(natoms+2)
+    # with open('opt_converged_001.xyz') as f:
+    #     lines = f.readlines()
+    #     natoms = int(lines[0])
+    #     total_lines = len(lines)
+    #     num_geoms = total_lines/(natoms+2)
 
-        se = 1
-        for i in range(int(num_geoms)):
-            energies.append(float(lines[se]))
-            se = se + natoms + 2
+    #     se = 1
+    #     for i in range(int(num_geoms)):
+    #         energies.append(float(lines[se]))
+    #         se = se + natoms + 2
         
-    ts_node_energy = ts_node(energies)[1]
-    ts_node_geom = geoms[energies.index(ts_node_energy)]
-    reactant_geom = geoms[0]
+    # ts_node_energy = ts_node(energies)[1]
+    # ts_node_geom = geoms[energies.index(ts_node_energy)]
+    # reactant_geom = geoms[0]
 
-    lot = ASELoT.from_options(config3.ase_calculator, geom=reactant_geom)
+    # lot = ASELoT.from_options(config3.ase_calculator, geom=reactant_geom)
 
-    pes = PES.from_options(lot=lot, ad_idx=0, multiplicity=1)
+    # pes = PES.from_options(lot=lot, ad_idx=0, multiplicity=1)
         
-    atom_symbols = manage_xyz.get_atoms(reactant_geom)
+    # atom_symbols = manage_xyz.get_atoms(reactant_geom)
 
-    ELEMENT_TABLE = elements.ElementData()
-    atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
-    xyz1 = manage_xyz.xyz_to_np(reactant_geom)
-    xyz2 = manage_xyz.xyz_to_np(ts_node_geom)
+    # ELEMENT_TABLE = elements.ElementData()
+    # atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
+    # xyz1 = manage_xyz.xyz_to_np(reactant_geom)
+    # xyz2 = manage_xyz.xyz_to_np(ts_node_geom)
 
-    top1 = Topology.build_topology(
-        xyz1,
-        atoms,
-    )
+    # top1 = Topology.build_topology(
+    #     xyz1,
+    #     atoms,
+    # )
 
-    top2 = Topology.build_topology(
-            xyz2,
-            atoms,
-        )
+    # top2 = Topology.build_topology(
+    #         xyz2,
+    #         atoms,
+    #     )
 
-    for bond in top2.edges():
-            if bond in top1.edges:
-                pass
-            elif (bond[1], bond[0]) in top1.edges():
-                pass
-            else:
-                print(" Adding bond {} to top1".format(bond))
-                if bond[0] > bond[1]:
-                    top1.add_edge(bond[0], bond[1])
-                else:
-                    top1.add_edge(bond[1], bond[0])
+    # for bond in top2.edges():
+    #         if bond in top1.edges:
+    #             pass
+    #         elif (bond[1], bond[0]) in top1.edges():
+    #             pass
+    #         else:
+    #             print(" Adding bond {} to top1".format(bond))
+    #             if bond[0] > bond[1]:
+    #                 top1.add_edge(bond[0], bond[1])
+    #             else:
+    #                 top1.add_edge(bond[1], bond[0])
 
-    addtr = True
-    connect = addcart = False
-    p1 = PrimitiveInternalCoordinates.from_options(
-        xyz=xyz1,
-        atoms=atoms,
-        connect=connect,
-        addtr=addtr,
-        addcart=addcart,
-        topology=top1,
-    )
+    # addtr = True
+    # connect = addcart = False
+    # p1 = PrimitiveInternalCoordinates.from_options(
+    #     xyz=xyz1,
+    #     atoms=atoms,
+    #     connect=connect,
+    #     addtr=addtr,
+    #     addcart=addcart,
+    #     topology=top1,
+    # )
 
-    p2 = PrimitiveInternalCoordinates.from_options(
-        xyz=xyz2,
-        atoms=atoms,
-        addtr=addtr,
-        addcart=addcart,
-        connect=connect,
-        topology=top1,  # Use the topology of 1 because we fixed it above
-    )
+    # p2 = PrimitiveInternalCoordinates.from_options(
+    #     xyz=xyz2,
+    #     atoms=atoms,
+    #     addtr=addtr,
+    #     addcart=addcart,
+    #     connect=connect,
+    #     topology=top1,  # Use the topology of 1 because we fixed it above
+    # )
 
-    p1.add_union_primitives(p2)
+    # p1.add_union_primitives(p2)
 
-    coord_obj1 = DelocalizedInternalCoordinates.from_options(
-        xyz=xyz1,
-        atoms=atoms,
-        addtr=addtr,
-        addcart=addcart,
-        connect=connect,
-        primitives=p1,
-    )
+    # coord_obj1 = DelocalizedInternalCoordinates.from_options(
+    #     xyz=xyz1,
+    #     atoms=atoms,
+    #     addtr=addtr,
+    #     addcart=addcart,
+    #     connect=connect,
+    #     primitives=p1,
+    # )
 
-    reactant = Molecule.from_options(
-            geom=reactant_geom,
-            PES=pes,
-            coord_obj=coord_obj1,
-            Form_Hessian=True,
-        )
+    # reactant = Molecule.from_options(
+    #         geom=reactant_geom,
+    #         PES=pes,
+    #         coord_obj=coord_obj1,
+    #         Form_Hessian=True,
+    #     )
 
-    transition_state =  Molecule.from_options(
-            geom=ts_node_geom,
-            PES=pes,
-            coord_obj=coord_obj1,
-            Form_Hessian=True,
-        )
+    # transition_state =  Molecule.from_options(
+    #         geom=ts_node_geom,
+    #         PES=pes,
+    #         coord_obj=coord_obj1,
+    #         Form_Hessian=True,
+    #     )
 
-    nifty.printcool("Reactant singlePoint energy is {:5.4f} kcal/mol".format(reactant.energy))
+    # nifty.printcool("Reactant singlePoint energy is {:5.4f} kcal/mol".format(reactant.energy))
 
-    nifty.printcool("TS singlePoint energy is {:5.4f} kcal/mol".format(transition_state.energy))
+    # nifty.printcool("TS singlePoint energy is {:5.4f} kcal/mol".format(transition_state.energy))
 
 def sp_from_string_node():
      pass
