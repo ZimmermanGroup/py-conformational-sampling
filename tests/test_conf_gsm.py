@@ -20,9 +20,9 @@ from conformational_sampling.gsm import stk_gsm
 
 def conf_gsm():
 
-    ligand_5a_path = Path('tests/test_data/example2_5a.xyz') # name of file containing ligand geometry
-    ligand_6a_path = Path('tests/test_data/example2_6a.xyz')
-    ancillary_ligand = Path('tests/test_data/example2_L1.xyz')
+    ligand_5a_path = Path('example2_5a.xyz') # name of file containing ligand geometry
+    ligand_6a_path = Path('example2_6a.xyz')
+    ancillary_ligand = Path('example2_L1.xyz')
     stk_ligand_5a = load_stk_mol(ligand_5a_path)
     stk_ligand_6a = load_stk_mol(ligand_6a_path)
     stk_ancillary_ligand = load_stk_mol(ancillary_ligand)
@@ -49,31 +49,31 @@ def conf_gsm():
 
     # py-conformational-sampling configuration object
     config = Config(
-        initial_conformers=30,
+        initial_conformers=100,
         xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        #ase_calculator=XTB(),
-        max_dft_opt_steps=10,
-        num_cpus=28,
-        dft_cpus_per_opt=8,
+        ase_calculator=XTB(),
+        # max_dft_opt_steps=1,
+        # num_cpus=12,
+        # dft_cpus_per_opt=4,
     )
 
-    # qchem ase calculator setup
-    from ase.calculators.qchem import QChem
-    os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
-    config.ase_calculator = QChem(
-        method='PBE',
-        # basis='6-31G',
-        # basis='STO-3G',
-        basis='LANL2DZ',
-        ecp='fit-LANL2DZ',
-        SCF_CONVERGENCE='5',
-        nt=config.dft_cpus_per_opt,
-        SCF_MAX_CYCLES='200',
-        SCF_ALGORITHM='DIIS',
-    )
+    # # qchem ase calculator setup
+    # from ase.calculators.qchem import QChem
+    # os.environ['QCSCRATCH'] = os.environ['SLURM_LOCAL_SCRATCH']
+    # config.ase_calculator = QChem(
+    #     method='PBE',
+    #     # basis='6-31G',
+    #     # basis='STO-3G',
+    #     basis='LANL2DZ',
+    #     ecp='fit-LANL2DZ',
+    #     SCF_CONVERGENCE='5',
+    #     nt=config.dft_cpus_per_opt,
+    #     SCF_MAX_CYCLES='200',
+    #     SCF_ALGORITHM='DIIS',
+    # )
 
     # generates conformers, performs multiple step optimization and uniqueness filtering
-    # suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
+    suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
 
     ##############################################
     #####  py-GSM run on all the conformers  #####
@@ -97,8 +97,10 @@ def conf_gsm():
         path = Path.cwd() / f'scratch/pystring_{i}'
         path.mkdir(exist_ok=True)
 
-    subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', './tests/gsm_job_array.py'])
-    # subprocess.run(['sbatch', f'--array=2', './tests/gsm_job_array.py'])
+    subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', '../tests/se_gsm_job_array.py'])
+    # subprocess.run(['sbatch', f'--array=0', '../tests/se_gsm_job_array.py'])
+
+    # subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', '../tests/sp_job.py'])
 
 if __name__ == '__main__':
     conf_gsm()
