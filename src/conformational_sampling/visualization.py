@@ -77,7 +77,7 @@ class Conformer:
         
         self.truncated_string = truncate_string_at_bond_formation(
             self.string_nodes,
-            *system.reductive_elim_torsion[1:3]
+            *system.reductive_elim_torsion[1:3] # middle atoms of torsion
         )
         if not self.truncated_string:
             return
