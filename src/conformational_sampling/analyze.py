@@ -14,6 +14,20 @@ from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 
 from conformational_sampling.utils import pybel_mol_to_rdkit_mol
 
+@dataclass
+class System:
+    reductive_elim_torsion: tuple
+    pro_dis_torsion: tuple
+
+
+systems = {
+    'ligand_l1': System(reductive_elim_torsion=(56, 55, 79, 78), pro_dis_torsion=(21, 11, 55, 65)),
+    'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
+    'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
+}
+ligand_name = 'ligand_achiral'
+system = systems[ligand_name]
+
 
 # Function to determine the existence and position of a unique TS node along the string
  
@@ -43,21 +57,6 @@ def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_
 
 
 # setup_mol()
-@dataclass
-class System:
-    reductive_elim_torsion: tuple
-    pro_dis_torsion: tuple
-
-
-systems = {
-    'ligand_l1': System(reductive_elim_torsion=(56, 55, 79, 78), pro_dis_torsion=(21, 11, 55, 65)),
-    'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
-    'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
-}
-ligand_name = 'ligand_achiral'
-system = systems[ligand_name]
-
-
 @dataclass
 class Conformer:
     string_path: Path

@@ -13,7 +13,7 @@ from rdkit.Chem.rdMolAlign import AlignMol
 
 import param
 import hvplot.pandas # noqa
-from holoviews import opts
+from holoviews import opts, Slope
 from holoviews.streams import Selection1D
 import panel as pn
 from panel_chemistry.pane import \
@@ -95,10 +95,9 @@ class ConformationalSamplingDashboard(param.Parameterized):
         #                 # width=600, height=600,
         #                 marker='triangle', size=10, fontsize={'labels': 14}),
         # )
-        self.rmsd_plot = plot
-
-        print(df)
-           
+        self.rmsd_plot = plot * Slope.from_scatter(plot)
+        
+        df.to_csv(Path.home() / 'df.csv')
 
     
     def get_mol_confs(self, string_paths):
