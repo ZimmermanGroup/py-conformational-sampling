@@ -22,10 +22,10 @@ def conf_gsm():
 
     ligand_5a_path = Path('example2_5a.xyz') # name of file containing ligand geometry
     ligand_6a_path = Path('example2_6a.xyz')
-    ancillary_ligand = Path('example2_L1.xyz')
+    ancillary_ligand_confs = Path('crest_conformers.xyz')
     stk_ligand_5a = load_stk_mol(ligand_5a_path)
     stk_ligand_6a = load_stk_mol(ligand_6a_path)
-    stk_ancillary_ligand = load_stk_mol(ancillary_ligand)
+    stk_ancillary_ligand_confs = load_stk_mol_list(ancillary_ligand_confs)
 
     # specifies atoms of the ligand that bind to the metal, in this case as a smarts string
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
@@ -45,7 +45,10 @@ def conf_gsm():
         bonders=(0,),
         deleters=(),
     )
-    stk_ancillary_ligand = stk.BuildingBlock.init_from_molecule(stk_ancillary_ligand, functional_groups=[functional_group_factory])
+    stk_ancillary_ligand_confs = [
+        stk.BuildingBlock.init_from_molecule(conf, functional_groups=[functional_group_factory])
+        for conf in stk_ancillary_ligand_confs
+    ]
 
     # py-conformational-sampling configuration object
     config = Config(
@@ -73,7 +76,7 @@ def conf_gsm():
     # )
 
     # generates conformers, performs multiple step optimization and uniqueness filtering
-    suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
+    suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand_confs, config)
 
     ##############################################
     #####  py-GSM run on all the conformers  #####
@@ -90,14 +93,14 @@ def conf_gsm():
     #        config=config)
     #     os.chdir(Path('../..'))
 
-    conformer_path = Path('suzuki_conformers.xyz')
-    conformer_mols = load_stk_mol_list(conformer_path)
+    # conformer_path = Path('suzuki_conformers.xyz')
+    # conformer_mols = load_stk_mol_list(conformer_path)
 
-    for i in range(len(conformer_mols)):
-        path = Path.cwd() / f'scratch/pystring_{i}'
-        path.mkdir(exist_ok=True)
+    # for i in range(len(conformer_mols)):
+    #     path = Path.cwd() / f'scratch/pystring_{i}'
+    #     path.mkdir(exist_ok=True)
 
-    subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', '../tests/se_gsm_job_array.py'])
+    # subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', '../tests/se_gsm_job_array.py'])
     # subprocess.run(['sbatch', f'--array=0', '../tests/se_gsm_job_array.py'])
 
     # subprocess.run(['sbatch', f'--array=0-{len(conformer_mols)-1}', '../tests/sp_job.py'])
