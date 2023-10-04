@@ -47,7 +47,9 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # extract the conformers for a molecule from an xyz file
         
         # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
-        self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
+        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
+        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
+        self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
         xtb_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
         dft_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_002.xyz'))
         xtb_mol_confs = self.get_mol_confs(xtb_string_paths)
@@ -97,7 +99,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # )
         self.rmsd_plot = plot * Slope.from_scatter(plot)
         
-        df.to_csv(Path.home() / 'df.csv')
+        # df.to_csv(Path.home() / 'df.csv')
 
     
     def get_mol_confs(self, string_paths):
@@ -135,7 +137,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                                                     - self.df['absolute_reactant_energy (kcal/mol)'].min())
         
         # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
-        # self.to_csv(Path.home() / 'df.csv')
+        self.df.to_csv(Path.home() / 'df.csv')
         return pn.widgets.Tabulator(self.df)
     
     
@@ -179,7 +181,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         df = self.df
         plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan', title='Conformer Energies', height=500, width=400, legend=False) 
         plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', ylim=(0,100), hover_cols='all').opts(jitter=0.5)
-        plot += self.rmsd_plot
+        # plot += self.rmsd_plot
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
                         # width=600, height=600,
@@ -217,7 +219,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             return None
         
         pdb_block = MolToPDBBlock(mol)
-        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=500, sizing_mode="stretch_both")
+        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=400, sizing_mode="stretch_both")
         return viewer
 
     
@@ -238,7 +240,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         if not conformer:
             return None
         pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
-        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=500, sizing_mode="stretch_both")
+        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=400, sizing_mode="stretch_both")
         return viewer
 
 

@@ -25,7 +25,7 @@ systems = {
     'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
     'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
 }
-ligand_name = 'ligand_achiral'
+ligand_name = 'ligand_l8'
 system = systems[ligand_name]
 
 
