@@ -138,7 +138,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
         
         # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
         self.df.to_csv(Path.home() / 'df.csv')
-        return pn.widgets.Tabulator(self.df)
+        # return pn.widgets.Tabulator(self.df)
+        return hvplot.explorer(self.df)
     
     
     @param.depends('stream.index', watch=True)
