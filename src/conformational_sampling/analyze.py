@@ -30,12 +30,27 @@ systems = {
     'ligand_l8': System(
         reductive_elim_torsion=(74, 73, 97, 96),
         pro_dis_torsion=(47, 9, 73, 83),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_crest')
     ),
     'ligand_achiral': System(
         reductive_elim_torsion=(36, 35, 59, 58),
         pro_dis_torsion=(21, 11, 35, 45),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb_crest')
+    ),
+    'ligand_l3': System(
+        reductive_elim_torsion=(78, 77, 101, 100),
+        pro_dis_torsion=(17, 38, 77, 87),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l3_xtb')
+    ),
+    'ligand_l4': System(
+        reductive_elim_torsion=(74, 73, 97, 96),
+        pro_dis_torsion=(11, 34, 73, 83),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l4_xtb')
+    ),
+    'ligand_l6': System(
+        reductive_elim_torsion=(82, 81, 105, 104),
+        pro_dis_torsion=(11, 42, 81, 91),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l6_xtb')
     ),
 }
 
