@@ -132,8 +132,14 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('dataframe')
     def scatter_plot(self):
         df = self.df
-        plot = df.hvplot.box(by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan', title='Conformer Energies', height=500, width=400, legend=False) 
-        plot *= df.hvplot.scatter(y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo', ylim=(0,100), hover_cols='all').opts(jitter=0.5)
+        plot = df.hvplot.box(
+            by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan',
+            title='Conformer Energies', height=500, width=400, legend=False
+        ) 
+        plot *= df.hvplot.scatter(
+            y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo',
+            ylim=(0,100), hover_cols='all'
+        ).opts(jitter=0.5)
         # plot += self.rmsd_plot
         plot.opts(
             opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
@@ -193,7 +199,13 @@ class ConformationalSamplingDashboard(param.Parameterized):
         if not conformer:
             return None
         pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
-        viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=400, sizing_mode="stretch_both")
+        viewer = NGLViewer(
+            object=pdb_block,
+            extension='pdb',
+            background="#F7F7F7",
+            min_height=400,
+            sizing_mode="stretch_both"
+        )
         return viewer
 
 
@@ -206,8 +218,15 @@ class ConformationalSamplingDashboard(param.Parameterized):
 
 
     def free_energy_R_minus_S(self):
-        group_by = self.df.groupby('pdt_stereo')['relative_ts_energy (kcal/mol)'].apply(list)
-        return free_energy_diff(group_by['S'], group_by['R'], temperature=358.15)
+        group_by = self.df.groupby(['mol_name', 'pdt_stereo'])['relative_ts_energy (kcal/mol)'].apply(list)
+        free_energy_diffs = {}
+        for mol_name in self.df['mol_name'].unique():
+            free_energy_diffs[mol_name] = free_energy_diff(
+                group_by[(mol_name, 'S')],
+                group_by[(mol_name, 'R')],
+                temperature=358.15
+            )
+        return free_energy_diffs
     
 
 dashboard = ConformationalSamplingDashboard()
