@@ -18,15 +18,26 @@ from conformational_sampling.utils import pybel_mol_to_rdkit_mol
 class System:
     reductive_elim_torsion: tuple
     pro_dis_torsion: tuple
+    mol_path: Path
 
 
 systems = {
-    'ligand_l1': System(reductive_elim_torsion=(56, 55, 79, 78), pro_dis_torsion=(21, 11, 55, 65)),
-    'ligand_l8': System(reductive_elim_torsion=(74, 73, 97, 96), pro_dis_torsion=(47, 9, 73, 83)),
-    'ligand_achiral': System(reductive_elim_torsion=(36, 35, 59, 58), pro_dis_torsion=(21, 11, 35, 45)),
+    'ligand_l1': System(
+        reductive_elim_torsion=(56, 55, 79, 78),
+        pro_dis_torsion=(21, 11, 55, 65),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
+    ),
+    'ligand_l8': System(
+        reductive_elim_torsion=(74, 73, 97, 96),
+        pro_dis_torsion=(47, 9, 73, 83),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
+    ),
+    'ligand_achiral': System(
+        reductive_elim_torsion=(36, 35, 59, 58),
+        pro_dis_torsion=(21, 11, 35, 45),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
+    ),
 }
-ligand_name = 'ligand_l8'
-system = systems[ligand_name]
 
 
 # Function to determine the existence and position of a unique TS node along the string
@@ -59,6 +70,7 @@ def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_
 # setup_mol()
 @dataclass
 class Conformer:
+    system: System
     string_path: Path
 
     def __post_init__(self):
@@ -84,7 +96,7 @@ class Conformer:
 
         self.truncated_string = truncate_string_at_bond_formation(
             self.string_nodes,
-            *system.reductive_elim_torsion[1:3] # middle atoms of torsion
+            *self.system.reductive_elim_torsion[1:3] # middle atoms of torsion
         )
         if not self.truncated_string:
             return
@@ -96,16 +108,16 @@ class Conformer:
         # compute properties of the transition state
         self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
             self.ts_rdkit_mol.GetConformer(),
-            *system.reductive_elim_torsion
+            *self.system.reductive_elim_torsion
         )
         self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
             self.ts_rdkit_mol.GetConformer(),
-            *system.pro_dis_torsion
+            *self.system.pro_dis_torsion
         )
         #compute properties of the product 
         self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
             self.pdt_rdkit_mol.GetConformer(),
-            *system.reductive_elim_torsion
+            *self.system.reductive_elim_torsion
         )
 
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'

@@ -26,7 +26,7 @@ pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 import openbabel as ob
 
-from conformational_sampling.analyze import Conformer, ligand_name
+from conformational_sampling.analyze import Conformer, systems
 from conformational_sampling.utils import free_energy_diff
 
     
@@ -46,70 +46,20 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_degsm')
-        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_symm_xtb')
-        # self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
-        self.mol_path = Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
-        xtb_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
-        dft_string_paths = tuple(self.mol_path.glob('scratch/pystring_*/opt_converged_002.xyz'))
-        xtb_mol_confs = self.get_mol_confs(xtb_string_paths)
-        dft_mol_confs = self.get_mol_confs(dft_string_paths)
+        self.mols = {}
+        for ligand_name, system in systems.items():
+            string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
+            self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
         
-        self.mols = { # molecule name -> conformer index -> Conformer
-            f'{ligand_name}_xtb': xtb_mol_confs,
-            f'{ligand_name}_dft': dft_mol_confs
-        }
-        
-        # try out getting distances between xtb and dft conformers
-        conformer_rows = []
-        for conf_idx, dft_conf in dft_mol_confs.items():
-            xtb_conf = xtb_mol_confs[conf_idx]
-            id_list = [[i,i] for i in range(dft_conf.ts_rdkit_mol.GetNumAtoms())]
-            rms = AlignMol(
-                dft_conf.ts_rdkit_mol,
-                xtb_conf.ts_rdkit_mol,
-                atomMap=id_list
-            )
-            print(rms)
-            
-            conformer_rows.append({
-                'conf_idx': conf_idx,
-                # 'dft activation energy (kcal/mol)': dft_conf.activation_energy,
-                # 'xtb activation energy (kcal/mol)': xtb_conf.activation_energy,
-                'absolute_reactant_xtb_energy (kcal/mol)': xtb_conf.string_energies[0],
-                'absolute_ts_xtb_energy (kcal/mol)': xtb_conf.ts_energy,
-                'absolute_reactant_dft_energy (kcal/mol)': dft_conf.string_energies[0],
-                'absolute_ts_dft_energy (kcal/mol)': dft_conf.ts_energy,
-                'rmsd': rms,
-            })
-
-        df = pd.DataFrame(conformer_rows)
-        df['relative_ts_xtb_energy (kcal/mol)'] = (df['absolute_ts_xtb_energy (kcal/mol)']
-                                                    - df['absolute_reactant_xtb_energy (kcal/mol)'].min())
-        df['relative_ts_dft_energy (kcal/mol)'] = (df['absolute_ts_dft_energy (kcal/mol)']
-                                                    - df['absolute_reactant_dft_energy (kcal/mol)'].min())
-        df['relative_ts_energy_diff (kcal/mol)'] = (df['relative_ts_dft_energy (kcal/mol)']
-                                                       - df['relative_ts_xtb_energy (kcal/mol)'])
-      
-        plot = df.hvplot.scatter(y='rmsd', x='relative_ts_energy_diff (kcal/mol)', hover_cols='all')
-        # plot.opts(
-        #     opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
-        #                 # width=600, height=600,
-        #                 marker='triangle', size=10, fontsize={'labels': 14}),
-        # )
-        self.rmsd_plot = plot * Slope.from_scatter(plot)
-        
-        # df.to_csv(Path.home() / 'df.csv')
-
     
-    def get_mol_confs(self, string_paths):
+    def get_mol_confs(self, system, string_paths):
         return {
             # get the conformer index for this string
             int(re.search(r"pystring_(\d+)", str(string_path)).groups()[0]):
             mol_conf
             for string_path in string_paths
             # remove any reactant structures that have already optimized to the product
-            if (mol_conf := Conformer(string_path)).truncated_string # ignore conf if reactant optimized to product
+            if (mol_conf := Conformer(system, string_path)).truncated_string # ignore conf if reactant optimized to product
         }
         
         
@@ -133,8 +83,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'pdt_stereo': conformer.pdt_stereo,
                 })
         self.df = pd.DataFrame(conformer_rows)
-        self.df['relative_ts_energy (kcal/mol)'] = (self.df['absolute_ts_energy (kcal/mol)']
-                                                    - self.df['absolute_reactant_energy (kcal/mol)'].min())
+        self.df['relative_ts_energy (kcal/mol)'] = (
+            self.df['absolute_ts_energy (kcal/mol)']
+            - self.df.groupby('mol_name')['absolute_reactant_energy (kcal/mol)'].transform('min')
+        )
         
         # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
         self.df.to_csv(Path.home() / 'df.csv')
