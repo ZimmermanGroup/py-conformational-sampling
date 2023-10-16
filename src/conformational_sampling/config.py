@@ -11,7 +11,7 @@ class Config:
     initial_conformers: int = 100
     # set if you want to pass multiple ancillary ligand conformers and generate more
     # conformers based on each of them
-    combinatorial_ancillary_ligand_confs = False
+    combinatorial_ancillary_ligand_confs: bool = False
     # initial_rms_threshold: float = 0.6 # NOT NEEDED IN OPENBABEL IMPLEMENTATION
     max_connectivity_changes: int = 2
     pre_xtb_rms_threshold: float = 2.0
