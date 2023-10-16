@@ -284,7 +284,7 @@ def suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, c
         if config.combinatorial_ancillary_ligand_confs:
             stk_ancillary_ligand_conformers = []
             for conf in stk_ancillary_ligand:
-                stk_ancillary_ligand_conformers.append(gen_confs_openbabel(conf, config))
+                stk_ancillary_ligand_conformers.extend(gen_confs_openbabel(conf, config))
         else:
             stk_ancillary_ligand_conformers = stk_ancillary_ligand
     else:
