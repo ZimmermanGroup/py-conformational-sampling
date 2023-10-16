@@ -18,8 +18,11 @@ def num_cpus():
 
 def pybel_mol_to_rdkit_mol(pybel_mol):
     rdkit_mol = MolFromMolBlock(pybel_mol.write('mol'), removeHs=False)
-    Chem.rdmolops.Kekulize(rdkit_mol)
-    return rdkit_mol
+    try:
+        Chem.rdmolops.Kekulize(rdkit_mol)
+        return rdkit_mol
+    except:
+        return rdkit_mol
 
 
 def rdkit_mol_to_stk_mol(rdkit_mol):

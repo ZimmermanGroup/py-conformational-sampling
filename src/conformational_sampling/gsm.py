@@ -319,6 +319,7 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
 def stk_de_gsm(config: Config):
 
+    # geoms = manage_xyz.read_xyzs('opt_converged_001.xyz')
     geoms = manage_xyz.read_xyzs('grown_string_000.xyz')
     lot = ASELoT.from_options(config.ase_calculator, geom=geoms[0])
 
@@ -432,6 +433,8 @@ def stk_de_gsm(config: Config):
             opt_steps=50,
         )
 
+    # For xTB
+
     de_gsm_max_nodes = 20
     path = Path.cwd() / 'scratch/001'
     path.mkdir(exist_ok=True)
@@ -448,6 +451,25 @@ def stk_de_gsm(config: Config):
         xyz_writer=manage_xyz.write_std_multixyz,
         ID=1,
     )
+
+    # For DFT
+
+    # de_gsm_max_nodes = 20
+    # path = Path.cwd() / 'scratch/002'
+    # path.mkdir(exist_ok=True)
+
+    # for item in range(de_gsm_max_nodes):
+    #     path = Path.cwd() / f'scratch/002/{item}'
+    #     path.mkdir(exist_ok=True)
+    
+    # de_gsm = DE_GSM.from_options(
+    #     reactant=reactant,
+    #     product=product,
+    #     nnodes=15,
+    #     optimizer=optimizer,
+    #     xyz_writer=manage_xyz.write_std_multixyz,
+    #     ID=2,
+    # )
 
     de_gsm.go_gsm()
 
