@@ -31,7 +31,8 @@ setuptools.setup(
         'stko',
         'ase',
         'xtb',
-        'pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git',
+        'morfeus-ml',
+        'pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git@c81fd700448798434029b3fe490c48c5daeafb6d',
     ),
     extras_require={
         # "dev": ["sphinx", "sphinx_rtd_theme", "pytest", "coverage", "pytest-mock"],
