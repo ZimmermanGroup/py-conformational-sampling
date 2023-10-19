@@ -22,11 +22,11 @@ class System:
 
 
 systems = {
-    'ligand_l1': System(
-        reductive_elim_torsion=(56, 55, 79, 78),
-        pro_dis_torsion=(21, 11, 55, 65),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
-    ),
+    # 'ligand_l1': System(
+    #     reductive_elim_torsion=(56, 55, 79, 78),
+    #     pro_dis_torsion=(21, 11, 55, 65),
+    #     mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
+    # ),
     'ligand_achiral': System(
         reductive_elim_torsion=(36, 35, 59, 58),
         pro_dis_torsion=(21, 11, 35, 45),
@@ -138,6 +138,23 @@ class Conformer:
             self.ts_rdkit_mol.GetConformer(),
             *self.system.pro_dis_torsion
         )
+        phos = [atom for atom in self.reac_rdkit_mol.GetAtoms() if atom.GetSymbol() == 'P'][0]
+        self.improper_torsion = rdMolTransforms.GetDihedralDeg(
+            self.reac_rdkit_mol.GetConformer(),
+            self.system.reductive_elim_torsion[1],
+            0,
+            phos.GetIdx(),
+            self.system.reductive_elim_torsion[2],
+        )
+        self.improper_torsion_ts = rdMolTransforms.GetDihedralDeg(
+            self.ts_rdkit_mol.GetConformer(),
+            self.system.reductive_elim_torsion[1],
+            0,
+            phos.GetIdx(),
+            self.system.reductive_elim_torsion[2],
+        )
+
+        
         #compute properties of the product 
         self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
             self.pdt_rdkit_mol.GetConformer(),
@@ -155,7 +172,7 @@ class Conformer:
         self.pdt_stereo = 'R' if self.formed_bond_torsion <= 0 else 'S'
         
 
-def tau_4_prime(rdkit_mol, atom_id: int) -> float:
+def tau_4_prime(rdkit_mol, atom_id: int = 0) -> float:
     'formula from https://en.wikipedia.org/wiki/Geometry_index'
     
     rdkit_atom = rdkit_mol.GetAtomWithIdx(atom_id)
@@ -170,3 +187,4 @@ def tau_4_prime(rdkit_mol, atom_id: int) -> float:
               for angle_atoms in angles_atoms]
     alpha, beta = sorted(angles, reverse=True)[:2]
     return -0.00399 * alpha - 0.01019 * beta + 2.55
+

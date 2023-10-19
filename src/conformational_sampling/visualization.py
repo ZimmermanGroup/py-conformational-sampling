@@ -30,7 +30,8 @@ import openbabel as ob
 from conformational_sampling.analyze import Conformer, systems
 from conformational_sampling.utils import free_energy_diff
 
-    
+
+READ_FROM_PICKLE = False 
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
@@ -48,7 +49,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # extract the conformers for a molecule from an xyz file
         
         pickle_path = Path.home() / 'mols.pkl'
-        if pickle_path.exists():
+        if pickle_path.exists() and READ_FROM_PICKLE:
             with pickle_path.open('rb') as file:
                 self.mols = pickle.load(file)
         else:
@@ -67,7 +68,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
             mol_conf
             for string_path in string_paths
             # remove any reactant structures that have already optimized to the product
-            if (mol_conf := Conformer(system, string_path)).truncated_string # ignore conf if reactant optimized to product
+            if ((mol_conf := Conformer(system, string_path)).truncated_string
+                and mol_conf.activation_energy <= 200)
         }
         
         
@@ -85,6 +87,8 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
                     'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
                     'pro_dis_torsion': conformer.pro_dis_torsion,
+                    'improper_torsion': conformer.improper_torsion,
+                    'improper_torsion_ts': conformer.improper_torsion_ts,
                     'pro_dis': conformer.pro_dis,
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
