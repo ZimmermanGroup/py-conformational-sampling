@@ -3,6 +3,7 @@
 %autoreload 2
 import os
 import re
+import pickle
 from IPython.display import display
 import numpy as np
 import pandas as pd
@@ -46,10 +47,17 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
         
-        self.mols = {}
-        for ligand_name, system in systems.items():
-            string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
-            self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
+        pickle_path = Path.home() / 'mols.pkl'
+        if pickle_path.exists():
+            with pickle_path.open('rb') as file:
+                self.mols = pickle.load(file)
+        else:
+            self.mols = {}
+            for ligand_name, system in systems.items():
+                string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
+                self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
+            with pickle_path.open('wb') as file:
+                pickle.dump(self.mols, file)
         
     
     def get_mol_confs(self, system, string_paths):
@@ -81,6 +89,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
                     'pdt_stereo': conformer.pdt_stereo,
+                    'tau_4_prime': conformer.tau_4_prime,
                 })
         self.df = pd.DataFrame(conformer_rows)
         self.df['relative_ts_energy (kcal/mol)'] = (
@@ -235,7 +244,12 @@ try: # reboot server if already running in interactive mode
 except (NameError, AssertionError):
     pass
 bokeh_server = dashboard.app().show()
+# %%
+test_df = pd.read_csv(Path.home() / 'df.csv')
+groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'pdt_stereo']).reset_index(name='count')
+display(groupby)
 
-# dashboard.app()
+pn.panel(hvplot.explorer(groupby)).show()
 
+pass
 # %%

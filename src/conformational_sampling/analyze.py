@@ -22,11 +22,11 @@ class System:
 
 
 systems = {
-    # 'ligand_l1': System(
-    #     reductive_elim_torsion=(56, 55, 79, 78),
-    #     pro_dis_torsion=(21, 11, 55, 65),
-    #     mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
-    # ),
+    'ligand_l1': System(
+        reductive_elim_torsion=(56, 55, 79, 78),
+        pro_dis_torsion=(21, 11, 55, 65),
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l1_xtb')
+    ),
     'ligand_achiral': System(
         reductive_elim_torsion=(36, 35, 59, 58),
         pro_dis_torsion=(21, 11, 35, 45),
@@ -52,6 +52,11 @@ systems = {
         pro_dis_torsion=(47, 9, 73, 83),
         mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_crest')
     ),
+    # 'ligand_l8_dft': System(
+    #     reductive_elim_torsion=(74, 73, 97, 96),
+    #     pro_dis_torsion=(47, 9, 73, 83),
+    #     mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
+    # ),
 }
 
 
@@ -135,9 +140,28 @@ class Conformer:
             *self.system.reductive_elim_torsion
         )
 
+        self.tau_4_prime = tau_4_prime(self.ts_rdkit_mol, 0)
+
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
         # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
         # if distal, the relationship is reversed
         self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
         self.syn_anti = 'syn' if -90 <= self.forming_bond_torsion <= 90 else 'anti'
         self.pdt_stereo = 'R' if self.formed_bond_torsion <= 0 else 'S'
+        
+
+def tau_4_prime(rdkit_mol, atom_id: int) -> float:
+    'formula from https://en.wikipedia.org/wiki/Geometry_index'
+    
+    rdkit_atom = rdkit_mol.GetAtomWithIdx(atom_id)
+    neighbors = rdkit_atom.GetNeighbors()
+    if len(neighbors) != 4:
+        return -1.0
+    neighbors = [neighbor.GetIdx() for neighbor in neighbors]
+
+    # list of tuples containing atom ids of each angle through the atom
+    angles_atoms = [(comb[0], atom_id, comb[1]) for comb in combinations(neighbors, 2)]
+    angles = [rdMolTransforms.GetAngleDeg(rdkit_mol.GetConformer(), *angle_atoms)
+              for angle_atoms in angles_atoms]
+    alpha, beta = sorted(angles, reverse=True)[:2]
+    return -0.00399 * alpha - 0.01019 * beta + 2.55
