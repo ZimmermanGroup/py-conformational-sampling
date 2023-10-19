@@ -69,14 +69,16 @@ def ts_node(en_list):
     max_diff = 0.0
     ts_node_energy = en_list[0]
     ts_barrier = 0.0
+    min_reac_energy = en_list[0]
     for item in res_list:
         tmp = item[1] - item[0]
         if tmp > max_diff:
             max_diff = tmp
             ts_node_energy = item[1]
+            min_reac_energy = item[0]
             ts_barrier = max_diff
             
-    return (max_diff, ts_node_energy, ts_barrier)
+    return (max_diff, ts_node_energy, ts_barrier, min_reac_energy)
 
 
 def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_1: int, atom_2: int, thresh=1.7):
@@ -120,8 +122,10 @@ class Conformer:
         )
         if not self.truncated_string:
             return
-        max_diff, self.ts_energy, self.activation_energy = ts_node(self.string_energies[:len(self.truncated_string)])
+        max_diff, self.ts_energy, self.activation_energy, self.min_reac_energy = ts_node(self.string_energies[:len(self.truncated_string)])
         self.ts_node_num = self.string_energies.index(self.ts_energy)
+        self.reac_node_num = self.string_energies.index(self.min_reac_energy)
+        self.reac_rdkit_mol = self.string_nodes[self.reac_node_num]
         self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
         self.pdt_rdkit_mol = self.string_nodes[-1]
 
@@ -140,7 +144,8 @@ class Conformer:
             *self.system.reductive_elim_torsion
         )
 
-        self.tau_4_prime = tau_4_prime(self.ts_rdkit_mol, 0)
+        self.tau_4_prime_ts = tau_4_prime(self.ts_rdkit_mol, 0)
+        self.tau_4_prime = tau_4_prime(self.reac_rdkit_mol, 0)
 
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
         # ts is exo if the torsion of the bond being formed is positive and the ts is proximal

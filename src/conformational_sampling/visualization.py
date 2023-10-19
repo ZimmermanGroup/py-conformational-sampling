@@ -80,7 +80,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'mol_name': mol_name,
                     'conf_idx': conf_idx,
                     'activation energy (kcal/mol)': conformer.activation_energy,
-                    'absolute_reactant_energy (kcal/mol)': conformer.string_energies[0],
+                    'absolute_reactant_energy (kcal/mol)': conformer.min_reac_energy,
                     'absolute_ts_energy (kcal/mol)': conformer.ts_energy,
                     'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
                     'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
@@ -90,6 +90,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'syn_anti': conformer.syn_anti,
                     'pdt_stereo': conformer.pdt_stereo,
                     'tau_4_prime': conformer.tau_4_prime,
+                    'tau_4_prime_ts':conformer.tau_4_prime_ts,
                 })
         self.df = pd.DataFrame(conformer_rows)
         self.df['relative_ts_energy (kcal/mol)'] = (
