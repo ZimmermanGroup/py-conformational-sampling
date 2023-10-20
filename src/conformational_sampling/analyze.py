@@ -153,8 +153,12 @@ class Conformer:
             phos.GetIdx(),
             self.system.reductive_elim_torsion[2],
         )
-
-        
+        self.ligands_angle = rdMolTransforms.GetAngleDeg(
+            self.reac_rdkit_mol.GetConformer(),
+            self.system.reductive_elim_torsion[1],
+            0,
+            self.system.reductive_elim_torsion[2],
+        )
         #compute properties of the product 
         self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
             self.pdt_rdkit_mol.GetConformer(),

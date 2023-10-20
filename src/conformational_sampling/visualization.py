@@ -31,7 +31,7 @@ from conformational_sampling.analyze import Conformer, systems
 from conformational_sampling.utils import free_energy_diff
 
 
-READ_FROM_PICKLE = False 
+READ_FROM_PICKLE = True 
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
@@ -89,6 +89,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'pro_dis_torsion': conformer.pro_dis_torsion,
                     'improper_torsion': conformer.improper_torsion,
                     'improper_torsion_ts': conformer.improper_torsion_ts,
+                    'ligands_angle': conformer.ligands_angle,
                     'pro_dis': conformer.pro_dis,
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
