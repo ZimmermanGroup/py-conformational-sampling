@@ -5,14 +5,16 @@ from itertools import combinations
 import os
 from pathlib import Path
 import re
+import numpy as np
 
 from openbabel import pybel as pb
 from pygsm.utilities.units import KCAL_MOL_PER_AU
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms, rdmolops
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
+import stk
 
-from conformational_sampling.utils import pybel_mol_to_rdkit_mol
+from conformational_sampling.utils import pybel_mol_to_rdkit_mol, rdkit_mol_to_stk_mol
 
 @dataclass
 class System:
@@ -129,25 +131,10 @@ class Conformer:
         self.ts_rdkit_mol = self.string_nodes[self.ts_node_num]
         self.pdt_rdkit_mol = self.string_nodes[-1]
 
-        # compute properties of the transition state
-        self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
-            *self.system.reductive_elim_torsion
-        )
-        self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
-            *self.system.pro_dis_torsion
-        )
+        # compute properties of the reactant
         phos = [atom for atom in self.reac_rdkit_mol.GetAtoms() if atom.GetSymbol() == 'P'][0]
         self.improper_torsion = rdMolTransforms.GetDihedralDeg(
             self.reac_rdkit_mol.GetConformer(),
-            self.system.reductive_elim_torsion[1],
-            0,
-            phos.GetIdx(),
-            self.system.reductive_elim_torsion[2],
-        )
-        self.improper_torsion_ts = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
             self.system.reductive_elim_torsion[1],
             0,
             phos.GetIdx(),
@@ -159,14 +146,39 @@ class Conformer:
             0,
             self.system.reductive_elim_torsion[2],
         )
+        
+        self.out_of_plane_angle = out_of_plane_angle(
+            self.reac_rdkit_mol,
+            0,
+            *self.system.reductive_elim_torsion[1:3],
+            phos.GetIdx(),
+        )
+        
+        self.tau_4_prime = tau_4_prime(self.reac_rdkit_mol, 0)
+        
+        # compute properties of the transition state
+        self.forming_bond_torsion = rdMolTransforms.GetDihedralDeg(
+            self.ts_rdkit_mol.GetConformer(),
+            *self.system.reductive_elim_torsion
+        )
+        self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
+            self.ts_rdkit_mol.GetConformer(),
+            *self.system.pro_dis_torsion
+        )
+        self.improper_torsion_ts = rdMolTransforms.GetDihedralDeg(
+            self.ts_rdkit_mol.GetConformer(),
+            self.system.reductive_elim_torsion[1],
+            0,
+            phos.GetIdx(),
+            self.system.reductive_elim_torsion[2],
+        )
+        self.tau_4_prime_ts = tau_4_prime(self.ts_rdkit_mol, 0)
+        
         #compute properties of the product 
         self.formed_bond_torsion = rdMolTransforms.GetDihedralDeg(
             self.pdt_rdkit_mol.GetConformer(),
             *self.system.reductive_elim_torsion
         )
-
-        self.tau_4_prime_ts = tau_4_prime(self.ts_rdkit_mol, 0)
-        self.tau_4_prime = tau_4_prime(self.reac_rdkit_mol, 0)
 
         self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
         # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
@@ -192,3 +204,17 @@ def tau_4_prime(rdkit_mol, atom_id: int = 0) -> float:
     alpha, beta = sorted(angles, reverse=True)[:2]
     return -0.00399 * alpha - 0.01019 * beta + 2.55
 
+
+def out_of_plane_angle(
+    rdkit_mol,
+    central_atom: int,
+    plane_atom_1: int,
+    plane_atom_2: int,
+    out_of_plane_atom: int,
+):
+    stk_mol = rdkit_mol_to_stk_mol(rdkit_mol)
+    plane_normal = stk_mol.get_plane_normal((central_atom, plane_atom_1, plane_atom_2))
+    pos_matrix = stk_mol.get_position_matrix()
+    out_of_plane_vector = pos_matrix[out_of_plane_atom] - pos_matrix[central_atom]
+    plane_normal = stk.get_acute_vector(out_of_plane_vector, plane_normal)
+    return 90 - np.rad2deg(stk.vector_angle(plane_normal, out_of_plane_vector))

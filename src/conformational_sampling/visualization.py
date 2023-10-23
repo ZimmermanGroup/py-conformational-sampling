@@ -90,6 +90,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'improper_torsion': conformer.improper_torsion,
                     'improper_torsion_ts': conformer.improper_torsion_ts,
                     'ligands_angle': conformer.ligands_angle,
+                    'out_of_plane_angle': conformer.out_of_plane_angle,
                     'pro_dis': conformer.pro_dis,
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
@@ -146,6 +147,22 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     @param.depends('dataframe')
     def scatter_plot(self):
+        df = self.df
+        plot = df.hvplot.scatter(
+            y='relative_ts_energy (kcal/mol)', x='forming_bond_torsion (deg)',
+            c='mol_name', #groupby='mol_name',
+            ylim=(0,100), hover_cols='all'
+        )
+        # plot += self.rmsd_plot
+        plot.opts(
+            opts.Scatter(tools=['tap', 'hover'], active_tools=['wheel_zoom'],
+                        # width=600, height=600,
+                        marker='triangle', size=10, fontsize={'labels': 14}),
+        )
+        self.stream.update(index=[])
+        self.stream.source = plot
+        return plot
+    
         df = self.df
         plot = df.hvplot.box(
             by='mol_name', y='relative_ts_energy (kcal/mol)', c='cyan',
