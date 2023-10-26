@@ -14,7 +14,7 @@ class ASE(stko.optimizers.Optimizer):
     calculator: Calculator
 
     def optimize(self, stk_mol):
-        print(*[i for i in os.environ.items() if 'OMP' in i[0] or 'SLURM' in i[0]], sep='\n')
+        print(*[i for i in os.environ.items() if 'OMP' in i[0] or 'SLURM' in i[0]], sep='\n', flush=True)
         ase_mol = stk_mol_to_ase_atoms(stk_mol)
         ase_mol.calc = self.calculator
         opt = BFGS(ase_mol)
