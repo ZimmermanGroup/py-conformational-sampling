@@ -12,6 +12,8 @@ from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
 from rdkit.Chem.rdMolAlign import AlignMol
 
+print('Made it halfway through imports!')
+
 import param
 import hvplot.pandas # noqa
 from holoviews import opts, Slope
@@ -30,8 +32,9 @@ import openbabel as ob
 from conformational_sampling.analyze import Conformer, systems
 from conformational_sampling.utils import free_energy_diff
 
+print('Finished imports!')
 
-READ_FROM_PICKLE = True 
+READ_FROM_PICKLE = True
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
@@ -78,13 +81,21 @@ class ConformationalSamplingDashboard(param.Parameterized):
         conformer_rows = []
         for mol_name, mol_confs in self.mols.items():
             for conf_idx, conformer in mol_confs.items():
+                
+                # wrap forming_bond_torsion differently based on stereochemistry
+                forming_bond_torsion = conformer.forming_bond_torsion
+                if conformer.forming_bond_torsion < -90 and conformer.pdt_stereo == 'S':
+                    forming_bond_torsion += 360
+                elif conformer.forming_bond_torsion > 90 and conformer.pdt_stereo == 'R':
+                    forming_bond_torsion -= 360
+                    
                 conformer_rows.append({
                     'mol_name': mol_name,
                     'conf_idx': conf_idx,
                     'activation energy (kcal/mol)': conformer.activation_energy,
                     'absolute_reactant_energy (kcal/mol)': conformer.min_reac_energy,
                     'absolute_ts_energy (kcal/mol)': conformer.ts_energy,
-                    'forming_bond_torsion (deg)': conformer.forming_bond_torsion,
+                    'forming_bond_torsion (deg)': forming_bond_torsion,
                     'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
                     'pro_dis_torsion': conformer.pro_dis_torsion,
                     'improper_torsion': conformer.improper_torsion,
@@ -268,11 +279,11 @@ except (NameError, AssertionError):
     pass
 bokeh_server = dashboard.app().show()
 # %%
-test_df = pd.read_csv(Path.home() / 'df.csv')
-groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'pdt_stereo']).reset_index(name='count')
-display(groupby)
+# test_df = pd.read_csv(Path.home() / 'df.csv')
+# groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'pdt_stereo']).reset_index(name='count')
+# display(groupby)
 
-pn.panel(hvplot.explorer(groupby)).show()
+# pn.panel(hvplot.explorer(groupby)).show()
 
-pass
+# pass
 # %%
