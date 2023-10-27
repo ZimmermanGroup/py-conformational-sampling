@@ -96,7 +96,9 @@ class ConformerEnsembleOptimizer:
 
     def optimize(self):
         with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
+            logging.debug(f'{self.config.num_cpus = }')
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
+            logging.debug(f'{len(unoptimized_complexes) = }')
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             logging.debug(f'{len(mc_hammer_complexes) = }')
             for i, conformer in enumerate(self.conformers):

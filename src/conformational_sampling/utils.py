@@ -11,7 +11,7 @@ from pygsm.utilities.units import KJ_PER_KCAL
 
 def num_cpus():
     try:
-        return int(os.environ["SLURM_CPUS_PER_TASK"])
+        return int(os.environ["SLURM_NTASKS_PER_NODE"])
     except KeyError:
         return 2
 
