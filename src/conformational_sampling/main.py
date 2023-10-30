@@ -273,6 +273,7 @@ def gen_confs_openbabel(stk_mol, config):
             for stk_conformer in stk_conformers]
     
 def gen_ligand_library_entry(stk_ligand, config):
+    logging.debug('Start generating conformers')
     stk_conformers = gen_confs_openbabel(stk_ligand, config)
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
@@ -280,18 +281,25 @@ def gen_ligand_library_entry(stk_ligand, config):
     logging.debug('Finished generating ligand library entry')
 
 def suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config):
+    logging.debug('Start generating conformers')
     stk_ligand_5a_conformers = gen_confs_openbabel(stk_ligand_5a, config)
     stk_ligand_6a_conformers = gen_confs_openbabel(stk_ligand_6a, config)
     if isinstance(stk_ancillary_ligand, list):
         if config.combinatorial_ancillary_ligand_confs:
             stk_ancillary_ligand_conformers = []
             for conf in stk_ancillary_ligand:
+                logging.debug('Open babel generating combinatorial conformers')
                 stk_ancillary_ligand_conformers.extend(gen_confs_openbabel(conf, config))
         else:
             stk_ancillary_ligand_conformers = stk_ancillary_ligand
     else:
         stk_ancillary_ligand_conformers = gen_confs_openbabel(stk_ancillary_ligand, config)
-    unoptimized_complexes = [bind_ligands(stk_metal('Pd'), ligand1, ligand2, ligand3) for ligand1 in stk_ancillary_ligand_conformers for ligand2 in stk_ligand_5a_conformers for ligand3 in stk_ligand_6a_conformers]
+    logging.debug(f'{len(stk_ancillary_ligand_conformers) * len(stk_ligand_5a_conformers) * len(stk_ligand_6a_conformers) = }')
+    unoptimized_complexes = [bind_ligands(stk_metal('Pd'), ligand1, ligand2, ligand3)
+                             for ligand1 in stk_ancillary_ligand_conformers
+                             for ligand2 in stk_ligand_5a_conformers
+                             for ligand3 in stk_ligand_6a_conformers
+                             ]
     optimized_complexes = ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
     stk_list_to_xyz_file(optimized_complexes, 'suzuki_conformers.xyz')
     logging.debug('Finished generating ligand library entry')

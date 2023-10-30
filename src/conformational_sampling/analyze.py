@@ -5,6 +5,7 @@ from itertools import combinations
 import os
 from pathlib import Path
 import re
+from typing import Optional
 import numpy as np
 
 from openbabel import pybel as pb
@@ -21,6 +22,7 @@ class System:
     reductive_elim_torsion: tuple
     pro_dis_torsion: tuple
     mol_path: Path
+    atrop_torsion: Optional[tuple] = None
 
 
 systems = {
@@ -37,12 +39,13 @@ systems = {
     'ligand_l3': System(
         reductive_elim_torsion=(78, 77, 101, 100),
         pro_dis_torsion=(17, 38, 77, 87),
+        atrop_torsion=(3, 9, 17, 19),
         mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l3_xtb')
     ),
     'ligand_l4': System(
         reductive_elim_torsion=(74, 73, 97, 96),
         pro_dis_torsion=(11, 34, 73, 83),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l4_xtb')
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l4_xtb_new')
     ),
     'ligand_l6': System(
         reductive_elim_torsion=(82, 81, 105, 104),
@@ -52,7 +55,7 @@ systems = {
     'ligand_l8': System(
         reductive_elim_torsion=(74, 73, 97, 96),
         pro_dis_torsion=(47, 9, 73, 83),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_crest')
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb_new')
     ),
     # 'ligand_l8_dft': System(
     #     reductive_elim_torsion=(74, 73, 97, 96),

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.rdchem import Mol
+from rdkit.Chem import rdMolTransforms
 from rdkit.Chem.rdmolfiles import MolToPDBBlock
 from rdkit.Chem.rdMolAlign import AlignMol
 
@@ -81,7 +82,17 @@ class ConformationalSamplingDashboard(param.Parameterized):
         conformer_rows = []
         for mol_name, mol_confs in self.mols.items():
             for conf_idx, conformer in mol_confs.items():
-                
+
+                # filter out conformers whose ancillary ligand inverted atropisomerism
+                # REMOVE THIS ONCE PICKLE FILE IS RELOADED
+                for ligand_name, system in systems.items():
+                    if conformer.system.mol_path == system.mol_path:
+                        conformer.system = system
+                        
+                if ((atrop_torsion := conformer.system.atrop_torsion)
+                    and rdMolTransforms.GetDihedralDeg(conformer.string_nodes[0].GetConformer(), *atrop_torsion) < 0):
+                        continue
+
                 # wrap forming_bond_torsion differently based on stereochemistry
                 forming_bond_torsion = conformer.forming_bond_torsion
                 if conformer.forming_bond_torsion < -90 and conformer.pdt_stereo == 'S':
