@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 
 from openbabel import pybel as pb
-from pygsm.utilities.units import KCAL_MOL_PER_AU
+from pygsm.utilities.units import KCAL_MOL_PER_AU, EV_TO_AU
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms, rdmolops
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
@@ -50,7 +50,7 @@ systems = {
     'ligand_l6': System(
         reductive_elim_torsion=(82, 81, 105, 104),
         pro_dis_torsion=(11, 42, 81, 91),
-        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l6_xtb')
+        mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l6_xtb_new')
     ),
     'ligand_l8': System(
         reductive_elim_torsion=(74, 73, 97, 96),
@@ -99,27 +99,34 @@ def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_
 class Conformer:
     system: System
     string_path: Path
+    singlepoints: bool = False
 
     def __post_init__(self):
-        string_nodes = list(pb.readfile('xyz', str(self.string_path)))
-        self.string_nodes = [MolFromMolBlock(node.write('mol'), removeHs=False)
-                             for node in string_nodes] # convert to rdkit
+        ob_string_nodes = list(pb.readfile("xyz", str(self.string_path)))
+        if self.singlepoints:
+            self.string_nodes = []
+            self.string_energies = []
+            for node in ob_string_nodes:
+                mol_block = node.write('mol')
+                self.string_nodes.append(MolFromMolBlock(mol_block, removeHs=False))
+                self.string_energies.append(
+                    float(mol_block.split()[0]) * EV_TO_AU * KCAL_MOL_PER_AU
+                )
+        else:
+            self.string_nodes = [
+                MolFromMolBlock(node.write("mol"), removeHs=False)
+                for node in ob_string_nodes
+            ]  # convert to rdkit
 
-        # previous way of getting reactant energy
-        # raw_dft_energy_path = self.string_path.parent / 'scratch' / '000' / 'E_0.txt'
-        # raw_dft_energy_au = float(raw_dft_energy_path.read_text().split()[2])
-        # self.string_energies = [(raw_dft_energy_au + float(MolToMolBlock(node).split()[0])) * KCAL_MOL_PER_AU
-        #                         for node in self.string_nodes]
-
-        # getting reactant energy
-        raw_dft_energy_path = self.string_path.parent / 'de_output.txt'
-        with open(raw_dft_energy_path) as file:
-            while line := file.readline():
-                if line.startswith(' Energy of the end points are'):
-                    # extracting energy from output file formatting
-                    raw_dft_energy_kcal_mol = float(line.split()[-2][:-1])
-        self.string_energies = [raw_dft_energy_kcal_mol + float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
-                                for node in self.string_nodes]
+            # getting reactant energy
+            raw_dft_energy_path = self.string_path.parent / 'de_output.txt'
+            with open(raw_dft_energy_path) as file:
+                while line := file.readline():
+                    if line.startswith(' Energy of the end points are'):
+                        # extracting energy from output file formatting
+                        raw_dft_energy_kcal_mol = float(line.split()[-2][:-1])
+            self.string_energies = [raw_dft_energy_kcal_mol + float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
+                                    for node in self.string_nodes]
 
         self.truncated_string = truncate_string_at_bond_formation(
             self.string_nodes,

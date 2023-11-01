@@ -35,7 +35,7 @@ from conformational_sampling.utils import free_energy_diff
 
 print('Finished imports!')
 
-READ_FROM_PICKLE = True
+READ_FROM_PICKLE = False
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
@@ -59,9 +59,12 @@ class ConformationalSamplingDashboard(param.Parameterized):
         else:
             self.mols = {}
             for ligand_name, system in systems.items():
-                string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
-                self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
-            with pickle_path.open('wb') as file:
+                # string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
+                string_paths = tuple(
+                    system.mol_path.glob("scratch/pystring_*/xtb_singlepoints_001.xyz")
+                )
+                self.mols[ligand_name] = self.get_mol_confs(system, string_paths[:10])
+            with pickle_path.open("wb") as file:
                 pickle.dump(self.mols, file)
         
     
@@ -72,7 +75,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             mol_conf
             for string_path in string_paths
             # remove any reactant structures that have already optimized to the product
-            if ((mol_conf := Conformer(system, string_path)).truncated_string
+            if ((mol_conf := Conformer(system, string_path, singlepoints=True)).truncated_string
                 and mol_conf.activation_energy <= 200)
         }
         
