@@ -138,10 +138,13 @@ class ConformationalSamplingDashboard(param.Parameterized):
         if not index:
             index = [0]
             return None
-        index = index[0]
-        mol_name = self.df.iloc[index]['mol_name']
-        conf_index = int(self.df.iloc[index]['conf_idx'])
-        return self.mols[mol_name][conf_index]
+        # index = index[0]
+        mols = []
+        for idx in index:
+            mol_name = self.df.iloc[idx]['mol_name']
+            conf_index = int(self.df.iloc[idx]['conf_idx'])
+            mols.append(self.mols[mol_name][conf_index])
+        return mols
     
 
     @param.depends('stream_string.index', watch=True)
@@ -249,18 +252,21 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     @param.depends('current_conformer', 'scatter_plot', 'stream_string.index', watch=True)
     def display_mol(self):
-        conformer = self.current_conformer()
-        if not conformer:
+        conformers = self.current_conformer()
+        if not conformers:
             return None
-        pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
-        viewer = NGLViewer(
-            object=pdb_block,
-            extension='pdb',
-            background="#F7F7F7",
-            min_height=400,
-            sizing_mode="stretch_both"
-        )
-        return viewer
+        viewers = []
+        for conformer in conformers:
+            pdb_block = MolToPDBBlock(conformer.ts_rdkit_mol)
+            viewer = NGLViewer(
+                object=pdb_block,
+                extension='pdb',
+                background="#F7F7F7",
+                min_height=400,
+                sizing_mode="stretch_both"
+            )
+            viewers.append(viewer)
+        return pn.Row(*viewers)
 
 
     @param.depends('refresh', 'stream.index', watch=True)
