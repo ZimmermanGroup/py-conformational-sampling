@@ -17,6 +17,7 @@ print('Made it halfway through imports!')
 
 import param
 import hvplot.pandas # noqa
+import holoviews as hv
 from holoviews import opts, Slope
 from holoviews.streams import Selection1D
 import panel as pn
@@ -24,18 +25,19 @@ from panel_chemistry.pane import \
     NGLViewer  # panel_chemistry needs to be imported before you run pn.extension()
 from panel_chemistry.pane.ngl_viewer import EXTENSIONS
 pn.extension('bokeh')
+hv.extension('bokeh')
 pn.extension(comms='vscode')
 pn.extension('tabulator')
 pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 import openbabel as ob
 
-from conformational_sampling.analyze import Conformer, systems
+from conformational_sampling.analyze import Conformer, systems, exclude_confs
 from conformational_sampling.utils import free_energy_diff
 
 print('Finished imports!')
 
-READ_FROM_PICKLE = False
+READ_FROM_PICKLE = True
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
@@ -63,7 +65,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                 string_paths = tuple(
                     system.mol_path.glob("scratch/pystring_*/xtb_singlepoints_001.xyz")
                 )
-                self.mols[ligand_name] = self.get_mol_confs(system, string_paths[:10])
+                self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
             with pickle_path.open("wb") as file:
                 pickle.dump(self.mols, file)
         
@@ -88,9 +90,13 @@ class ConformationalSamplingDashboard(param.Parameterized):
 
                 # filter out conformers whose ancillary ligand inverted atropisomerism
                 # REMOVE THIS ONCE PICKLE FILE IS RELOADED
-                for ligand_name, system in systems.items():
-                    if conformer.system.mol_path == system.mol_path:
-                        conformer.system = system
+                # for ligand_name, system in systems.items():
+                #     if conformer.system.mol_path == system.mol_path:
+                #         conformer.system = system
+                
+                # remove conformers manually identified as problematic
+                if mol_name in exclude_confs and conf_idx in exclude_confs[mol_name]:
+                    continue
                         
                 if ((atrop_torsion := conformer.system.atrop_torsion)
                     and rdMolTransforms.GetDihedralDeg(conformer.string_nodes[0].GetConformer(), *atrop_torsion) < 0):
@@ -119,7 +125,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     'pro_dis': conformer.pro_dis,
                     'exo_endo': conformer.endo_exo,
                     'syn_anti': conformer.syn_anti,
-                    'pdt_stereo': conformer.pdt_stereo,
+                    'Product stereochemistry': conformer.pdt_stereo,
                     'tau_4_prime': conformer.tau_4_prime,
                     'tau_4_prime_ts':conformer.tau_4_prime_ts,
                 })
@@ -132,7 +138,36 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
         self.df.to_csv(Path.home() / 'df.csv')
         # return pn.widgets.Tabulator(self.df)
-        return hvplot.explorer(self.df)
+        
+        plot = self.df.hvplot(
+            by=['Product stereochemistry'],
+            fontscale=1.2,
+            groupby=['mol_name'],
+            kind='scatter',
+            x='forming_bond_torsion (deg)',
+            xlabel='Reductive elimination torsion at TS (deg)',
+            y=['relative_ts_energy (kcal/mol)'],
+            ylabel='Relative TS energy (kcal/mol)',
+            title='',
+            width=600,
+            height=500,
+            xlim=(-220,220),
+            ylim=(0,40),
+        ).opts(legend_position='top_left')
+        # plot *= hv.VLine(-180).opts(color='black', line_dash='dashed', line_width=3)
+        # plot *= hv.VLine(180).opts(color='black', line_dash='dashed', line_width=3)
+        # plot.opts(opts.Scatter())
+        # hvplot.save(plot, Path.home() / 'Lilly' / 'py-conformational-sampling' / 'test_plot.svg', fmt='svg')
+
+        return self.df.hvplot.explorer(
+            by=['Product stereochemistry'],
+            groupby=['mol_name'],
+            kind='scatter',
+            x='forming_bond_torsion (deg)',
+            y=['relative_ts_energy (kcal/mol)'],
+            width=700,
+            ylim=(0,40),
+        )
     
     
     @param.depends('stream.index', watch=True)
@@ -197,7 +232,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             title='Conformer Energies', height=500, width=400, legend=False
         ) 
         plot *= df.hvplot.scatter(
-            y='relative_ts_energy (kcal/mol)', x='mol_name', c='pdt_stereo',
+            y='relative_ts_energy (kcal/mol)', x='mol_name', c='Product stereochemistry',
             ylim=(0,100), hover_cols='all'
         ).opts(jitter=0.5)
         # plot += self.rmsd_plot
@@ -281,7 +316,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
 
 
     def free_energy_R_minus_S(self):
-        group_by = self.df.groupby(['mol_name', 'pdt_stereo'])['relative_ts_energy (kcal/mol)'].apply(list)
+        group_by = self.df.groupby(['mol_name', 'Product stereochemistry'])['relative_ts_energy (kcal/mol)'].apply(list)
         free_energy_diffs = {}
         for mol_name in self.df['mol_name'].unique():
             free_energy_diffs[mol_name] = free_energy_diff(
@@ -300,10 +335,11 @@ except (NameError, AssertionError):
 bokeh_server = dashboard.app().show()
 # %%
 # test_df = pd.read_csv(Path.home() / 'df.csv')
-# groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'pdt_stereo']).reset_index(name='count')
+# groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'Product stereochemistry']).reset_index(name='count')
 # display(groupby)
 
 # pn.panel(hvplot.explorer(groupby)).show()
 
 # pass
 # %%
+# 'fontsize': {'labels': 10}, 'title': '', 'group_label': 'Prod'

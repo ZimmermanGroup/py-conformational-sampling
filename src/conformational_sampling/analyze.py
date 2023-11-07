@@ -24,7 +24,6 @@ class System:
     mol_path: Path
     atrop_torsion: Optional[tuple] = None
 
-
 systems = {
     # 'ligand_l1': System(
     #     reductive_elim_torsion=(56, 55, 79, 78),
@@ -62,6 +61,10 @@ systems = {
     #     pro_dis_torsion=(47, 9, 73, 83),
     #     mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
     # ),
+}
+
+exclude_confs = {
+    'ligand_l4': [315]
 }
 
 
@@ -109,9 +112,7 @@ class Conformer:
             for node in ob_string_nodes:
                 mol_block = node.write('mol')
                 self.string_nodes.append(MolFromMolBlock(mol_block, removeHs=False))
-                self.string_energies.append(
-                    float(mol_block.split()[0]) * EV_TO_AU * KCAL_MOL_PER_AU
-                )
+                self.string_energies.append(float(mol_block.split()[0]) * EV_TO_AU * KCAL_MOL_PER_AU)
         else:
             self.string_nodes = [
                 MolFromMolBlock(node.write("mol"), removeHs=False)
