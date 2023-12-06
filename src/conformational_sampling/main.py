@@ -74,6 +74,8 @@ class ConformerEnsembleOptimizer:
         logging.debug(f'{len(metal_optimized_conformers) = } (pruned before xtb stage)')
         logging.debug(f'{len(xtb_conformers) = } (pruned after xtb stage)')
         logging.debug(f'{len(final_conformers) = } (had <= {self.config.max_connectivity_changes} connectivity changes)')
+        
+        # TODO: I think this should check if any of the conformers have DFT energies but this is only checking the last one
         if DFT in conformer.stages:
             self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
             self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])

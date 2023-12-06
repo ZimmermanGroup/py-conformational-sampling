@@ -10,7 +10,7 @@ import pandas as pd
 from rdkit import Chem
 from rdkit.Chem.rdchem import Mol
 from rdkit.Chem import rdMolTransforms
-from rdkit.Chem.rdmolfiles import MolToPDBBlock
+from rdkit.Chem.rdmolfiles import MolToPDBBlock, MolToXYZBlock
 from rdkit.Chem.rdMolAlign import AlignMol
 
 print('Made it halfway through imports!')
@@ -87,13 +87,6 @@ class ConformationalSamplingDashboard(param.Parameterized):
         conformer_rows = []
         for mol_name, mol_confs in self.mols.items():
             for conf_idx, conformer in mol_confs.items():
-
-                # filter out conformers whose ancillary ligand inverted atropisomerism
-                # REMOVE THIS ONCE PICKLE FILE IS RELOADED
-                # for ligand_name, system in systems.items():
-                #     if conformer.system.mol_path == system.mol_path:
-                #         conformer.system = system
-                
                 # remove conformers manually identified as problematic
                 if mol_name in exclude_confs and conf_idx in exclude_confs[mol_name]:
                     continue
@@ -158,6 +151,18 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # plot *= hv.VLine(180).opts(color='black', line_dash='dashed', line_width=3)
         # plot.opts(opts.Scatter())
         # hvplot.save(plot, Path.home() / 'Lilly' / 'py-conformational-sampling' / 'test_plot.svg', fmt='svg')
+        
+        # testing out generating descriptive statistics
+        pd.options.display.width = 200
+        # self.df.groupby('mol_name').describe().to_csv(Path.home() / 'Lilly' / 'py-conformational-sampling' / 'summary_statistics.csv')
+        sum_stats_file = Path.home() / 'Lilly' / 'py-conformational-sampling' / 'summary_statistics.csv'
+        group_by = self.df.groupby(['mol_name', 'Product stereochemistry'])
+        sum_stats = group_by[[
+            'activation energy (kcal/mol)',
+            'relative_ts_energy (kcal/mol)',
+            'forming_bond_torsion (deg)',
+        ]].describe(percentiles=[0.5]).T.to_csv(sum_stats_file, float_format=lambda x: f' {x:.6f}')
+        # sum_stats_file.write_text(sum_stats)
 
         return self.df.hvplot.explorer(
             by=['Product stereochemistry'],
@@ -171,7 +176,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
     
     @param.depends('stream.index', watch=True)
-    def current_conformer(self):
+    def current_conformers(self):
         index = self.stream.index
         if not index:
             index = [0]
@@ -192,15 +197,16 @@ class ConformationalSamplingDashboard(param.Parameterized):
             index = [0]
             return None
         index = index[0]
-        conformer = self.current_conformer()
+        conformer = self.current_conformers()[0]
         return conformer.string_nodes[index]
     
     
-    @param.depends('current_conformer', watch=True)
+    @param.depends('current_conformers', watch=True)
     def conf_dataframe(self):
-        conformer = self.current_conformer()
-        if not conformer:
+        conformers = self.current_conformers()
+        if not conformers:
             return None
+        conformer = conformers[0] # use the first conformer selected
         self.conf_df = pd.DataFrame(
             {'node_num': i, 'energy (kcal/mol)': energy}
             for i, energy in enumerate(conformer.string_energies)
@@ -245,10 +251,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
         self.stream.source = plot
         return plot
     
-    @param.depends('conf_dataframe', watch=True)
+    @param.depends('conf_dataframe', 'stream.index', watch=True)
     def string_plot(self):
         try:
-            self.current_conformer()
+            self.current_conformers()
             self.conf_dataframe()
             plot = self.conf_df.hvplot.scatter(
                 y='relative_energy (kcal/mol)',
@@ -266,7 +272,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
             return f'Attribute Error {self.attribute_error}:\n{error}'
 
 
-    @param.depends('current_conformer', 'string_plot', 'current_string_mol', watch=True)
+    @param.depends('current_conformers', 'string_plot', 'current_string_mol', watch=True)
     def display_string_mol(self):
         mol = self.current_string_mol()
         if not mol:
@@ -274,6 +280,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         
         pdb_block = MolToPDBBlock(mol)
         viewer = NGLViewer(object=pdb_block, extension='pdb', background="#F7F7F7", min_height=400, sizing_mode="stretch_both")
+        print(MolToXYZBlock(mol))
         return viewer
 
     
@@ -288,9 +295,9 @@ class ConformationalSamplingDashboard(param.Parameterized):
         )
     
     
-    @param.depends('current_conformer', 'scatter_plot', 'stream_string.index', watch=True)
+    @param.depends('current_conformers', 'scatter_plot', 'stream_string.index', watch=True)
     def display_mol(self):
-        conformers = self.current_conformer()
+        conformers = self.current_conformers()
         if not conformers:
             return None
         viewers = []
