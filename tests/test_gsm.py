@@ -14,7 +14,7 @@ from conformational_sampling.main import (ConformerEnsembleOptimizer, bind_ligan
 from conformational_sampling.utils import stk_metal
 
 
-@pytest.mark.xfail(raises=RuntimeError)
+@pytest.mark.xfail(raises=ValueError)
 def test_gsm():
     # create dppe bound complex as test stk molecule
     ligand_path = Path('examples/dppe/ligand.xyz') # name of file containing ligand geometry
