@@ -46,6 +46,7 @@ def test_gsm():
     )
 
 
+@pytest.mark.skip(reason='requires QChem')
 def test_suzuki():
     stk_ancillary_ligand = load_stk_mol(Path('tests/test_data/example2_L9.xyz'))
     stk_ligand_5a = load_stk_mol(Path('tests/test_data/example2_5a.xyz'))
