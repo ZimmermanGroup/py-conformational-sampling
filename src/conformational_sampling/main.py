@@ -178,7 +178,7 @@ def bind_to_dimethyl_Pd(ligand):
         ]
     )
 
-    return bind_ligands(metal, ligand, methyl, methyl)    
+    return bind_ligands(metal, ligand, methyl, methyl.clone())    
     
 
 def bind_ligands(
