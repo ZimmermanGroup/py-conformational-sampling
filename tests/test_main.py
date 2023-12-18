@@ -20,9 +20,12 @@ def test_stk_to_pybel_loop():
     final_positions = butane_final.get_position_matrix()
     assert np.allclose(initial_positions, final_positions, atol=1e-3)
 
-def test_monodentate_binding():
-    # create dppe bound complex as test stk molecule
-    ligand_path = Path('examples/suzuki/example2_L1.xyz') # name of file containing ligand geometry
+
+@pytest.mark.parametrize(
+    "ligand_path", # test monodentate and bidentate examples
+    [Path('examples/suzuki/example2_L1.xyz'), Path('examples/dppe/ligand.xyz')]
+)
+def test_metal_ligand_binding(ligand_path):
     stk_ligand = load_stk_mol(ligand_path)
 
     # specifies atoms of the ligand that bind to the metal, in this case as a smarts string
@@ -34,20 +37,6 @@ def test_monodentate_binding():
     stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
     stk_mol = bind_to_dimethyl_Pd(stk_ligand)
     
-
-def test_bidentate_binding():
-    # create dppe bound complex as test stk molecule
-    ligand_path = Path('examples/dppe/ligand.xyz') # name of file containing ligand geometry
-    stk_ligand = load_stk_mol(ligand_path)
-
-    # specifies atoms of the ligand that bind to the metal, in this case as a smarts string
-    functional_group_factory = stk.SmartsFunctionalGroupFactory(
-        smarts='P',
-        bonders=(0,),
-        deleters=(),
-    )
-    stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
-    stk_mol = bind_to_dimethyl_Pd(stk_ligand)
 
 @pytest.mark.skip(reason='not implemented')
 def test_conformer_ensemble_optimizer():
