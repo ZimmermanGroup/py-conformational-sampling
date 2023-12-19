@@ -254,7 +254,7 @@ def num_connectivity_differences(stk_mol_1, stk_mol_2):
     # return the number of bonds that appear in one of the molecules but not both
     return len(bond_tuples_1 ^ bond_tuples_2)
 
-def gen_confs_openbabel(stk_mol, config):
+def gen_confs_openbabel(stk_mol, config) -> list:
     pybel_mol = stk_mol_to_pybel_mol(stk_mol)
     cs = pb.ob.OBConformerSearch()
     # Setup arguments: OBMol, numConformers, numChildren, mutability, convergence

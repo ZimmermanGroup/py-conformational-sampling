@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import stk
 from conformational_sampling.ase_stko_optimizer import ASE
-from conformational_sampling.main import bind_to_dimethyl_Pd, load_stk_mol
+from conformational_sampling.config import Config
+from conformational_sampling.main import ConformerEnsembleOptimizer, bind_to_dimethyl_Pd, gen_confs_openbabel, load_stk_mol
 import stko
 from xtb.ase.calculator import XTB
 from conformational_sampling.utils import stk_mol_to_pybel_mol
@@ -34,10 +35,29 @@ def test_metal_ligand_binding(ligand_path):
         bonders=(0,),
         deleters=(),
     )
-    stk_ligand = stk.BuildingBlock.init_from_molecule(stk_ligand, functional_groups=[functional_group_factory])
+    stk_ligand = stk.BuildingBlock.init_from_molecule(
+        stk_ligand,
+        functional_groups=[functional_group_factory]
+    )
     stk_mol = bind_to_dimethyl_Pd(stk_ligand)
     
 
-@pytest.mark.skip(reason='not implemented')
+@pytest.mark.skip(reason='implementation in progress')
 def test_conformer_ensemble_optimizer():
-    pass
+    simple_ligand = stk.BuildingBlock('CPCC')
+    functional_group_factory = stk.SmartsFunctionalGroupFactory(
+        smarts='P',
+        bonders=(0,),
+        deleters=(),
+    )
+    simple_ligand = stk.BuildingBlock.init_from_molecule(
+        simple_ligand,
+        functional_groups=[functional_group_factory]
+    )
+    simple_complex = bind_to_dimethyl_Pd(simple_ligand)
+
+    config = Config(initial_conformers=2)
+    stk_confs = gen_confs_openbabel(simple_complex, config)
+    assert len(stk_confs) == 2
+    ConformerEnsembleOptimizer(stk_confs, config).optimize()
+    
