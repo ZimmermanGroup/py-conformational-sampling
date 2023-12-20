@@ -1,13 +1,13 @@
 from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
+import os
 from pathlib import Path
 import logging
 import sys, platform
 from importlib.metadata import version
 import pkg_resources
 
-from xtb.ase import calculator
 import ase
 from ase.optimize import BFGS
 from ase.io.trajectory import Trajectory
@@ -17,6 +17,9 @@ import stko
 from openbabel import pybel as pb
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolToXYZBlock
+
+os.environ['OMP_NUM_THREADS'] = '1'
+from xtb.ase import calculator
 
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.metal_complexes import (
@@ -125,6 +128,9 @@ class ConformerEnsembleOptimizer:
                     conformer.stages[XTB] = xtb_complexes[i]
                     conformer.energies[XTB] = energies[i]
             self.write()
+        
+        if self.config.ase_calculator is None:
+            return [conformer.stages[XTB] for conformer in self.conformers if XTB in conformer.stages]
             
         with ProcessPoolExecutor(max_workers=self.config.num_cpus//self.config.dft_cpus_per_opt) as executor:
             # run dft calculator on conformers in parallel

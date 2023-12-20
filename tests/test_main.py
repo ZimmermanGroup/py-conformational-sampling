@@ -2,11 +2,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 import stk
-from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.config import Config
 from conformational_sampling.main import ConformerEnsembleOptimizer, bind_to_dimethyl_Pd, gen_confs_openbabel, load_stk_mol
 import stko
-from xtb.ase.calculator import XTB
 from conformational_sampling.utils import stk_mol_to_pybel_mol
 from conformational_sampling.utils import pybel_mol_to_stk_mol
 
@@ -42,7 +40,7 @@ def test_metal_ligand_binding(ligand_path):
     stk_mol = bind_to_dimethyl_Pd(stk_ligand)
     
 
-@pytest.mark.skip(reason='implementation in progress')
+@pytest.mark.skip(reason='sorting out OMP_NUM_THREADS')
 def test_conformer_ensemble_optimizer():
     simple_ligand = stk.BuildingBlock('CPCC')
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
