@@ -119,6 +119,7 @@ Notes:
 * The venv or conda environment containing py-conformational-sampling should be activated when using the library
 * Since openbabel is used to interpret the input file, any openbabel supported molecular file format can be used as input with slight modification (e.g. `stk_ligand = load_stk_mol(ligand_path, fmt='mol')` for a mol file)
 * Binding atoms may be alternatively supplied by specifying the element and index of binding atoms based on zero-indexed ordering in the ligand structure file (example excerpt below)
+* It is recommended that the environment variable OMP_NUM_THREADS is set to "1". Otherwise it seems that xTB attempts to use threads for each individual conformer and that this can be an order of magnitude less efficient than parallelizing over conformers.
 
 ```python
 functional_groups = [stk.SingleAtom(stk.C(73)), stk.SingleAtom(stk.O(22))]

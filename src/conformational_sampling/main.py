@@ -18,7 +18,6 @@ from openbabel import pybel as pb
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolToXYZBlock
 
-os.environ['OMP_NUM_THREADS'] = '1'
 from xtb.ase import calculator
 
 from conformational_sampling.ase_stko_optimizer import ASE

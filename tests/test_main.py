@@ -40,6 +40,8 @@ def test_metal_ligand_binding(ligand_path):
     stk_mol = bind_to_dimethyl_Pd(stk_ligand)
     
 
+# it might work to try using a pytest.ini file in the repo root like here:
+# https://github.com/pytest-dev/pytest/discussions/10027#discussioncomment-2906684
 @pytest.mark.skip(reason='sorting out OMP_NUM_THREADS')
 def test_conformer_ensemble_optimizer():
     simple_ligand = stk.BuildingBlock('CPCC')
