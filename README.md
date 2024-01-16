@@ -2,7 +2,7 @@
 
 py-conformational-sampling is an experimental python library for sampling conformers of a metal ligand complex and searching for a reaction path and corresponding transition state for each conformer.
 
-![Conformational sampling](https://github.com/ZimmermanGroup/py-conformational-sampling/assets/5794446/bf1f4371-410b-4225-bce9-567373ed1d4b)
+![Conformational sampling](https://github.com/ZimmermanGroup/py-conformational-sampling/assets/5794446/ac17c431-3a02-4fb0-a923-d2ea1459b2d8)
 
 The user provides an ancillary ligand and reactive ligands as structure files which this library reads and stores as [stk (supramolecular toolkit) objects](https://stk.readthedocs.io/en/stable/stk.molecular.molecules.building_block.html). The user also provides a description of binding atoms and a description of a reaction in the form of changes in bonding. This library generates an ensemble of conformers for each ligand, binds them to Pd, and performs an optimization and filtering funnel to refine the conformer ensemble. Then for each conformer, the user's reaction is carried out using [pyGSM](https://github.com/ZimmermanGroup/pyGSM) which looks for a reaction path and corresponding transition state.
 
