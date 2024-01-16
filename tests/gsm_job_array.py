@@ -58,18 +58,6 @@ if not (path / 'opt_converged_000.xyz').exists():
     except IndexError: # no pygsm opt iters files exist, which should always occur in an initial run
         pass
 
-    # stk_gsm(
-    #     stk_mol=conformer_mols[job_index],
-    #     driving_coordinates=driving_coordinates,
-    #     config=config,
-    # )
-
-    # stk_gsm_command_line(
-    #     stk_mol=conformer_mols[job_index],
-    #     driving_coordinates=driving_coordinates,
-    #     config=config,
-    # )
-
     stk_se_de_gsm(
         stk_mol=conformer_mols[job_index],
         driving_coordinates=driving_coordinates,
