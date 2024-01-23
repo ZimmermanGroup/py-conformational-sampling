@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-conformational-sampling"
+dynamic = ["version"]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Joshua Kammeraad" },
+]
+dependencies = [
+    "ase",
+    "hvplot",
+    "numpy",
+    "openbabel-wheel",
+    "pandas",
+    "panel-chemistry",
+    "panel>=0.13.1",
+    "param",
+    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
+    "pytest",
+    "rdkit",
+    "stk",
+    "stko",
+    "xtb",
+]
+
+[project.optional-dependencies]
+dev = [
+    "dask-jobqueue",
+    "snakeviz",
+]
+vscode = [
+    "jupyter",
+    "pylint",
+]
+
+[project.urls]
+Homepage = "https://github.com/ZimmermanGroup/py-conformational-sampling"
+
+[tool.hatch.version]
+path = "py_conformational_sampling/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
