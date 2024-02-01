@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "py-conformational-sampling"
+version = "0.3.1"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    { name = "Joshua Kammeraad" },
+    { name = "Soumik Das"},
+]
+dependencies = [
+    "ase",
+    "hvplot",
+    "numpy",
+    "openbabel-wheel",
+    "pandas",
+    "panel-chemistry",
+    "panel>=0.13.1",
+    "param",
+    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
+    "pytest",
+    "rdkit",
+    "stk",
+    "stko",
+    "xtb",
+]
+
+[project.optional-dependencies]
+dev = [
+    "dask-jobqueue",
+    "snakeviz",
+]
+vscode = [
+    "jupyter",
+    "pylint",
+]
+
+[project.urls]
+Homepage = "https://github.com/ZimmermanGroup/py-conformational-sampling"
