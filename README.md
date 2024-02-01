@@ -60,7 +60,7 @@ Note: in the author's environment, manually compiling a version of xTB was found
 conda activate conformational-sampling
 ```
 
-* Navigate to the root directory of this project (py-conformational-sampling). The directory should contain this project's setup.py which pip will look to for installation instructions.
+* Navigate to the root directory of this project (py-conformational-sampling). The directory should contain this project's pyproject.toml which pip will look to for installation instructions.
 * Use pip to install py-conformational-sampling and its dependencies.
 
 ```
