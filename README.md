@@ -75,6 +75,13 @@ To install in editable mode with extra packages for development and testing with
 pip install -e .[dev,vscode]
 ```
 
+### Updating an existing installation:
+If py-conformational-sampling is installed in editable mode as in the above installation instructions, changes pulled from git should be immediately accessible in the installation's python environment. Running a pip install should check if there are any changes to the dependencies and if so automatically install them. In the directory of the git repository, run
+```
+git pull
+pip install -e .
+```
+
 ## Getting started
 
 ### ADD EXAMPLE OF FULL PIPELINE
