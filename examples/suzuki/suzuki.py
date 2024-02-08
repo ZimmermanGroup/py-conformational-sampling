@@ -15,20 +15,11 @@ from conformational_sampling.utils import stk_metal
 
 
 def suzuki():
-    stk_ancillary_ligand = load_stk_mol(Path('example2_L1.xyz'))
     stk_ligand_5a = load_stk_mol(Path('example2_5a.xyz'))
     stk_ligand_6a = load_stk_mol(Path('example2_6a.xyz'))
+    stk_ancillary_ligand = load_stk_mol(Path('example2_L1.xyz'))
 
-    # specifies atoms of the ancillary ligand that bind to the metal, in this case as a smarts string
-    functional_group_factory = stk.SmartsFunctionalGroupFactory(
-        smarts='P',
-        bonders=(0,),
-        deleters=(),
-    )
-    stk_ancillary_ligand = stk.BuildingBlock.init_from_molecule(stk_ancillary_ligand, functional_groups=[functional_group_factory])
-    # stk_mol = bind_to_dimethyl_Pd(stk_ancillary_ligand)
-
-    # prepare functional groups for the reactive ligands
+    # specify atoms of each ligand that bind to the metal, in this case as a smarts string
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
         smarts='cBr',
         bonders=(0,),
@@ -41,6 +32,12 @@ def suzuki():
         deleters=tuple(range(1,6)),
     )
     stk_ligand_6a = stk.BuildingBlock.init_from_molecule(stk_ligand_6a, functional_groups=[functional_group_factory])
+    functional_group_factory = stk.SmartsFunctionalGroupFactory(
+        smarts='P',
+        bonders=(0,),
+        deleters=(),
+    )
+    stk_ancillary_ligand = stk.BuildingBlock.init_from_molecule(stk_ancillary_ligand, functional_groups=[functional_group_factory])
     stk_mol = bind_ligands(stk_metal('Pd'), stk_ancillary_ligand, stk_ligand_5a, stk_ligand_6a)
     stk_list_to_xyz_file([stk_mol], 'test_Pd_complex.xyz')
     

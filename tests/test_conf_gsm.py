@@ -35,10 +35,10 @@ def conf_gsm():
     )
     stk_ligand_5a = stk.BuildingBlock.init_from_molecule(stk_ligand_5a, functional_groups=[functional_group_factory])
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
-            smarts='cB([O][H])[O][H]',
-            bonders=(0,),
-            deleters=tuple(range(1,6)),
-        )
+        smarts='cB([O][H])[O][H]',
+        bonders=(0,),
+        deleters=tuple(range(1,6)),
+    )
     stk_ligand_6a = stk.BuildingBlock.init_from_molecule(stk_ligand_6a, functional_groups=[functional_group_factory])
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
         smarts='P',
