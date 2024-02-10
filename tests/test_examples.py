@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import runpy
 
@@ -9,6 +10,7 @@ def test_examples():
 
 
 def test_suzuki_example():
-    # CHANGE DIRECTORY INTO THE SUZUKI EXAMPLE BEFORE EXECUTING THE SCRIPT
-    example_vars = runpy.run_path(Path(__file__).parents[1] / 'examples' / 'suzuki' / 'suzuki.py')
+    example_path = Path(__file__).parents[1] / 'examples' / 'suzuki'
+    os.chdir(example_path)
+    example_vars = runpy.run_path(example_path / 'suzuki.py')
     
