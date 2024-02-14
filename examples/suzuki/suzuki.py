@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import stk
 import stko
-from xtb.ase.calculator import XTB
 import os
 
 from conformational_sampling.ase_stko_optimizer import ASE
@@ -44,12 +43,8 @@ stk_ancillary_ligand = stk.BuildingBlock.init_from_molecule(stk_ancillary_ligand
 # stk_list_to_xyz_file([stk_mol], 'test_Pd_complex.xyz')
 
 config = Config(
-    # xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-    #ase_calculator=XTB(),
-    # max_dft_opt_steps=30,
     initial_conformers=2,
     num_cpus=2,
-    # dft_cpus_per_opt=16,
 )
 suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
 
