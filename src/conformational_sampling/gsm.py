@@ -8,6 +8,7 @@ sys.path.append(str(Path(pyGSM.__file__).parent))
 import ase.io
 import numpy as np
 from ase.calculators.morse import MorsePotential
+from xtb.ase import calculator
 
 from pyGSM.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Distance, Topology
 from pyGSM.level_of_theories.ase import ASELoT
@@ -188,8 +189,10 @@ def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     
     nifty.printcool(" Building the LOT")
     atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol)
-
-    lot = ASELoT.from_options(config.ase_calculator, geom=geom)
+    ase_calculator = config.ase_calculator
+    if ase_calculator is None:
+        ase_calculator = calculator.XTB()
+    lot = ASELoT.from_options(ase_calculator, geom=geom)
     
     nifty.printcool(" Building the PES")
     pes = PES.from_options(
