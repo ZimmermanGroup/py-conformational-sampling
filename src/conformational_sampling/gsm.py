@@ -322,6 +322,9 @@ def stk_se_de_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
             # path=path
         )
     
+    lot = ASELoT.from_options(ase_calculator, geom=geom, ID=1)
+    pes.lot = lot
+
     de_gsm = DE_GSM.from_options(
         reactant=reactant,
         product=product,
