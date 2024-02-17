@@ -8,7 +8,7 @@ import os
 
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.config import Config
-from conformational_sampling.gsm import stk_gsm, stk_se_de_gsm
+from conformational_sampling.gsm import stk_de_gsm, stk_se_gsm
 from conformational_sampling.main import (ConformerEnsembleOptimizer, bind_ligands, bind_to_dimethyl_Pd, load_stk_mol, load_stk_mol_list, stk_list_to_xyz_file, suzuki_ligand_conf_gen)
 from conformational_sampling.utils import stk_metal
 
@@ -58,11 +58,12 @@ os.chdir(path)
 driving_coordinates = [('ADD',56,80),('BREAK',1,56),('BREAK',1,80)]
 
 job_index=0
-stk_se_de_gsm(
+stk_se_gsm(
     stk_mol=conformer_mols[job_index],
     driving_coordinates=driving_coordinates,
     config=config,
 )
+stk_de_gsm(config=config)
 # stk_gsm(
 #     stk_mol=optimized_stk_mol,
 #     driving_coordinates=driving_coordinates,
