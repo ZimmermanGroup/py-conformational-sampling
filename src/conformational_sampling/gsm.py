@@ -22,9 +22,9 @@ from pyGSM.utilities.cli_utils import get_driving_coord_prim
 import stk
 
 from conformational_sampling.config import Config
-from conformational_sampling.analyze import ts_node
+# from conformational_sampling.analyze import ts_node
 
-OPT_STEPS = 10 # 10 for debugging, 50 for production
+OPT_STEPS = 50 # 10 for debugging, 50 for production
 
 def stk_mol_to_gsm_objects(stk_mol: stk.Molecule):
     ELEMENT_TABLE = elements.ElementData()
@@ -497,19 +497,19 @@ def stk_de_gsm(config: Config):
 
     # TS-Optimization following DE-GSM run
 
-    ts_node_energy = ts_node(de_gsm.energies)[1]
-    ts_node_index = de_gsm.energies.index(ts_node_energy)
-    ts_node_geom = de_gsm.nodes[ts_node_index]
+    # ts_node_energy = ts_node(de_gsm.energies)[1]
+    # ts_node_index = de_gsm.energies.index(ts_node_energy)
+    # ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    nifty.printcool("Optimizing TS node")
-    optimizer.optimize(
-        molecule=ts_node_geom,
-        refE=de_gsm.energies[0],
-        opt_steps=OPT_STEPS,
-        opt_type="TS",
-        ictan=de_gsm.ictan[ts_node_index],
-    )
+    # nifty.printcool("Optimizing TS node")
+    # optimizer.optimize(
+    #     molecule=ts_node_geom,
+    #     refE=de_gsm.energies[0],
+    #     opt_steps=OPT_STEPS,
+    #     opt_type="TS",
+    #     ictan=de_gsm.ictan[ts_node_index],
+    # )
 
-    de_gsm.nodes[ts_node_index] = ts_node_geom
+    # de_gsm.nodes[ts_node_index] = ts_node_geom
 
     gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)
