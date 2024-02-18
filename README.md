@@ -1,5 +1,5 @@
-# py-conformational-sampling
-
+py-conformational-sampling
+==========================
 
 py-conformational-sampling is an experimental python library for sampling conformers of a metal ligand complex and searching for a reaction path and corresponding transition state for each conformer.
 
@@ -9,11 +9,11 @@ Note for viewers coming from Jan 2024 paper: Visualization work is still being d
 
 The user provides an ancillary ligand and reactive ligands as structure files which this library reads and stores as [stk (supramolecular toolkit) objects](https://stk.readthedocs.io/en/stable/stk.molecular.molecules.building_block.html). The user also provides a description of binding atoms and a description of a reaction in the form of changes in bonding. This library generates an ensemble of conformers for each ligand, binds them to Pd, and performs an optimization and filtering funnel to refine the conformer ensemble. Then for each conformer, the user's reaction is carried out using [pyGSM](https://github.com/ZimmermanGroup/pyGSM) which looks for a reaction path and corresponding transition state.
 
-## Draft installation instructions
+# Draft installation instructions
 
 Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform.
 
-### Venv (built in virtual environment) installation
+## Venv (built in virtual environment) installation
 
 Note: [on Windows, the dependency openbabel may be difficult to install](https://github.com/openbabel/openbabel/issues/2408#issuecomment-1288847122).
 
@@ -43,7 +43,7 @@ source ./.venv/bin/activate
 pip install -e .
 ```
 
-### Conda (alternative) installation
+## Conda (alternative) installation
 
 * Clone GitHub repository.
 * Create a conda environment in which to install this library (links to more information on [anaconda installation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and [anaconda environments](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)). The following command creates a new conda environment with python and a couple dependencies that the author was unable to install automatically using pip (see below).
@@ -67,7 +67,7 @@ conda activate conformational-sampling
 pip install -e .
 ```
 
-### For developers:
+## For developers:
 
 To install in editable mode with extra packages for development and testing within visual studio code, substitute the following during the pip installation:
 
@@ -75,18 +75,33 @@ To install in editable mode with extra packages for development and testing with
 pip install -e .[dev,vscode]
 ```
 
-### Updating an existing installation:
+## Updating an existing installation:
 If py-conformational-sampling is installed in editable mode as in the above installation instructions, changes pulled from git should be immediately accessible in the installation's python environment. Running a pip install should check if there are any changes to the dependencies and if so automatically install them. In the directory of the git repository, run
 ```
 git pull
 pip install -e .
 ```
 
-## Getting started
+# Getting started
 
-### ADD EXAMPLE OF FULL PIPELINE
+## Suzuki example from [Organic Letters publication](https://pubs.acs.org/doi/10.1021/acs.orglett.3c04047)
 
-### Basic example
+* Navigate to the examples/suzuki directory
+
+```
+cd examples/suzuki
+```
+
+* Ensure that the venv or conda environment containing py-conformational-sampling is activated.
+* Execute the example:
+
+```
+python ./suzuki.py
+```
+
+## Examples of only conformer generation step (archive)
+
+### DPPE
 
 * Navigate to the examples/dppe directory.
 
@@ -102,9 +117,9 @@ python ./slurm.py
 
 * Example output can be found in the examples/dppe_output directory. XYZ output files contain the conformer ensemble after each stage of optimization.
 
-### Intermediate example
+### Alonso's ligand
 
-* Example is in the alonso_ligand directory. Execution is similar to basic example.
+* Example is in the alonso_ligand directory. Execution is similar to DPPE example.
 
 ```
 cd examples/alonso_ligand
@@ -118,7 +133,7 @@ Output notes:
 * Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (3 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
 * Current openbabel implementation may not maintain all types of stereochemistry such as atropisomerism.
 
-### Using your own ligand
+## Using your own ligand
 
 * Create a directory and copy an XYZ file of your ligand's structure into the directory.
 * Copy one of the slurm.py files from the examples folder into the directory.
