@@ -7,7 +7,6 @@ FORMAT = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s]%(levelname)s: %(
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 import stk
-from xtb.ase.calculator import XTB
 from concurrent.futures import ProcessPoolExecutor
 
 from conformational_sampling.main import load_stk_mol, load_stk_mol_list, suzuki_ligand_conf_gen
@@ -35,10 +34,10 @@ def conf_gsm():
     )
     stk_ligand_5a = stk.BuildingBlock.init_from_molecule(stk_ligand_5a, functional_groups=[functional_group_factory])
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
-            smarts='cB([O][H])[O][H]',
-            bonders=(0,),
-            deleters=tuple(range(1,6)),
-        )
+        smarts='cB([O][H])[O][H]',
+        bonders=(0,),
+        deleters=tuple(range(1,6)),
+    )
     stk_ligand_6a = stk.BuildingBlock.init_from_molecule(stk_ligand_6a, functional_groups=[functional_group_factory])
     functional_group_factory = stk.SmartsFunctionalGroupFactory(
         smarts='P',
@@ -50,8 +49,6 @@ def conf_gsm():
     # py-conformational-sampling configuration object
     config = Config(
         initial_conformers=50,
-        xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        #ase_calculator=XTB(),
         max_dft_opt_steps=10,
         num_cpus=28,
         dft_cpus_per_opt=4,

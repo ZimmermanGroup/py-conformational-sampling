@@ -8,7 +8,6 @@
 
 import os
 from pathlib import Path
-from xtb.ase.calculator import XTB
 from conformational_sampling.config import Config
 
 from conformational_sampling.gsm import stk_gsm, stk_gsm_command_line, stk_se_de_gsm
@@ -28,8 +27,6 @@ os.chdir(path)
 
 # py-GSM configuration object
 config = Config(
-    xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-    #ase_calculator=XTB(),
     max_dft_opt_steps=2,
     num_cpus=8,
     dft_cpus_per_opt=8,

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 import stk
-from xtb.ase.calculator import XTB
 import os
 
 from conformational_sampling.config import Config
@@ -16,10 +15,7 @@ def test_gsm():
     # run gsm to eliminate ethane
     # driving coordinates are 1-indexed
     driving_coordinates = [['BREAK',1,54],['BREAK',1,58],['ADD',54,58]]
-    config = Config(
-        xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        ase_calculator=XTB(),
-    )
+    config = Config()
     
     stk_gsm(
         stk_mol=stk_mol,
@@ -60,8 +56,6 @@ def test_suzuki():
     stk_list_to_xyz_file([stk_mol], 'test_Pd_complex.xyz')
     
     config = Config(
-        xtb_path='/export/apps/CentOS7/xtb/xtb/bin/xtb',
-        #ase_calculator=XTB(),
         max_dft_opt_steps=30,
         # num_cpus=16,
         dft_cpus_per_opt=20,
