@@ -43,11 +43,5 @@ vscode = [
 [project.urls]
 Homepage = "https://github.com/ZimmermanGroup/py-conformational-sampling"
 
-# [tool.ruff]
-# line-length = 88
-
-# [tool.ruff.lint]
-# extend-select = ["E5"]
-
 [tool.ruff.format]
 quote-style = "single"
