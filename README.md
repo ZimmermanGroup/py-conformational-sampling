@@ -3,7 +3,7 @@ py-conformational-sampling
 
 py-conformational-sampling is an experimental python library for sampling conformers of a metal ligand complex and searching for a reaction path and corresponding transition state for each conformer.
 
-Note for viewers coming from Jan 2024 paper: Visualization work is still being developed in a branch (https://github.com/ZimmermanGroup/py-conformational-sampling/tree/joshkamm/issue21)
+Note for viewers coming from Jan 2024 paper: Visualization work is still in its own branch (https://github.com/ZimmermanGroup/py-conformational-sampling/tree/joshkamm/issue21)
 
 ![Conformational sampling](https://github.com/ZimmermanGroup/py-conformational-sampling/assets/5794446/ac17c431-3a02-4fb0-a923-d2ea1459b2d8)
 
