@@ -1,12 +1,18 @@
 from dataclasses import dataclass
 from math import cos, pi, sin
+
 import stk
 from stk.molecular.topology_graphs import Edge
 from stk.molecular.topology_graphs.metal_complex import MetalComplex
-from stk.molecular.topology_graphs.metal_complex.vertices import BiDentateLigandVertex, MonoDentateLigandVertex, MetalVertex
+from stk.molecular.topology_graphs.metal_complex.vertices import (
+    BiDentateLigandVertex,
+    MetalVertex,
+    MonoDentateLigandVertex,
+)
 
 from conformational_sampling.main import bind_ligands
 from conformational_sampling.utils import stk_metal
+
 
 class TwoMonoOneBidentateSquarePlanar(MetalComplex):
 
@@ -104,13 +110,17 @@ class CatalyticReactionComplex:
         'generate reductive elimination driving coordinates for this complex'
         atom_infos = list(self.complex.get_atom_infos())
         driving_coordinates = []
-        
-        def is_metal_reactive_ligand_bond(atom_info_1: stk.AtomInfo, atom_info_2: stk.AtomInfo) -> bool:
+
+        def is_metal_reactive_ligand_bond(
+            atom_info_1: stk.AtomInfo, atom_info_2: stk.AtomInfo
+        ) -> bool:
             building_block_1 = atom_info_1.get_building_block()
             building_block_2 = atom_info_2.get_building_block()
-            return (building_block_1 is self.metal
-                    and building_block_2 in (self.reactive_ligand_1, self.reactive_ligand_2))
-        
+            return building_block_1 is self.metal and building_block_2 in (
+                self.reactive_ligand_1,
+                self.reactive_ligand_2,
+            )
+
         # determine driving coordinates to break
         for bond_info in self.complex.get_bond_infos():
             if bond_info.get_building_block() is None:
@@ -124,10 +134,6 @@ class CatalyticReactionComplex:
                     driving_coordinates += ('BREAK', atom_id_1, atom_id_2)
                 
         # CHECK THAT THERE ARE TWO BREAKING DRIVING COORDS
-        
-                
-        
+
         # go from zero-indexed to one-indexed
-        return [(type, i+1, j+1) for (type, i, j) in driving_coordinates]
-                    
-                    
+        return [(type, i + 1, j + 1) for (type, i, j) in driving_coordinates]
