@@ -7,13 +7,13 @@ from conformational_sampling.main import bind_ligands
 
 @dataclass
 class CatalyticReactionComplex:
-    metal: stk.Molecule
-    ancillary_ligand: stk.Molecule
-    reactive_ligand_1: stk.Molecule
-    reactive_ligand_2: stk.Molecule
+    metal: stk.BuildingBlock
+    ancillary_ligand: stk.BuildingBlock
+    reactive_ligand_1: stk.BuildingBlock
+    reactive_ligand_2: stk.BuildingBlock
 
     def __post_init__(self) -> None:
-        "create a complex with ane ancillary ligand and two reactive ligands, like bind_ligands"
+        """Create a complex with one ancillary ligand and two reactive ligands"""
         self.complex = bind_ligands(
             self.metal,
             self.ancillary_ligand,
@@ -22,37 +22,38 @@ class CatalyticReactionComplex:
         )
 
     def gen_reductive_elim_drive_coords(self):
-        "generate reductive elimination driving coordinates for this complex"
-        atom_infos = list(self.complex.get_atom_infos())
-        driving_coordinates = []
+        """Generate reductive elimination driving coordinates for this complex"""
+        breaking_bonds = []
 
-        def is_metal_reactive_ligand_bond(
-            atom_info_1: stk.AtomInfo, atom_info_2: stk.AtomInfo
-        ) -> bool:
-            building_block_1 = atom_info_1.get_building_block()
-            building_block_2 = atom_info_2.get_building_block()
-            return building_block_1 is self.metal and building_block_2 in (
-                self.reactive_ligand_1,
-                self.reactive_ligand_2,
-            )
-
-        # determine driving coordinates to break
+        # Identify metal / reactive ligand bonds
         for bond_info in self.complex.get_bond_infos():
             if bond_info.get_building_block() is None:
                 bond = bond_info.get_bond()
-                atom_id_1, atom_id_2 = (
-                    bond.get_atom1().get_id(),
-                    bond.get_atom2().get_id(),
-                )
-                atom_info_1 = next(self.complex.get_atom_infos(atom_id_1))
-                atom_info_2 = next(self.complex.get_atom_infos(atom_id_2))
-                if is_metal_reactive_ligand_bond(
-                    atom_info_1, atom_info_2
-                ) or is_metal_reactive_ligand_bond(atom_info_2, atom_info_1):
-                    # this bond is broken in reductive elimination
-                    driving_coordinates += ('BREAK', atom_id_1, atom_id_2)
+                atom_ids = {bond.get_atom1().get_id(), bond.get_atom2().get_id()}
+                atom_infos = set(self.complex.get_atom_infos(atom_ids))
+                building_blocks = {
+                    atom_info.get_building_block() for atom_info in atom_infos
+                }
+                if self.metal in building_blocks:
+                    building_blocks.remove(self.metal)
+                    other_building_block = building_blocks.pop()
+                    if other_building_block in {
+                        self.reactive_ligand_1,
+                        self.reactive_ligand_2,
+                    }:
+                        # This bond is broken in reductive elimination
+                        breaking_bonds.append(atom_ids)
 
-        # CHECK THAT THERE ARE TWO BREAKING DRIVING COORDS
+        # There should be one bond from the metal to each reactive ligand
+        assert len(breaking_bonds) == 2
 
-        # go from zero-indexed to one-indexed
+        # Form a bond between the distinct atom from each metal-ligand bond
+        forming_bond = breaking_bonds[0] ^ breaking_bonds[1]
+
+        driving_coordinates = [
+            ('BREAK', *breaking_bond) for breaking_bond in breaking_bonds
+        ]
+        driving_coordinates.append(('ADD', *forming_bond))
+
+        # Convert from zero-indexed to one-indexed for pyGSM
         return [(type, i + 1, j + 1) for (type, i, j) in driving_coordinates]
