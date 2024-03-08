@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 import stk
 
-from conformational_sampling.main import bind_ligands
+from conformational_sampling.config import Config
+from conformational_sampling.main import bind_ligands, gen_confs_openbabel
 
 
 @dataclass
@@ -11,6 +12,7 @@ class CatalyticReactionComplex:
     ancillary_ligand: stk.BuildingBlock
     reactive_ligand_1: stk.BuildingBlock
     reactive_ligand_2: stk.BuildingBlock
+    config: Config
 
     def __post_init__(self) -> None:
         """Create a complex with one ancillary ligand and two reactive ligands"""
@@ -20,6 +22,23 @@ class CatalyticReactionComplex:
             self.reactive_ligand_1,
             self.reactive_ligand_2,
         )
+
+    def gen_conformers(self):
+        reactive_ligand_1_conformers = gen_confs_openbabel(
+            self.reactive_ligand_1, self.config
+        )
+        reactive_ligand_2_conformers = gen_confs_openbabel(
+            self.reactive_ligand_2, self.config
+        )
+        ancillary_ligand_conformers = gen_confs_openbabel(
+            self.ancillary_ligand, self.config
+        )
+        self.unoptimized_conformers = [
+            bind_ligands(self.metal, ancillary, ligand_1, ligand_2)
+            for ancillary in ancillary_ligand_conformers
+            for ligand_1 in reactive_ligand_1_conformers
+            for ligand_2 in reactive_ligand_2_conformers
+        ]
 
     def gen_reductive_elim_drive_coords(self):
         """Generate reductive elimination driving coordinates for this complex"""
