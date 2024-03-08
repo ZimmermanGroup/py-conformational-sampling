@@ -12,7 +12,7 @@ class CatalyticReactionComplex:
     ancillary_ligand: stk.BuildingBlock
     reactive_ligand_1: stk.BuildingBlock
     reactive_ligand_2: stk.BuildingBlock
-    config: Config
+    config: Config = Config()
 
     def __post_init__(self) -> None:
         """Create a complex with one ancillary ligand and two reactive ligands"""
