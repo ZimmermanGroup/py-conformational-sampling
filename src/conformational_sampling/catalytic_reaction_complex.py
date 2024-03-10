@@ -1,9 +1,15 @@
+import logging
 from dataclasses import dataclass
 
 import stk
 
 from conformational_sampling.config import Config
-from conformational_sampling.main import bind_ligands, gen_confs_openbabel
+from conformational_sampling.main import (
+    ConformerEnsembleOptimizer,
+    bind_ligands,
+    gen_confs_openbabel,
+    stk_list_to_xyz_file,
+)
 
 
 @dataclass
@@ -39,6 +45,11 @@ class CatalyticReactionComplex:
             for ligand_1 in reactive_ligand_1_conformers
             for ligand_2 in reactive_ligand_2_conformers
         ]
+        self.optimized_conformers = ConformerEnsembleOptimizer(
+            self.unoptimized_conformers, self.config
+        ).optimize()
+        logging.debug('Finished generating CatalyticReactionComplex conformers')
+        return self.optimized_conformers
 
     def gen_reductive_elim_drive_coords(self):
         """Generate reductive elimination driving coordinates for this complex"""

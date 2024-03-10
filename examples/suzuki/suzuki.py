@@ -1,17 +1,12 @@
-from pathlib import Path
-import numpy as np
-
-import pytest
-import stk
-import stko
 import os
+from pathlib import Path
 
-from conformational_sampling.ase_stko_optimizer import ASE
+import stk
+from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_de_gsm, stk_se_gsm
-from conformational_sampling.main import (ConformerEnsembleOptimizer, bind_ligands, bind_to_dimethyl_Pd, load_stk_mol, load_stk_mol_list, stk_list_to_xyz_file, suzuki_ligand_conf_gen)
+from conformational_sampling.main import load_stk_mol, load_stk_mol_list
 from conformational_sampling.utils import stk_metal
-
 
 stk_ligand_5a = load_stk_mol(Path('example2_5a.xyz'))
 stk_ligand_6a = load_stk_mol(Path('example2_6a.xyz'))
@@ -42,9 +37,16 @@ config = Config(
     initial_conformers=2,
     num_cpus=2,
 )
-suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config)
+reactive_complex = CatalyticReactionComplex(
+    metal=stk_metal('Pd'),
+    ancillary_ligand=stk_ancillary_ligand,
+    reactive_ligand_1=stk_ligand_5a,
+    reactive_ligand_2=stk_ligand_6a,
+    config=config,
+)
+reactive_complex.gen_conformers()
 
-conformer_path = Path('suzuki_conformers.xyz')
+conformer_path = Path('conformers_3_xtb.xyz')
 conformer_mols = load_stk_mol_list(conformer_path)
 
 # for i in range(len(conformer_mols)):
@@ -55,7 +57,8 @@ for i in range(1):
 os.chdir(path)
 
 # specifying driving coordinates for pyGSM (1-indexed based on XYZ file)
-driving_coordinates = [('ADD',56,80),('BREAK',1,56),('BREAK',1,80)]
+# driving_coordinates = [('ADD',56,80),('BREAK',1,56),('BREAK',1,80)]
+driving_coordinates = reactive_complex.gen_reductive_elim_drive_coords()
 
 job_index=0
 stk_se_gsm(
