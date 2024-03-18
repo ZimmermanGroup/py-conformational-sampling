@@ -8,7 +8,6 @@ from conformational_sampling.main import (
     ConformerEnsembleOptimizer,
     bind_ligands,
     gen_confs_openbabel,
-    stk_list_to_xyz_file,
 )
 
 
