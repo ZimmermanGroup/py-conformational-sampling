@@ -1,30 +1,37 @@
-from copy import deepcopy
-from concurrent.futures import ProcessPoolExecutor
-from itertools import repeat
-import os
-from pathlib import Path
 import logging
-import sys, platform
+import os
+import platform
+import sys
+from concurrent.futures import ProcessPoolExecutor
+from copy import deepcopy
 from importlib.metadata import version
-import pkg_resources
+from itertools import repeat
+from pathlib import Path
 
 import ase
-from ase.optimize import BFGS
-from ase.io.trajectory import Trajectory
-
+import pkg_resources
 import stk
 import stko
+from ase.io.trajectory import Trajectory
+from ase.optimize import BFGS
 from openbabel import pybel as pb
 from rdkit import Chem
 from rdkit.Chem.rdmolfiles import MolToXYZBlock
-
 from xtb.ase import calculator
 
 from conformational_sampling.ase_stko_optimizer import ASE
-from conformational_sampling.metal_complexes import (
-    OneLargeTwoSmallMonodentateTrigonalPlanar, TwoMonoOneBidentateSquarePlanar)
-from conformational_sampling.utils import num_cpus, pybel_mol_to_stk_mol, stk_metal, stk_mol_to_ase_atoms, stk_mol_to_pybel_mol
 from conformational_sampling.config import Config
+from conformational_sampling.metal_complexes import (
+    OneLargeTwoSmallMonodentateTrigonalPlanar,
+    TwoMonoOneBidentateSquarePlanar,
+)
+from conformational_sampling.utils import (
+    num_cpus,
+    pybel_mol_to_stk_mol,
+    stk_metal,
+    stk_mol_to_ase_atoms,
+    stk_mol_to_pybel_mol,
+)
 
 UNOPTIMIZED = 0
 MC_HAMMER = 1
@@ -52,7 +59,7 @@ class ConformerOptimizationSequence:
                 self.stages[UNOPTIMIZED],
                 reperceive_bonds(self.stages[DFT])
             )
-        except KeyError: # FIGURE OUT WHAT THE ACTUAL ERROR IS
+        except KeyError:
             return None
     
 class ConformerEnsembleOptimizer:
@@ -280,13 +287,4 @@ def gen_ligand_library_entry(stk_ligand, config):
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
     ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
-    logging.debug('Finished generating ligand library entry')
-
-def suzuki_ligand_conf_gen(stk_ligand_5a, stk_ligand_6a, stk_ancillary_ligand, config):
-    stk_ligand_5a_conformers = gen_confs_openbabel(stk_ligand_5a, config)
-    stk_ligand_6a_conformers = gen_confs_openbabel(stk_ligand_6a, config)
-    stk_ancillary_ligand_conformers = gen_confs_openbabel(stk_ancillary_ligand, config)
-    unoptimized_complexes = [bind_ligands(stk_metal('Pd'), ligand1, ligand2, ligand3) for ligand1 in stk_ancillary_ligand_conformers for ligand2 in stk_ligand_5a_conformers for ligand3 in stk_ligand_6a_conformers]
-    optimized_complexes = ConformerEnsembleOptimizer(unoptimized_complexes, config).optimize()
-    stk_list_to_xyz_file(optimized_complexes, 'suzuki_conformers.xyz')
     logging.debug('Finished generating ligand library entry')
