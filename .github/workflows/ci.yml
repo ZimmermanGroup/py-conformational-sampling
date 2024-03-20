@@ -26,8 +26,8 @@ jobs:
         # python -m pip install --upgrade pip
         # pip install flake8 pytest
         # pip install -e .
-        uv pip install pytest
-        uv pip install -e .
+        uv pip install --system pytest
+        uv pip install --system -e .
     - name: Test with pytest
       run: |
         pytest -s -m "not long"
