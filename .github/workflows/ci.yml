@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pytest-mark: ['not long', long]
+        pytest-mark: ['"not long"', long]
 
     steps:
     - uses: actions/checkout@v3
