@@ -10,7 +10,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pytest-specifier: ['-m "not long"', 'test_examples.py::test_suzuki_example']
+        pytest-specifier: [
+          '-m "not long"',
+          'tests/test_examples.py::test_suzuki_example',
+          ]
 
     steps:
     - uses: actions/checkout@v4
