@@ -4,13 +4,12 @@ from pathlib import Path
 
 import pytest
 import stk
-
 from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
 from conformational_sampling.main import load_stk_mol
 from conformational_sampling.utils import stk_metal
 
 
-@pytest.mark.long
+@pytest.mark.slow
 def test_suzuki_example(tmp_path, monkeypatch):
     example_path = Path(__file__).parents[1] / 'examples' / 'suzuki'
     example_tmp_path = shutil.copytree(example_path, tmp_path, dirs_exist_ok=True)
