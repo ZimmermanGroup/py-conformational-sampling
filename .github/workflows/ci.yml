@@ -1,10 +1,10 @@
 # This workflow will install PyCoSa including dependencies and run pytest
-name: pytest
+name: CI
 
 on: [push]
 
 jobs:
-  build:
+  pytest:
     runs-on: ubuntu-latest
     
     strategy:
