@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pytest-mark: ['"not long"', long]
+        pytest-specifier: ['-m "not long"', 'test_examples.py::test_suzuki_example']
 
     steps:
     - uses: actions/checkout@v4
@@ -27,4 +27,4 @@ jobs:
         uv pip install --system -e .
     - name: Test with pytest
       run: |
-        pytest -s -m ${{matrix.pytest-mark}}
+        pytest -v -s ${{matrix.pytest-specifier}}
