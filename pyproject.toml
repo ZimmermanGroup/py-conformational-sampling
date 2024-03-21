@@ -43,5 +43,10 @@ vscode = [
 [project.urls]
 Homepage = "https://github.com/ZimmermanGroup/py-conformational-sampling"
 
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
 [tool.ruff.format]
 quote-style = "single"

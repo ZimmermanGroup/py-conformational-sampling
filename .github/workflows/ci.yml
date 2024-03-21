@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         pytest-specifier: [
-          '-m "not long"',
+          '-m "not slow"',
           'tests/test_examples.py::test_suzuki_example',
           ]
 
