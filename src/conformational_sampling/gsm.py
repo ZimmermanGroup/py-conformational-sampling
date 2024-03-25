@@ -1,27 +1,35 @@
-from pathlib import Path
+import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
+from pathlib import Path
+
 import pyGSM
 
 from conformational_sampling.main import load_stk_mol_list
+
 # workaround for issue with pyGSM installation
 sys.path.append(str(Path(pyGSM.__file__).parent))
-import ase.io
 import numpy as np
-from ase.calculators.morse import MorsePotential
-from xtb.ase import calculator
-
-from pyGSM.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Distance, Topology
+import stk
+from pyGSM.coordinate_systems import (
+    DelocalizedInternalCoordinates,
+    Distance,
+    PrimitiveInternalCoordinates,
+    Topology,
+)
+from pyGSM.growing_string_methods import DE_GSM, SE_GSM
 from pyGSM.level_of_theories.ase import ASELoT
+from pyGSM.molecule import Molecule
 from pyGSM.optimizers import eigenvector_follow
 from pyGSM.potential_energy_surfaces import PES
 from pyGSM.utilities import elements, manage_xyz, nifty
-from pyGSM.molecule import Molecule
-from pyGSM.growing_string_methods import SE_GSM, DE_GSM
-from pyGSM.utilities.cli_utils import plot as gsm_plot
 from pyGSM.utilities.cli_utils import get_driving_coord_prim
-import stk
+from pyGSM.utilities.cli_utils import plot as gsm_plot
+from xtb.ase import calculator
 
 from conformational_sampling.config import Config
+
 # from conformational_sampling.analyze import ts_node
 
 OPT_STEPS = 50 # 10 for debugging, 50 for production
@@ -44,6 +52,28 @@ def stk_mol_list_to_gsm_objects(stk_mol_list):
     atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol_list[0])
     geoms = [stk_mol_to_gsm_objects(stk_mol)[2] for stk_mol in stk_mol_list]
     return atoms, xyz, geoms
+
+
+def stk_se_de_gsm(
+    path: Path, stk_mol: stk.Molecule, driving_coordinates, config: Config
+):
+    """Run pyGSM (changes directory, so run in its own process)"""
+    path.mkdir(parents=True, exist_ok=True)
+    os.chdir(path)
+    stk_se_gsm(
+        stk_mol=stk_mol,
+        driving_coordinates=driving_coordinates,
+        config=config,
+    )
+    stk_de_gsm(config=config)
+
+
+def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Config):
+    paths = [Path.cwd() / f'scratch/pystring_{i}' for i in range(len(stk_mols))]
+    with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
+        executor.map(
+            stk_se_de_gsm, paths, stk_mols, repeat(driving_coordinates), repeat(config)
+        )
 
 
 def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
