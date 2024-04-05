@@ -25,7 +25,7 @@ dependencies = [
     "pytest",
     "rdkit",
     "stk",
-    "stko",
+    "stko<=0.0.40",
     "xtb",
 ]
 
