@@ -24,7 +24,7 @@ dependencies = [
     "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
     "pytest",
     "rdkit",
-    "stk",
+    "stk<=2021.8.2.0",
     "stko<=0.0.40",
     "xtb",
 ]
