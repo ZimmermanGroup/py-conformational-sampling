@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.12]
+        python-version: [3.8, 3.11]
         pytest-specifier: ['-m "not slow"']
         include:
           - python-version: 3.8
