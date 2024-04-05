@@ -10,17 +10,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pytest-specifier: [
-          '-m "not slow"',
-          # 'tests/test_examples.py::test_suzuki_example',
-          ]
+        python-version: [3.8, 3.12]
+        pytest-specifier: '-m "not slow"'
+        include:
+          - python-version: 3.8
+            pytest-specifier: 'tests/test_examples.py::test_suzuki_example'
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.11
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: ${{ matrix.python-version }}
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
     - name: Install uv
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
