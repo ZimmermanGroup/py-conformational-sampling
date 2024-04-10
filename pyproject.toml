@@ -24,6 +24,7 @@ dependencies = [
     "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
     "pytest",
     "rdkit",
+    "setuptools", # necessary for pyGSM to run on python 3.11
     "stk<=2021.8.2.0",
     "stko<=0.0.40",
     "xtb",
