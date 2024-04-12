@@ -13,7 +13,7 @@ jobs:
         python-version: [3.8, 3.11]
         pytest-specifier: ['-m "not slow"']
         include:
-          - python-version: 3.11
+          - python-version: 3.8
             pytest-specifier: 'tests/test_examples.py::test_suzuki_example'
 
     steps:

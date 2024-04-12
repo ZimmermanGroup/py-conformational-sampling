@@ -12,7 +12,7 @@ The user provides an ancillary ligand and reactive ligands as structure files wh
 
 # Draft installation instructions
 
-Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform.
+Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform. Python versions 3.8 and 3.11 are tested in github actions workflows.
 
 ## Venv (built in virtual environment) installation
 
