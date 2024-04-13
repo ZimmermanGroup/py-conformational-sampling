@@ -9,7 +9,6 @@ from itertools import repeat
 from pathlib import Path
 
 import ase
-import pkg_resources
 import stk
 import stko
 from ase.io.trajectory import Trajectory
@@ -45,8 +44,7 @@ print(f'py-conformational-sampling {version("py-conformational-sampling")}')
 logging.debug(sys.executable)
 logging.debug(f'python {sys.version}')
 logging.debug(f'Platform: {platform.platform()}')
-logging.debug('Installed packages:')
-logging.debug('\n\t'.join(reversed(list(f'{p.project_name}={p.version}' for p in pkg_resources.working_set))))
+
 
 class ConformerOptimizationSequence:
     def __init__(self, unoptimized) -> None:

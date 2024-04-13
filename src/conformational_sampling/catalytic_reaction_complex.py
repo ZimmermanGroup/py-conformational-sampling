@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import stk
 
@@ -17,7 +17,7 @@ class CatalyticReactionComplex:
     ancillary_ligand: stk.BuildingBlock
     reactive_ligand_1: stk.BuildingBlock
     reactive_ligand_2: stk.BuildingBlock
-    config: Config = Config()
+    config: Config = field(default_factory=Config)
 
     def __post_init__(self) -> None:
         """Create a complex with one ancillary ligand and two reactive ligands"""
