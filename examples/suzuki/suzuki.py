@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import stk
-
 from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_se_de_gsm_single_node_parallel
@@ -58,7 +57,8 @@ conformer_mols = load_stk_mol_list(conformer_path)
 
 driving_coordinates = reactive_complex.gen_reductive_elim_drive_coords()
 
-stk_se_de_gsm_single_node_parallel(conformer_mols[:3], driving_coordinates, config)
-
-assert True
-    
+stk_se_de_gsm_single_node_parallel(
+    stk_mols=conformer_mols[:3],
+    driving_coordinates=driving_coordinates,
+    config=config,
+)
