@@ -1,10 +1,9 @@
-import os
 from pathlib import Path
 
 import stk
 from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
 from conformational_sampling.config import Config
-from conformational_sampling.gsm import stk_de_gsm, stk_se_gsm
+from conformational_sampling.gsm import stk_se_de_gsm_single_node_parallel
 from conformational_sampling.main import load_stk_mol, load_stk_mol_list
 from conformational_sampling.utils import stk_metal
 
@@ -41,8 +40,8 @@ ancillary_ligand = stk.BuildingBlock.init_from_molecule(
 )
 
 config = Config(
-    initial_conformers=2,
-    num_cpus=2,
+    initial_conformers=3,
+    num_cpus=3,
 )
 reactive_complex = CatalyticReactionComplex(
     metal=stk_metal('Pd'),
@@ -56,18 +55,10 @@ reactive_complex.gen_conformers()
 conformer_path = Path('conformers_3_xtb.xyz')
 conformer_mols = load_stk_mol_list(conformer_path)
 
-# for i in range(len(conformer_mols)):
-for i in range(1):
-    path = Path.cwd() / f'scratch/pystring_{i}'
-    path.mkdir(parents=True, exist_ok=True)
-os.chdir(path)
-job_index = 0
-
 driving_coordinates = reactive_complex.gen_reductive_elim_drive_coords()
-stk_se_gsm(
-    stk_mol=conformer_mols[job_index],
+
+stk_se_de_gsm_single_node_parallel(
+    stk_mols=conformer_mols[:3],
     driving_coordinates=driving_coordinates,
     config=config,
 )
-stk_de_gsm(config=config)
-assert True

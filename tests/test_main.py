@@ -1,15 +1,30 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+
 import numpy as np
 import pytest
 import stk
 from conformational_sampling.config import Config
-from conformational_sampling.main import ConformerEnsembleOptimizer, bind_to_dimethyl_Pd, gen_confs_openbabel, load_stk_mol
-import stko
-from conformational_sampling.utils import stk_mol_to_pybel_mol
-from conformational_sampling.utils import pybel_mol_to_stk_mol
+from conformational_sampling.main import (
+    ConformerEnsembleOptimizer,
+    bind_to_dimethyl_Pd,
+    gen_confs_openbabel,
+    load_stk_mol,
+)
+from conformational_sampling.utils import pybel_mol_to_stk_mol, stk_mol_to_pybel_mol
+
 
 def test_imports():
     assert True
+
+
+@pytest.mark.skip(reason='temporary code example to use when processing pyGSM runs')
+def test_as_completed():
+    with ProcessPoolExecutor(max_workers=3) as executor:
+        futures = [executor.submit(pow, 3, i) for i in range(10)]
+        for future in as_completed(futures):
+            print(f'{future.result() = }')
+
 
 def test_stk_to_pybel_loop():
     'convert an stk molecule to a pybel molecule and then back to validate the conversion methods'
@@ -60,4 +75,3 @@ def test_conformer_ensemble_optimizer():
     stk_confs = gen_confs_openbabel(simple_complex, config)
     assert len(stk_confs) == 2
     ConformerEnsembleOptimizer(stk_confs, config).optimize()
-    

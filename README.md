@@ -140,10 +140,10 @@ Output notes:
 * Conformers are ordered in the output to display relevant conformers first. Conformers with no more than 2 changes in bonding (3 conformers in the sample output) are output first. This is customizable with `config.max_connectivity_changes`. Conformers are then sorted by energy, with the lowest energy first.
 * Current openbabel implementation may not maintain all types of stereochemistry such as atropisomerism.
 
-## Using your own ligand
+## Using your own ligands
 
-* Create a directory and copy an XYZ file of your ligand's structure into the directory.
-* Copy one of the slurm.py files from the examples folder into the directory.
+* Create a directory and copy files containing your ligand structures into the directory.
+* Copy one of the example python files from the examples folder into the directory.
 * If necessary or desired, customize the config and description of ligand binding
 
 Notes:
