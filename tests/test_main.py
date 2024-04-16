@@ -4,8 +4,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import stk
-import stko
-
 from conformational_sampling.config import Config
 from conformational_sampling.main import (
     ConformerEnsembleOptimizer,
@@ -20,6 +18,7 @@ def test_imports():
     assert True
 
 
+@pytest.mark.skip(reason='temporary code example to use when processing pyGSM runs')
 def test_as_completed():
     with ProcessPoolExecutor(max_workers=3) as executor:
         futures = [executor.submit(pow, 3, i) for i in range(10)]
@@ -71,11 +70,6 @@ def test_conformer_ensemble_optimizer():
         functional_groups=[functional_group_factory]
     )
     simple_complex = bind_to_dimethyl_Pd(simple_ligand)
-
-    config = Config(initial_conformers=2)
-    stk_confs = gen_confs_openbabel(simple_complex, config)
-    assert len(stk_confs) == 2
-    ConformerEnsembleOptimizer(stk_confs, config).optimize()
 
     config = Config(initial_conformers=2)
     stk_confs = gen_confs_openbabel(simple_complex, config)
