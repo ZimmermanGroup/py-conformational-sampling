@@ -11,6 +11,8 @@
     // Use 'postCreateCommand' to run commands after the container is created.
     // "postCreateCommand": "pipx install --user -r requirements.txt",
     "postCreateCommand": {
+        "install pixi": "curl -fsSL https://pixi.sh/install.sh | bash",
+        "pixi install": "pixi install",
         "install uv": "curl -LsSf https://astral.sh/uv/install.sh | sh",
         "add uv to PATH": "source $HOME/.cargo/env",
         "create venv": "uv venv",
