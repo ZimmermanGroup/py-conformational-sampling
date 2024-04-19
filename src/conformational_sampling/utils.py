@@ -7,7 +7,8 @@ from rdkit.Chem.rdmolfiles import MolToXYZBlock, MolFromMolBlock, MolToMolBlock
 
 import stk
 from rdkit import Chem
-from pygsm.utilities.units import KJ_PER_KCAL
+from pyGSM.utilities.units import KJ_PER_KCAL
+
 
 def num_cpus():
     try:

@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 
 from openbabel import pybel as pb
-from pygsm.utilities.units import KCAL_MOL_PER_AU, EV_TO_AU
+from pyGSM.utilities.units import KCAL_MOL_PER_AU, EV_TO_AU
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms, rdmolops
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
