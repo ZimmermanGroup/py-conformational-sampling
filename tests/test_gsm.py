@@ -1,12 +1,17 @@
+import os
 from pathlib import Path
 
 import pytest
 import stk
-import os
 
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_gsm
-from conformational_sampling.main import (ConformerEnsembleOptimizer, bind_ligands, load_stk_mol, stk_list_to_xyz_file)
+from conformational_sampling.main import (
+    ConformerEnsembleOptimizer,
+    bind_ligands,
+    load_stk_mol,
+    stk_list_to_xyz_file,
+)
 from conformational_sampling.utils import stk_metal
 
 
@@ -100,8 +105,8 @@ def test_suzuki():
     #                           if atom_info.get_building_block_id() == 1]
     # ancillary_ligand_ids = [atom_info.get_atom().get_id() for atom_info in ancillary_ligand_infos]
     # ancillary_positions = np.row_stack(list(stk_mol.get_atomic_positions(ancillary_ligand_ids)))
-    # stk_ancillary_ligand.with_position_matrix(ancillary_positions)
-    
+    # stk_ancillary_ligand = stk_ancillary_ligand.with_position_matrix(ancillary_positions)
+
     # complex = bind_ligands(stk_metal('Pd'), stk_ancillary_ligand, stk_ligand_5a, stk_ligand_6a)
     # stk_list_to_xyz_file([complex], 'test_Pd_complex.xyz')
     assert True
