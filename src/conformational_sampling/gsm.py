@@ -1,28 +1,38 @@
-from pathlib import Path
+import os
 import sys
-import pygsm
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
+from pathlib import Path
+
+import pyGSM
 
 from conformational_sampling.main import load_stk_mol_list
-# workaround for issue with pygsm installation
-sys.path.append(str(Path(pygsm.__file__).parent))
-import ase.io
-import numpy as np
-from ase.calculators.morse import MorsePotential
 
-from pygsm.coordinate_systems import DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Topology
-from pygsm.level_of_theories.ase import ASELoT
-from pygsm.optimizers import eigenvector_follow
-from pygsm.potential_energy_surfaces import PES
-from pygsm.utilities import elements, manage_xyz, nifty
-from pygsm.wrappers import Molecule
-from pygsm.wrappers.main import main
-from pygsm.growing_string_methods import SE_GSM, DE_GSM
-from pygsm.wrappers.main import plot as gsm_plot
-from pygsm.wrappers.main import get_driving_coord_prim, Distance
+# workaround for issue with pyGSM installation
+sys.path.append(str(Path(pyGSM.__file__).parent))
+import numpy as np
 import stk
+from pyGSM.coordinate_systems import (
+    DelocalizedInternalCoordinates,
+    Distance,
+    PrimitiveInternalCoordinates,
+    Topology,
+)
+from pyGSM.growing_string_methods import DE_GSM, SE_GSM
+from pyGSM.level_of_theories.ase import ASELoT
+from pyGSM.molecule import Molecule
+from pyGSM.optimizers import eigenvector_follow
+from pyGSM.potential_energy_surfaces import PES
+from pyGSM.utilities import elements, manage_xyz, nifty
+from pyGSM.utilities.cli_utils import get_driving_coord_prim
+from pyGSM.utilities.cli_utils import plot as gsm_plot
+from xtb.ase import calculator
 
 from conformational_sampling.config import Config
-from conformational_sampling.analyze import ts_node
+
+# from conformational_sampling.analyze import ts_node
+
+OPT_STEPS = 50 # 10 for debugging, 50 for production
 
 def stk_mol_to_gsm_objects(stk_mol: stk.Molecule):
     ELEMENT_TABLE = elements.ElementData()
@@ -42,6 +52,28 @@ def stk_mol_list_to_gsm_objects(stk_mol_list):
     atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol_list[0])
     geoms = [stk_mol_to_gsm_objects(stk_mol)[2] for stk_mol in stk_mol_list]
     return atoms, xyz, geoms
+
+
+def stk_se_de_gsm(
+    path: Path, stk_mol: stk.Molecule, driving_coordinates, config: Config
+):
+    """Run pyGSM (changes directory, so run in its own process)"""
+    path.mkdir(parents=True, exist_ok=True)
+    os.chdir(path)
+    stk_se_gsm(
+        stk_mol=stk_mol,
+        driving_coordinates=driving_coordinates,
+        config=config,
+    )
+    stk_de_gsm(config=config)
+
+
+def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Config):
+    paths = [Path.cwd() / f'scratch/pystring_{i}' for i in range(len(stk_mols))]
+    with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
+        executor.map(
+            stk_se_de_gsm, paths, stk_mols, repeat(driving_coordinates), repeat(config)
+        )
 
 
 def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
@@ -138,11 +170,11 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
     nifty.printcool("REACTANT GEOMETRY NOT FIXED!!! OPTIMIZING")
     optimizer.optimize(
-            molecule=reactant,
-            refE=reactant.energy,
-            opt_steps=50,
-            # path=path
-        )
+        molecule=reactant,
+        refE=reactant.energy,
+        opt_steps=50,
+        # path=path
+    )
 
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
@@ -151,9 +183,9 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=driving_coordinates,
-        DQMAG_MAX=0.5, #default value is 0.8
-        ADD_NODE_TOL=0.01, #default value is 0.1
-        CONV_TOL = 0.0005,
+        DQMAG_MAX=0.5,  # default value is 0.8
+        ADD_NODE_TOL=0.01,  # default value is 0.1
+        CONV_TOL=0.0005,
     )
     
     # run pyGSM, setting up restart if necessary
@@ -180,14 +212,20 @@ def stk_gsm_command_line(stk_mol: stk.Molecule, driving_coordinates, config: Con
         "-num_nodes", "15",
         "-isomers", "isomers0001.txt",
     ]
-    main()
+    # main()
+    raise NotImplementedError(
+        'the way to access the pyGSM command line functionality from python has changed'
+    )
+    
     
 def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     
     nifty.printcool(" Building the LOT")
     atoms, xyz, geom = stk_mol_to_gsm_objects(stk_mol)
-
-    lot = ASELoT.from_options(config.ase_calculator, geom=geom)
+    ase_calculator = config.ase_calculator
+    if ase_calculator is None:
+        ase_calculator = calculator.XTB()
+    lot = ASELoT.from_options(ase_calculator, geom=geom)
     
     nifty.printcool(" Building the PES")
     pes = PES.from_options(
@@ -251,26 +289,26 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
 
     nifty.printcool("REACTANT GEOMETRY NOT FIXED!!! OPTIMIZING")
     optimizer.optimize(
-            molecule=reactant,
-            refE=reactant.energy,
-            opt_steps=50,
-            # path=path
-        )
-    
+        molecule=reactant,
+        refE=reactant.energy,
+        opt_steps=OPT_STEPS,
+        # path=path
+    )
+
     se_gsm = SE_GSM.from_options(
         reactant=reactant,
         nnodes=20,
         optimizer=optimizer,
         xyz_writer=manage_xyz.write_std_multixyz,
         driving_coords=driving_coordinates,
-        DQMAG_MAX=0.5, #default value is 0.8
-        ADD_NODE_TOL=0.01, #default value is 0.1
-        CONV_TOL = 0.0005,
+        DQMAG_MAX=0.5,  # default value is 0.8
+        ADD_NODE_TOL=0.01,  # default value is 0.1
+        CONV_TOL=0.0005,
     )
 
     se_gsm.set_V0()
 
-    se_gsm.nodes[0].gradrms = 0.
+    se_gsm.nodes[0].gradrms = 0.0
     se_gsm.nodes[0].V0 = se_gsm.nodes[0].energy
     print(" Initial energy is %1.4f" % se_gsm.nodes[0].energy)
     se_gsm.add_GSM_nodeR()
@@ -279,14 +317,14 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         se_gsm.pastts = se_gsm.past_ts()
         print("pastts {}".format(se_gsm.pastts))
         try:
-            if se_gsm.pastts == 1: #normal over the hill
+            if se_gsm.pastts == 1:  # normal over the hill
                 se_gsm.add_GSM_nodeR(1)
                 se_gsm.add_last_node(2)
-            elif se_gsm.pastts == 2 or se_gsm.pastts==3: #when cgrad is positive
+            elif se_gsm.pastts == 2 or se_gsm.pastts == 3:  # when cgrad is positive
                 se_gsm.add_last_node(1)
                 if se_gsm.nodes[se_gsm.nR-1].gradrms > 5.*se_gsm.options['CONV_TOL']:
                     se_gsm.add_last_node(1)
-            elif se_gsm.pastts == 3: #product detected by bonding
+            elif se_gsm.pastts == 3:  # product detected by bonding
                 se_gsm.add_last_node(1)
         except:
             print("Failed to add last node, continuing.")
@@ -296,14 +334,20 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     se_gsm.nodes = se_gsm.nodes[:se_gsm.nR]
     energies = se_gsm.energies
 
-    if se_gsm.TSnode == se_gsm.nR-1:
+    if se_gsm.TSnode == se_gsm.nR - 1:
         print(" The highest energy node is the last")
         print(" not continuing with TS optimization.")
         se_gsm.tscontinue = False
 
     print(" Number of nodes is ", se_gsm.nnodes)
     print(" Warning last node still not optimized fully")
-    se_gsm.xyz_writer('grown_string_{:03}.xyz'.format(se_gsm.ID), se_gsm.geometries, se_gsm.energies, se_gsm.gradrmss, se_gsm.dEs)
+    se_gsm.xyz_writer(
+        "grown_string_{:03}.xyz".format(se_gsm.ID),
+        se_gsm.geometries,
+        se_gsm.energies,
+        se_gsm.gradrmss,
+        se_gsm.dEs,
+    )
     print(" SSM growth phase over")
     se_gsm.done_growing = True
 
@@ -317,14 +361,17 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     #         # path=path
     #     )
 
-def stk_de_gsm(config: Config):
 
+def stk_de_gsm(config: Config):
     # geoms = manage_xyz.read_xyzs('opt_converged_001.xyz')
-    geoms = manage_xyz.read_xyzs('grown_string_000.xyz')
-    lot = ASELoT.from_options(config.ase_calculator, geom=geoms[0])
+    geoms = manage_xyz.read_xyzs("grown_string_000.xyz")
+    ase_calculator = config.ase_calculator
+    if ase_calculator is None:
+        ase_calculator = calculator.XTB()
+    lot = ASELoT.from_options(ase_calculator, geom=geoms[0])
 
     pes = PES.from_options(lot=lot, ad_idx=0, multiplicity=1)
-    
+
     atom_symbols = manage_xyz.get_atoms(geoms[0])
 
     ELEMENT_TABLE = elements.ElementData()
@@ -412,37 +459,42 @@ def stk_de_gsm(config: Config):
     product = Molecule.copy_from_options(
         reactant,
         xyz=xyz2,
-        new_node_id=len(geoms)-1,
+        new_node_id=len(geoms) - 1,
         copy_wavefunction=False,
     )
 
-    optimizer = eigenvector_follow.from_options(Linesearch='backtrack', OPTTHRESH=0.0005, DMAX=0.5, abs_max_step=0.5,
-                                                conv_Ediff=0.1)
+    optimizer = eigenvector_follow.from_options(
+        Linesearch="backtrack",
+        OPTTHRESH=0.0005,
+        DMAX=0.5,
+        abs_max_step=0.5,
+        conv_Ediff=0.1,
+    )
 
     nifty.printcool("OPTIMIZING REACTANT GEOMETRY")
     optimizer.optimize(
-            molecule=reactant,
-            refE=reactant.energy,
-            opt_steps=50,
-        )
-    
+        molecule=reactant,
+        refE=reactant.energy,
+        opt_steps=OPT_STEPS,
+    )
+
     nifty.printcool("OPTIMIZING PRODUCT GEOMETRY")
     optimizer.optimize(
-            molecule=product,
-            refE=reactant.energy,
-            opt_steps=50,
-        )
+        molecule=product,
+        refE=reactant.energy,
+        opt_steps=OPT_STEPS,
+    )
 
     # For xTB
 
     de_gsm_max_nodes = 20
-    path = Path.cwd() / 'scratch/001'
+    path = Path.cwd() / "scratch/001"
     path.mkdir(exist_ok=True)
 
     for item in range(de_gsm_max_nodes):
-        path = Path.cwd() / f'scratch/001/{item}'
+        path = Path.cwd() / f"scratch/001/{item}"
         path.mkdir(exist_ok=True)
-    
+
     de_gsm = DE_GSM.from_options(
         reactant=reactant,
         product=product,
@@ -461,7 +513,7 @@ def stk_de_gsm(config: Config):
     # for item in range(de_gsm_max_nodes):
     #     path = Path.cwd() / f'scratch/002/{item}'
     #     path.mkdir(exist_ok=True)
-    
+
     # de_gsm = DE_GSM.from_options(
     #     reactant=reactant,
     #     product=product,
@@ -475,19 +527,19 @@ def stk_de_gsm(config: Config):
 
     # TS-Optimization following DE-GSM run
 
-    ts_node_energy = ts_node(de_gsm.energies)[1]
-    ts_node_index = de_gsm.energies.index(ts_node_energy)
-    ts_node_geom = de_gsm.nodes[ts_node_index]
+    # ts_node_energy = ts_node(de_gsm.energies)[1]
+    # ts_node_index = de_gsm.energies.index(ts_node_energy)
+    # ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    nifty.printcool("Optimizing TS node")
-    optimizer.optimize(
-            molecule=ts_node_geom,
-            refE=de_gsm.energies[0],
-            opt_steps=50,
-            opt_type='TS',
-            ictan=de_gsm.ictan[ts_node_index],
-        )
-    
-    de_gsm.nodes[ts_node_index] = ts_node_geom 
+    # nifty.printcool("Optimizing TS node")
+    # optimizer.optimize(
+    #     molecule=ts_node_geom,
+    #     refE=de_gsm.energies[0],
+    #     opt_steps=OPT_STEPS,
+    #     opt_type="TS",
+    #     ictan=de_gsm.ictan[ts_node_index],
+    # )
+
+    # de_gsm.nodes[ts_node_index] = ts_node_geom
 
     gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)

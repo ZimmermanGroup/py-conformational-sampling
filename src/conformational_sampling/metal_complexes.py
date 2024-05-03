@@ -1,7 +1,14 @@
 from math import cos, pi, sin
-from stk.molecular.topology_graphs import Edge
+
+from stk import Edge
+
 from stk.molecular.topology_graphs.metal_complex import MetalComplex
-from stk.molecular.topology_graphs.metal_complex.vertices import BiDentateLigandVertex, MonoDentateLigandVertex, MetalVertex
+from stk.molecular.topology_graphs.metal_complex.vertices import (
+    BiDentateLigandVertex,
+    MetalVertex,
+    MonoDentateLigandVertex,
+)
+
 
 class TwoMonoOneBidentateSquarePlanar(MetalComplex):
 
