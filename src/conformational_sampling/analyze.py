@@ -5,7 +5,7 @@ from itertools import combinations
 import os
 from pathlib import Path
 import re
-from typing import Optional
+from typing import List, Optional
 import numpy as np
 
 from openbabel import pybel as pb
@@ -89,7 +89,9 @@ def ts_node(en_list):
     return (max_diff, ts_node_energy, ts_barrier, min_reac_energy)
 
 
-def truncate_string_at_bond_formation(string_nodes: list[Chem.rdchem.Mol], atom_1: int, atom_2: int, thresh=1.7):
+def truncate_string_at_bond_formation(
+    string_nodes: List[Chem.rdchem.Mol], atom_1: int, atom_2: int, thresh=1.7
+):
     for idx, node in enumerate(string_nodes):
         dist_matrix = rdmolops.Get3DDistanceMatrix(node)
         if dist_matrix[atom_1][atom_2] < thresh:
