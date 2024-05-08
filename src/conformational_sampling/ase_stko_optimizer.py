@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-import os
 
-import ase
 import stk
 import stko
 from ase.calculators.calculator import CalculationFailed, Calculator
