@@ -2,20 +2,19 @@
 
 from dataclasses import dataclass
 from itertools import combinations
-import os
 from pathlib import Path
-import re
 from typing import List, Optional
+
 import numpy as np
-
-from openbabel import pybel as pb
-from pyGSM.utilities.units import KCAL_MOL_PER_AU, EV_TO_AU
-from rdkit import Chem
-from rdkit.Chem import rdMolTransforms, rdmolops
-from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 import stk
+from openbabel import pybel as pb
+from pyGSM.utilities.units import EV_TO_AU, KCAL_MOL_PER_AU
+from rdkit import Chem
+from rdkit.Chem import rdmolops, rdMolTransforms
+from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 
-from conformational_sampling.utils import pybel_mol_to_rdkit_mol, rdkit_mol_to_stk_mol
+from conformational_sampling.utils import rdkit_mol_to_stk_mol
+
 
 @dataclass
 class System:
