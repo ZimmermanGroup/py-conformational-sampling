@@ -81,6 +81,8 @@ class ConformerEnsembleOptimizer:
         logging.debug(f'{len(metal_optimized_conformers) = } (pruned before xtb stage)')
         logging.debug(f'{len(xtb_conformers) = } (pruned after xtb stage)')
         logging.debug(f'{len(final_conformers) = } (had <= {self.config.max_connectivity_changes} connectivity changes)')
+        
+        # TODO: I think this should check if any of the conformers have DFT energies but this is only checking the last one
         if DFT in conformer.stages:
             self.conformers = sorted(final_conformers, key=lambda conformer: conformer.energies[DFT])
             self.conformers += sorted(xtb_conformers, key=lambda conformer: conformer.energies[DFT])
@@ -103,7 +105,9 @@ class ConformerEnsembleOptimizer:
 
     def optimize(self):
         with ProcessPoolExecutor(max_workers=self.config.num_cpus) as executor:
+            logging.debug(f'{self.config.num_cpus = }')
             unoptimized_complexes = [conformer.stages[UNOPTIMIZED] for conformer in self.conformers]
+            logging.debug(f'{len(unoptimized_complexes) = }')
             mc_hammer_complexes = list(executor.map(stk.MCHammer().optimize, unoptimized_complexes))
             logging.debug(f'{len(mc_hammer_complexes) = }')
             for i, conformer in enumerate(self.conformers):
@@ -281,6 +285,7 @@ def gen_confs_openbabel(stk_mol, config) -> list:
             for stk_conformer in stk_conformers]
     
 def gen_ligand_library_entry(stk_ligand, config):
+    logging.debug('Start generating conformers')
     stk_conformers = gen_confs_openbabel(stk_ligand, config)
     stk_list_to_xyz_file(stk_conformers, 'conformers_ligand_only.xyz')
     unoptimized_complexes = [bind_to_dimethyl_Pd(ligand) for ligand in stk_conformers]
