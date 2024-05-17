@@ -104,7 +104,7 @@ cd examples/suzuki
 python ./suzuki.py
 ```
 
-## Examples of only conformer generation step (archive)
+## Examples of only conformer generation step (outdated)
 
 ### DPPE
 
