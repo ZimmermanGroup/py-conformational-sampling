@@ -335,11 +335,15 @@ class ConformationalSamplingDashboard(param.Parameterized):
     
 
 dashboard = ConformationalSamplingDashboard()
-try: # reboot server if already running in interactive mode
-    bokeh_server.stop()
-except (NameError, AssertionError):
-    pass
-bokeh_server = dashboard.app().show()
+dashboard.app().servable()  # for running dashboard with panel serve
+
+# below code block for running panel in interactive vscode window
+# try: # reboot server if already running in interactive mode
+#     bokeh_server.stop()
+# except (NameError, AssertionError):
+#     pass
+# bokeh_server = dashboard.app().show()
+
 # %%
 # test_df = pd.read_csv(Path.home() / 'df.csv')
 # groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'Product stereochemistry']).reset_index(name='count')
