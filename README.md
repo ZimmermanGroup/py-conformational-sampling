@@ -126,7 +126,7 @@ http://localhost:5006/visualization
 
 Note: The visualization is built using the Panel package. These instructions are based on the Panel documentation at https://panel.holoviz.org/how_to/server/index.html
 
-## Examples of only conformer generation step (archive)
+## Examples of only conformer generation step (outdated)
 
 ### DPPE
 

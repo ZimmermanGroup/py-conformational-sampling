@@ -15,7 +15,9 @@ jobs:
         include:
           - python-version: 3.8
             pytest-specifier: 'tests/test_examples.py::test_suzuki_example'
-
+          - python-version: 3.11
+            pytest-specifier: 'tests/test_examples.py::test_dppe_example'
+          
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
