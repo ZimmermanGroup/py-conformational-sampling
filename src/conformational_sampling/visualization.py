@@ -4,7 +4,7 @@
 import os
 import re
 import pickle
-from IPython.display import display
+# from IPython.display import display
 import numpy as np
 import pandas as pd
 from rdkit import Chem
