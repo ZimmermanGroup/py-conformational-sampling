@@ -332,10 +332,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
                 temperature=358.15
             )
         return free_energy_diffs
-    
 
-dashboard = ConformationalSamplingDashboard()
-dashboard.app().servable()  # for running dashboard with panel serve
+if __name__ == '__main__':
+    dashboard = ConformationalSamplingDashboard()
+    dashboard.app().servable()  # for running dashboard with panel serve
 
 # below code block for running panel in interactive vscode window
 # try: # reboot server if already running in interactive mode
