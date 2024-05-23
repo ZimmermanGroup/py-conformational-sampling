@@ -60,13 +60,13 @@ reactive_complex = CatalyticReactionComplex(
     config=config,
 )
 
-start_visualization = False
+start_visualization = True
 if start_visualization:
     import panel as pn
     from conformational_sampling.visualization import ConformationalSamplingDashboard
 
     pn.serve(ConformationalSamplingDashboard().app())
-
+    raise SystemExit
 # generates conformers including multi-phase optimization and uniqueness filtering
 reactive_complex.gen_conformers()
 

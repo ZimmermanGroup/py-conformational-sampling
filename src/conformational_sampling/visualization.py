@@ -318,9 +318,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
     def debug_data(self):
         # index = self.stream.index
         # return index
-        return (f'{self.stream.index = }\n{repr(dashboard) = }\n'
-                + f'{self.free_energy_R_minus_S() = }')
-
+        return (
+            f'{self.stream.index = }\n{repr(self) = }\n'
+            + f'{self.free_energy_R_minus_S() = }'
+        )
 
     def free_energy_R_minus_S(self):
         group_by = self.df.groupby(['mol_name', 'Product stereochemistry'])['relative_ts_energy (kcal/mol)'].apply(list)
