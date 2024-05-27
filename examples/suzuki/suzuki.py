@@ -1,4 +1,10 @@
+import logging
 from pathlib import Path
+
+FORMAT = (
+    '[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s]%(levelname)s: %(message)s'
+)
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 import stk
 from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
@@ -8,7 +14,7 @@ from conformational_sampling.main import load_stk_mol, load_stk_mol_list
 from conformational_sampling.utils import stk_metal
 
 # specify file paths and functional groups of each ligand that bind to the metal
-ligand_5a = stk.BuildingBlock.init_from_molecule(
+reactive_ligand_1 = stk.BuildingBlock.init_from_molecule(
     molecule=load_stk_mol(Path('example2_5a.xyz')),
     functional_groups=[
         stk.SmartsFunctionalGroupFactory(
@@ -18,7 +24,7 @@ ligand_5a = stk.BuildingBlock.init_from_molecule(
         )
     ],
 )
-ligand_6a = stk.BuildingBlock.init_from_molecule(
+reactive_ligand_2 = stk.BuildingBlock.init_from_molecule(
     molecule=load_stk_mol(Path('example2_6a.xyz')),
     functional_groups=[
         stk.SmartsFunctionalGroupFactory(
@@ -39,17 +45,21 @@ ancillary_ligand = stk.BuildingBlock.init_from_molecule(
     ],
 )
 
+# py-conformational-sampling configuration object
+# set for testing, increase for a full calculation with dense sampling
 config = Config(
     initial_conformers=3,
     num_cpus=3,
 )
+
 reactive_complex = CatalyticReactionComplex(
     metal=stk_metal('Pd'),
     ancillary_ligand=ancillary_ligand,
-    reactive_ligand_1=ligand_5a,
-    reactive_ligand_2=ligand_6a,
+    reactive_ligand_1=reactive_ligand_1,
+    reactive_ligand_2=reactive_ligand_2,
     config=config,
 )
+# generates conformers including multi-phase optimization and uniqueness filtering
 reactive_complex.gen_conformers()
 
 conformer_path = Path('conformers_3_xtb.xyz')
