@@ -32,18 +32,21 @@ pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
 import openbabel as ob
 
-from conformational_sampling.analyze import Conformer, systems, exclude_confs
+from conformational_sampling.analyze import Conformer, System, systems, exclude_confs
 from conformational_sampling.utils import free_energy_diff
 
 print('Finished imports!')
 
-READ_FROM_PICKLE = True
+READ_FROM_PICKLE = False
+
+
 class ConformationalSamplingDashboard(param.Parameterized):
 
     refresh = param.Action(lambda x: x.param.trigger('refresh'), label='Refresh')
 
-    def __init__(self):
+    def __init__(self, catalytic_reaction_complex):
         super().__init__()
+        self.catalytic_reaction_complex = catalytic_reaction_complex
         self.setup_mols()
         self.dataframe()
         self.stream = Selection1D()
@@ -53,7 +56,17 @@ class ConformationalSamplingDashboard(param.Parameterized):
     @param.depends('refresh', watch=True)
     def setup_mols(self):
         # extract the conformers for a molecule from an xyz file
-        
+        self.mols = {}
+        systems = {
+            'current_directory': System(
+                reductive_elim_torsion=self.catalytic_reaction_complex.forming_bond_torsion(),
+                # mol_path=Path.cwd(),
+                mol_path=Path(
+                    '/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/sample_output'
+                ),
+            )
+        }
+
         pickle_path = Path.home() / 'mols.pkl'
         if pickle_path.exists() and READ_FROM_PICKLE:
             with pickle_path.open('rb') as file:
@@ -61,15 +74,17 @@ class ConformationalSamplingDashboard(param.Parameterized):
         else:
             self.mols = {}
             for ligand_name, system in systems.items():
-                # string_paths = tuple(system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz'))
                 string_paths = tuple(
-                    system.mol_path.glob("scratch/pystring_*/xtb_singlepoints_001.xyz")
+                    system.mol_path.glob('scratch/pystring_*/opt_converged_001.xyz')
                 )
+                # string_paths = tuple(
+                #     system.mol_path.glob("scratch/pystring_*/xtb_singlepoints_001.xyz")
+                # )
                 self.mols[ligand_name] = self.get_mol_confs(system, string_paths)
             with pickle_path.open("wb") as file:
-                pickle.dump(self.mols, file)
-        
-    
+                # pickle.dump(self.mols, file)
+                pass
+
     def get_mol_confs(self, system, string_paths):
         return {
             # get the conformer index for this string
@@ -101,27 +116,29 @@ class ConformationalSamplingDashboard(param.Parameterized):
                     forming_bond_torsion += 360
                 elif conformer.forming_bond_torsion > 90 and conformer.pdt_stereo == 'R':
                     forming_bond_torsion -= 360
-                    
-                conformer_rows.append({
-                    'mol_name': mol_name,
-                    'conf_idx': conf_idx,
-                    'activation energy (kcal/mol)': conformer.activation_energy,
-                    'absolute_reactant_energy (kcal/mol)': conformer.min_reac_energy,
-                    'absolute_ts_energy (kcal/mol)': conformer.ts_energy,
-                    'forming_bond_torsion (deg)': forming_bond_torsion,
-                    'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
-                    'pro_dis_torsion': conformer.pro_dis_torsion,
-                    'improper_torsion': conformer.improper_torsion,
-                    'improper_torsion_ts': conformer.improper_torsion_ts,
-                    'ligands_angle': conformer.ligands_angle,
-                    'out_of_plane_angle': conformer.out_of_plane_angle,
-                    'pro_dis': conformer.pro_dis,
-                    'exo_endo': conformer.endo_exo,
-                    'syn_anti': conformer.syn_anti,
-                    'Product stereochemistry': conformer.pdt_stereo,
-                    'tau_4_prime': conformer.tau_4_prime,
-                    'tau_4_prime_ts':conformer.tau_4_prime_ts,
-                })
+
+                conformer_rows.append(
+                    {
+                        'mol_name': mol_name,
+                        'conf_idx': conf_idx,
+                        'activation energy (kcal/mol)': conformer.activation_energy,
+                        'absolute_reactant_energy (kcal/mol)': conformer.min_reac_energy,
+                        'absolute_ts_energy (kcal/mol)': conformer.ts_energy,
+                        'forming_bond_torsion (deg)': forming_bond_torsion,
+                        'formed_bond_torsion (deg)': conformer.formed_bond_torsion,
+                        # 'pro_dis_torsion': conformer.pro_dis_torsion,
+                        'improper_torsion': conformer.improper_torsion,
+                        'improper_torsion_ts': conformer.improper_torsion_ts,
+                        'ligands_angle': conformer.ligands_angle,
+                        'out_of_plane_angle': conformer.out_of_plane_angle,
+                        # 'pro_dis': conformer.pro_dis,
+                        # 'exo_endo': conformer.endo_exo,
+                        'syn_anti': conformer.syn_anti,
+                        'Product stereochemistry': conformer.pdt_stereo,
+                        'tau_4_prime': conformer.tau_4_prime,
+                        'tau_4_prime_ts': conformer.tau_4_prime_ts,
+                    }
+                )
         self.df = pd.DataFrame(conformer_rows)
         self.df['relative_ts_energy (kcal/mol)'] = (
             self.df['absolute_ts_energy (kcal/mol)']

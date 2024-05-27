@@ -65,7 +65,7 @@ if start_visualization:
     import panel as pn
     from conformational_sampling.visualization import ConformationalSamplingDashboard
 
-    pn.serve(ConformationalSamplingDashboard().app())
+    pn.serve(ConformationalSamplingDashboard(reactive_complex).app())
     raise SystemExit
 # generates conformers including multi-phase optimization and uniqueness filtering
 reactive_complex.gen_conformers()

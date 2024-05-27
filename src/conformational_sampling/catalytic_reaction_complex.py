@@ -50,8 +50,7 @@ class CatalyticReactionComplex:
         logging.debug('Finished generating CatalyticReactionComplex conformers')
         return self.optimized_conformers
 
-    def gen_reductive_elim_drive_coords(self):
-        """Generate reductive elimination driving coordinates for this complex"""
+    def _breaking_bonds(self):
         breaking_bonds = []
 
         # Identify metal / reactive ligand bonds
@@ -75,9 +74,18 @@ class CatalyticReactionComplex:
 
         # There should be one bond from the metal to each reactive ligand
         assert len(breaking_bonds) == 2
+        return breaking_bonds
+
+    def _forming_bond(self):
+        breaking_bonds = self._breaking_bonds()
+        return breaking_bonds[0] ^ breaking_bonds[1]
+
+    def gen_reductive_elim_drive_coords(self):
+        """Generate reductive elimination driving coordinates for this complex"""
+        breaking_bonds = self._breaking_bonds()
 
         # Form a bond between the distinct atom from each metal-ligand bond
-        forming_bond = breaking_bonds[0] ^ breaking_bonds[1]
+        forming_bond = self._forming_bond()
 
         driving_coordinates = [
             ('BREAK', *breaking_bond) for breaking_bond in breaking_bonds
@@ -86,3 +94,33 @@ class CatalyticReactionComplex:
 
         # Convert from zero-indexed to one-indexed for pyGSM
         return [(type, i + 1, j + 1) for (type, i, j) in driving_coordinates]
+
+    def forming_bond_torsion(self):
+        forming_bond = list(self._forming_bond())
+
+        def connected_atom_within_building_block(atom_id):
+            for bond_info in self.complex.get_bond_infos():
+                if bond_info.get_building_block() is not None:
+                    bond = bond_info.get_bond()
+                    bond_atom_ids = {
+                        bond.get_atom1().get_id(),
+                        bond.get_atom2().get_id(),
+                    }
+                    if atom_id in bond_atom_ids:
+                        bond_atom_ids.remove(atom_id)
+                        return bond_atom_ids.pop()
+
+        return (
+            connected_atom_within_building_block(forming_bond[0]),
+            forming_bond[0],
+            forming_bond[1],
+            connected_atom_within_building_block(forming_bond[1]),
+        )
+
+        # for torsion in (
+        #     stko.TorsionCalculator().get_results(self.complex).get_torsions()
+        # ):
+        #     torsion_bond = set(list(torsion.get_atom_ids())[1:3])
+        #     if torsion_bond == forming_bond:
+        #         return torsion
+        assert False  # didn't find forming bond torsion

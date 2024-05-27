@@ -19,8 +19,8 @@ from conformational_sampling.utils import rdkit_mol_to_stk_mol
 @dataclass
 class System:
     reductive_elim_torsion: tuple
-    pro_dis_torsion: tuple
     mol_path: Path
+    pro_dis_torsion: Optional[tuple] = None
     atrop_torsion: Optional[tuple] = None
 
 systems = {
@@ -61,6 +61,7 @@ systems = {
     #     mol_path=Path('/export/zimmerman/soumikd/py-conformational-sampling/example_l8_xtb')
     # ),
 }
+
 
 exclude_confs = {
     'ligand_l4': [315]
@@ -173,10 +174,10 @@ class Conformer:
             self.ts_rdkit_mol.GetConformer(),
             *self.system.reductive_elim_torsion
         )
-        self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
-            self.ts_rdkit_mol.GetConformer(),
-            *self.system.pro_dis_torsion
-        )
+        # self.pro_dis_torsion = rdMolTransforms.GetDihedralDeg(
+        #     self.ts_rdkit_mol.GetConformer(),
+        #     *self.system.pro_dis_torsion
+        # )
         self.improper_torsion_ts = rdMolTransforms.GetDihedralDeg(
             self.ts_rdkit_mol.GetConformer(),
             self.system.reductive_elim_torsion[1],
@@ -192,10 +193,10 @@ class Conformer:
             *self.system.reductive_elim_torsion
         )
 
-        self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
+        # self.pro_dis = 'proximal' if -90 <= self.pro_dis_torsion <= 90 else 'distal'
         # ts is exo if the torsion of the bond being formed is positive and the ts is proximal
         # if distal, the relationship is reversed
-        self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
+        # self.endo_exo = 'exo' if (self.forming_bond_torsion >= 0) ^ (self.pro_dis == 'distal') else 'endo'
         self.syn_anti = 'syn' if -90 <= self.forming_bond_torsion <= 90 else 'anti'
         self.pdt_stereo = 'R' if self.formed_bond_torsion <= 0 else 'S'
         
