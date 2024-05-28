@@ -104,27 +104,29 @@ cd examples/suzuki
 python ./suzuki.py
 ```
 
-## Interactive visualization
+## Interactive visualization example
+
+Note: assumes that the visualization is running on a remote computing cluster. If serving the visualization locally, omit the ssh tunneling step
 
 On the cluster containing the results of py-conformational-sampling calculations:
-* Navigate to the root directory of this repository
 * Ensure that the venv or conda environment containing py-conformational-sampling is activated.
-* Start the server which loads the molecular data and hosts the visualization
+* Navigate to examples/dppe within py-conformational-sampling
+* Set `start_visualization = True` in dppe.py, then run the script to start the server which loads the molecular data and hosts the visualization:
+
 ```
-panel serve src/conformational_sampling/visualization.py
+python dppe.py
 ```
 
-On the local machine with an available web browser to view the visualization
-* Establish an ssh SSH tunnel to the cluster:
+* Establish an ssh SSH tunnel to the cluster in a separate terminal tab or window on the local machine with an available web browser to view the visualization:
 ```
-ssh -NfL localhost:5006:localhost:5006 user@remote.host
+ssh -NfL localhost:5006:localhost:5006 <user@remote.host>
 ```
 * Access the visualization through a web browser at the following address:
 ```
-http://localhost:5006/visualization
+http://localhost:5006
 ```
 
-Note: The visualization is built using the Panel package. These instructions are based on the Panel documentation at https://panel.holoviz.org/how_to/server/index.html
+Note: the visualization is built using the Panel package. These instructions are based on the Panel documentation at https://panel.holoviz.org/how_to/server/index.html
 
 ## Examples of only conformer generation step (outdated)
 
