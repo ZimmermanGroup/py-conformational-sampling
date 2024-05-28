@@ -60,7 +60,7 @@ reactive_complex = CatalyticReactionComplex(
     config=config,
 )
 
-start_visualization = True
+start_visualization = False
 if start_visualization:
     import panel as pn
     from conformational_sampling.visualization import ConformationalSamplingDashboard
