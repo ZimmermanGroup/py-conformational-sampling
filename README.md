@@ -91,7 +91,7 @@ pip install .
 
 ## Suzuki example from [Organic Letters publication](https://pubs.acs.org/doi/10.1021/acs.orglett.3c04047)
 
-* Navigate to the examples/suzuki directory
+* Navigate to the examples/suzuki directory:
 
 ```
 cd examples/suzuki
@@ -106,22 +106,25 @@ python ./suzuki.py
 
 ## Interactive visualization example
 
-Note: assumes that the visualization is running on a remote computing cluster. If serving the visualization locally, omit the ssh tunneling step
+Note: assumes that the visualization is running on a remote computing cluster. If serving the visualization locally, omit the ssh tunneling step.
 
 On the cluster containing the results of py-conformational-sampling calculations:
 * Ensure that the venv or conda environment containing py-conformational-sampling is activated.
-* Navigate to examples/dppe within py-conformational-sampling
+* Navigate to examples/dppe within py-conformational-sampling.
 * Set `start_visualization = True` in dppe.py, then run the script to start the server which loads the molecular data and hosts the visualization:
 
 ```
 python dppe.py
 ```
 
-* Establish an ssh SSH tunnel to the cluster in a separate terminal tab or window on the local machine with an available web browser to view the visualization:
+* Leave this terminal tab open until you are finished using the interactive visualization, and use a new tab or window for the next step.
+
+On the local computer with an available web browser to view the visualization:
+* Establish an ssh SSH tunnel to the visualization on the cluster:
 ```
 ssh -NfL localhost:5006:localhost:5006 <user@remote.host>
 ```
-* Access the visualization through a web browser at the following address:
+* Access the visualization in a web browser through the tunnelled port:
 ```
 http://localhost:5006
 ```
