@@ -7,7 +7,9 @@ FORMAT = (
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 import stk
-from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
+from conformational_sampling.catalytic_reaction_complex import (
+    ReductiveEliminationComplex,
+)
 from conformational_sampling.config import Config
 from conformational_sampling.gsm import stk_se_de_gsm_single_node_parallel
 from conformational_sampling.main import load_stk_mol, load_stk_mol_list
@@ -52,7 +54,7 @@ config = Config(
     num_cpus=3,
 )
 
-reactive_complex = CatalyticReactionComplex(
+reactive_complex = ReductiveEliminationComplex(
     metal=stk_metal('Pd'),
     ancillary_ligand=ancillary_ligand,
     reactive_ligand_1=reactive_ligand_1,
@@ -69,6 +71,7 @@ if start_visualization:
         ConformationalSamplingDashboard(reactive_complex).app(), show=False, port=5006
     )
     raise SystemExit
+
 # generates conformers including multi-phase optimization and uniqueness filtering
 reactive_complex.gen_conformers()
 

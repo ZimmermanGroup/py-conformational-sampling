@@ -12,7 +12,7 @@ from conformational_sampling.main import (
 
 
 @dataclass
-class CatalyticReactionComplex:
+class ReductiveEliminationComplex:
     metal: stk.BuildingBlock
     ancillary_ligand: stk.BuildingBlock
     reactive_ligand_1: stk.BuildingBlock
@@ -51,6 +51,7 @@ class CatalyticReactionComplex:
         return self.optimized_conformers
 
     def _breaking_bonds(self):
+        """Identify bonds between reactive ligands and the metal"""
         breaking_bonds = []
 
         # Identify metal / reactive ligand bonds
@@ -77,11 +78,12 @@ class CatalyticReactionComplex:
         return breaking_bonds
 
     def _forming_bond(self):
+        """Identify bond that will form between the two reactive ligands"""
         breaking_bonds = self._breaking_bonds()
         return breaking_bonds[0] ^ breaking_bonds[1]
 
     def gen_reductive_elim_drive_coords(self):
-        """Generate reductive elimination driving coordinates for this complex"""
+        """Generate one-indexed reductive elimination driving coordinates for pyGSM"""
         breaking_bonds = self._breaking_bonds()
 
         # Form a bond between the distinct atom from each metal-ligand bond
@@ -96,6 +98,7 @@ class CatalyticReactionComplex:
         return [(type, i + 1, j + 1) for (type, i, j) in driving_coordinates]
 
     def forming_bond_torsion(self):
+        """Atom indices are zero-indexed for RDKit"""
         forming_bond = list(self._forming_bond())
 
         def connected_atom_within_building_block(atom_id):
@@ -116,11 +119,3 @@ class CatalyticReactionComplex:
             forming_bond[1],
             connected_atom_within_building_block(forming_bond[1]),
         )
-
-        # for torsion in (
-        #     stko.TorsionCalculator().get_results(self.complex).get_torsions()
-        # ):
-        #     torsion_bond = set(list(torsion.get_atom_ids())[1:3])
-        #     if torsion_bond == forming_bond:
-        #         return torsion
-        assert False  # didn't find forming bond torsion

@@ -60,10 +60,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
         systems = {
             'current_directory': System(
                 reductive_elim_torsion=self.catalytic_reaction_complex.forming_bond_torsion(),
-                # mol_path=Path.cwd(),
-                mol_path=Path(
-                    '/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/sample_output'
-                ),
+                mol_path=Path.cwd(),
+                # mol_path=Path(
+                #     '/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/sample_output'
+                # ),
             )
         }
 
@@ -361,14 +361,3 @@ if __name__ == '__main__':
 # except (NameError, AssertionError):
 #     pass
 # bokeh_server = dashboard.app().show()
-
-# %%
-# test_df = pd.read_csv(Path.home() / 'df.csv')
-# groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'Product stereochemistry']).reset_index(name='count')
-# display(groupby)
-
-# pn.panel(hvplot.explorer(groupby)).show()
-
-# pass
-# %%
-# 'fontsize': {'labels': 10}, 'title': '', 'group_label': 'Prod'
