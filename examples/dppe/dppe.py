@@ -48,10 +48,12 @@ ancillary_ligand = stk.BuildingBlock.init_from_molecule(
 )
 
 # py-conformational-sampling configuration object
-# set for testing, increase for a full calculation with dense sampling
+# (defaults are small for testing purposes)
 config = Config(
+    # larger value samples more thoroughly, set to roughly 20-100 for thorough
+    # sampling depending on ligand flexibility and resource availability
     initial_conformers=3,
-    num_cpus=3,
+    num_cpus=3,  # set to number of cpus available for use by pycosa
 )
 
 reactive_complex = ReductiveEliminationComplex(
@@ -62,6 +64,8 @@ reactive_complex = ReductiveEliminationComplex(
     config=config,
 )
 
+# set to True to start visualization after conformer reaction paths have already
+# been generated
 start_visualization = False
 if start_visualization:
     import panel as pn
@@ -77,11 +81,14 @@ reactive_complex.gen_conformers()
 
 conformer_path = Path('conformers_3_xtb.xyz')
 conformer_mols = load_stk_mol_list(conformer_path)
+# for testing, limit number of pyGSM reaction path optimizations to number of cpus
+# remove or comment out this line for a full calculation
+conformer_mols = conformer_mols[: config.num_cpus]
 
 driving_coordinates = reactive_complex.gen_reductive_elim_drive_coords()
 
 stk_se_de_gsm_single_node_parallel(
-    stk_mols=conformer_mols[:3],
+    stk_mols=conformer_mols,
     driving_coordinates=driving_coordinates,
     config=config,
 )
