@@ -1,11 +1,10 @@
 import numpy as np
 import stk
-from xtb.ase import calculator
-from xtb.interface import Calculator, Param, Environment
-from xtb.libxtb import VERBOSITY_FULL
-
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.utils import stk_mol_to_ase_atoms
+from xtb.ase import calculator
+from xtb.interface import Calculator, Environment, Param
+from xtb.libxtb import VERBOSITY_FULL
 
 
 def test_xtb_solvent():
@@ -13,7 +12,7 @@ def test_xtb_solvent():
     # ase_mol.calc = calculator.XTB(solvent='gbsa')
     ase_mol = stk_mol_to_ase_atoms(stk_mol)
     env = Environment()
-    env.set_output('error.log')
+    # env.set_output('error.log')
     numbers = np.array([8, 1, 1])
     positions = np.array([
     [ 0.00000000000000, 0.00000000000000,-0.73578586109551],
@@ -32,4 +31,5 @@ def test_xtb_solvent():
     pass
 
 # -371.55510438052335
-test_xtb_solvent()
+if __name__ == '__main__':
+    test_xtb_solvent()
