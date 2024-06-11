@@ -83,7 +83,7 @@ git reset --hard
 
 # updates this library to the latest version
 git pull
-pip install .
+pip install -e .
 ```
 
 
