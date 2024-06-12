@@ -7,6 +7,7 @@ FORMAT = (
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 import stk
+
 from conformational_sampling.catalytic_reaction_complex import (
     ReductiveEliminationComplex,
 )
@@ -69,6 +70,7 @@ reactive_complex = ReductiveEliminationComplex(
 start_visualization = False
 if start_visualization:
     import panel as pn
+
     from conformational_sampling.visualization import ConformationalSamplingDashboard
 
     pn.serve(
