@@ -8,7 +8,7 @@ from typing import List, Optional
 import numpy as np
 import stk
 from openbabel import pybel as pb
-from pyGSM.utilities.units import EV_TO_AU, KCAL_MOL_PER_AU
+from pyGSM.utilities.units import EV_TO_AU, KCAL_MOL_PER_AU, KJ_MOL_TO_AU
 from rdkit import Chem
 from rdkit.Chem import rdmolops, rdMolTransforms
 from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
@@ -114,7 +114,9 @@ class Conformer:
             for node in ob_string_nodes:
                 mol_block = node.write('mol')
                 self.string_nodes.append(MolFromMolBlock(mol_block, removeHs=False))
-                self.string_energies.append(float(mol_block.split()[0]) * EV_TO_AU * KCAL_MOL_PER_AU)
+                # correcting for mismatched units based on the unit conversion in pyGSM
+                # when writing to XYZ files
+                self.string_energies.append(float(mol_block.split()[0]) / KJ_MOL_TO_AU)
         else:
             self.string_nodes = [
                 MolFromMolBlock(node.write("mol"), removeHs=False)
