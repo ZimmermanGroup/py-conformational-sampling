@@ -1,8 +1,7 @@
 from math import cos, pi, sin
 
 from stk import Edge
-
-from stk.molecular.topology_graphs.metal_complex import MetalComplex
+from stk.metal_complex import MetalComplex
 from stk.molecular.topology_graphs.metal_complex.vertices import (
     BiDentateLigandVertex,
     MetalVertex,
