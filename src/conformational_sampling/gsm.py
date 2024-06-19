@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pyGSM
 
+from conformational_sampling.analyze import ts_node
 from conformational_sampling.main import load_stk_mol_list
 
 # workaround for issue with pyGSM installation
@@ -527,19 +528,21 @@ def stk_de_gsm(config: Config):
 
     # TS-Optimization following DE-GSM run
 
-    # ts_node_energy = ts_node(de_gsm.energies)[1]
-    # ts_node_index = de_gsm.energies.index(ts_node_energy)
-    # ts_node_geom = de_gsm.nodes[ts_node_index]
+    ts_node_energy = ts_node(de_gsm.energies)[1]
+    ts_node_index = de_gsm.energies.index(ts_node_energy)
+    ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    # nifty.printcool("Optimizing TS node")
-    # optimizer.optimize(
-    #     molecule=ts_node_geom,
-    #     refE=de_gsm.energies[0],
-    #     opt_steps=OPT_STEPS,
-    #     opt_type="TS",
-    #     ictan=de_gsm.ictan[ts_node_index],
-    # )
-
-    # de_gsm.nodes[ts_node_index] = ts_node_geom
+    nifty.printcool('Optimizing TS node')
+    geoms, energies = optimizer.optimize(
+        molecule=ts_node_geom,
+        refE=de_gsm.energies[0],
+        opt_steps=OPT_STEPS,
+        opt_type='TS',
+        ictan=de_gsm.ictan[ts_node_index],
+    )
+    manage_xyz.write_std_multixyz('ts_opt.xyz', geoms, energies, gradrms=None, dEs=None)
+    de_gsm.nodes[ts_node_index] = (
+        ts_node_geom  # has ts_node_geom actually been updated during optimize?
+    )
 
     gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)
