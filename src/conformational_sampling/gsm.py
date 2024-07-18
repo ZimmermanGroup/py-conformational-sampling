@@ -12,6 +12,7 @@ from conformational_sampling.main import load_stk_mol_list
 # workaround for issue with pyGSM installation
 sys.path.append(str(Path(pyGSM.__file__).parent))
 import numpy as np
+from openbabel import pybel as pb
 import stk
 from pyGSM.coordinate_systems import (
     DelocalizedInternalCoordinates,
@@ -34,6 +35,7 @@ from conformational_sampling.config import Config
 # from conformational_sampling.analyze import ts_node
 
 OPT_STEPS = 50 # 10 for debugging, 50 for production
+TS_OPT_FILENAME = 'ts_opt.xyz'
 
 def stk_mol_to_gsm_objects(stk_mol: stk.Molecule):
     ELEMENT_TABLE = elements.ElementData()
@@ -75,6 +77,15 @@ def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Co
         executor.map(
             stk_se_de_gsm, paths, stk_mols, repeat(driving_coordinates), repeat(config)
         )
+    ts_opt_paths = [path / TS_OPT_FILENAME for path in paths]
+    ts_opts = [
+        list(pb.readfile('xyz', str(ts_opt_path))) for ts_opt_path in ts_opt_paths
+    ]
+    transition_states = [ts_opt[-1] for ts_opt in ts_opts]
+    # JOSH - get string energies like in Conformer.__post_init__ and include those in the output file
+    # should probably sort by them too
+    # maybe I can just leave them as
+    # manage_xyz.write_std_multixyz('transition_states.xyz')
 
 
 def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
@@ -540,7 +551,9 @@ def stk_de_gsm(config: Config):
         opt_type='TS',
         ictan=de_gsm.ictan[ts_node_index],
     )
-    manage_xyz.write_std_multixyz('ts_opt.xyz', geoms, energies, gradrms=None, dEs=None)
+    manage_xyz.write_std_multixyz(
+        TS_OPT_FILENAME, geoms, energies, gradrms=None, dEs=None
+    )
     de_gsm.nodes[ts_node_index] = (
         ts_node_geom  # has ts_node_geom actually been updated during optimize?
     )
