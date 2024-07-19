@@ -82,10 +82,9 @@ def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Co
         list(pb.readfile('xyz', str(ts_opt_path))) for ts_opt_path in ts_opt_paths
     ]
     transition_states = [ts_opt[-1] for ts_opt in ts_opts]
-    # JOSH - get string energies like in Conformer.__post_init__ and include those in the output file
-    # should probably sort by them too
-    # maybe I can just leave them as
-    # manage_xyz.write_std_multixyz('transition_states.xyz')
+    with pb.Outputfile('xyz', 'transition_states', overwrite=True) as out_file:
+        for transition_state in transition_states:
+            out_file.write(transition_state)
 
 
 def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
