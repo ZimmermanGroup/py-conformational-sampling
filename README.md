@@ -45,13 +45,11 @@ pip install -e .
 ## Conda (alternative) installation
 
 * Clone GitHub repository.
-* Create a conda environment in which to install this library (links to more information on [anaconda installation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and [anaconda environments](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)). The following command creates a new conda environment with python and a couple dependencies that the author was unable to install automatically using pip (see below).
+* Create a conda environment in which to install this library (links to more information on [anaconda installation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and [anaconda environments](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)). The following command creates a new conda environment with python.
 
 ```
-conda create -c conda-forge --name conformational-sampling python openbabel xtb-python
+conda create -c conda-forge --name conformational-sampling python=3.11
 ```
-
-Note: in the author's environment, manually compiling a version of xTB was found to run a few times faster than the precompiled binary from conda used in these instructions.
 
 * Activate the conda environment.
 
@@ -83,7 +81,7 @@ git reset --hard
 
 # updates this library to the latest version
 git pull
-pip install .
+pip install -e .
 ```
 
 
@@ -91,7 +89,7 @@ pip install .
 
 ## Suzuki example from [Organic Letters publication](https://pubs.acs.org/doi/10.1021/acs.orglett.3c04047)
 
-* Navigate to the examples/suzuki directory
+* Navigate to the examples/suzuki directory:
 
 ```
 cd examples/suzuki
@@ -106,22 +104,25 @@ python ./suzuki.py
 
 ## Interactive visualization example
 
-Note: assumes that the visualization is running on a remote computing cluster. If serving the visualization locally, omit the ssh tunneling step
+Note: assumes that the visualization is running on a remote computing cluster. If serving the visualization locally, omit the ssh tunneling step.
 
 On the cluster containing the results of py-conformational-sampling calculations:
 * Ensure that the venv or conda environment containing py-conformational-sampling is activated.
-* Navigate to examples/dppe within py-conformational-sampling
+* Navigate to examples/dppe within py-conformational-sampling.
 * Set `start_visualization = True` in dppe.py, then run the script to start the server which loads the molecular data and hosts the visualization:
 
 ```
 python dppe.py
 ```
 
-* Establish an ssh SSH tunnel to the cluster in a separate terminal tab or window on the local machine with an available web browser to view the visualization:
+* Leave this terminal tab open until you are finished using the interactive visualization, and use a new tab or window for the next step.
+
+On the local computer with an available web browser to view the visualization:
+* Establish an ssh SSH tunnel to the visualization on the cluster:
 ```
 ssh -NfL localhost:5006:localhost:5006 <user@remote.host>
 ```
-* Access the visualization through a web browser at the following address:
+* Access the visualization in a web browser through the tunnelled port:
 ```
 http://localhost:5006
 ```

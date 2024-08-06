@@ -2,37 +2,41 @@
 # %reload_ext autoreload
 # %autoreload 2
 import os
-import re
 import pickle
+import re
+
 # from IPython.display import display
 import numpy as np
 import pandas as pd
 from rdkit import Chem
-from rdkit.Chem.rdchem import Mol
 from rdkit.Chem import rdMolTransforms
-from rdkit.Chem.rdmolfiles import MolToPDBBlock, MolToXYZBlock
+from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdMolAlign import AlignMol
+from rdkit.Chem.rdmolfiles import MolToPDBBlock, MolToXYZBlock
 
 print('Made it halfway through imports!')
 
-import param
-import hvplot.pandas # noqa
 import holoviews as hv
-from holoviews import opts, Slope
-from holoviews.streams import Selection1D
+import hvplot.pandas  # noqa
 import panel as pn
-from panel_chemistry.pane import \
-    NGLViewer  # panel_chemistry needs to be imported before you run pn.extension()
+import param
+from holoviews import Slope, opts
+from holoviews.streams import Selection1D
+from panel_chemistry.pane import NGLViewer
+
+# panel_chemistry needs to be imported before you run pn.extension()
 from panel_chemistry.pane.ngl_viewer import EXTENSIONS
+
 pn.extension('bokeh')
 hv.extension('bokeh')
 pn.extension(comms='vscode')
 pn.extension('tabulator')
 pn.extension("ngl_viewer", sizing_mode="stretch_width")
 from pathlib import Path
+
 import openbabel as ob
 
-from conformational_sampling.analyze import Conformer, System, systems, exclude_confs
+from conformational_sampling.analyze import Conformer, System, exclude_confs, systems
 from conformational_sampling.utils import free_energy_diff
 
 print('Finished imports!')
@@ -60,10 +64,10 @@ class ConformationalSamplingDashboard(param.Parameterized):
         systems = {
             'current_directory': System(
                 reductive_elim_torsion=self.catalytic_reaction_complex.forming_bond_torsion(),
-                # mol_path=Path.cwd(),
-                mol_path=Path(
-                    '/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/sample_output'
-                ),
+                mol_path=Path.cwd(),
+                # mol_path=Path(
+                #     '/export/zimmerman/joshkamm/Lilly/py-conformational-sampling/examples/dppe/sample_output'
+                # ),
             )
         }
 
@@ -146,7 +150,7 @@ class ConformationalSamplingDashboard(param.Parameterized):
         )
         
         # self.df.sort_values(axis=0, by='relative_ts_energy (kcal/mol)')['conf_idx'].to_csv(Path.home() / 'confs_df.csv')
-        self.df.to_csv(Path.home() / 'df.csv')
+        self.df.to_csv('conformer_data.csv')
         # return pn.widgets.Tabulator(self.df)
         
         plot = self.df.hvplot(
@@ -172,13 +176,19 @@ class ConformationalSamplingDashboard(param.Parameterized):
         # testing out generating descriptive statistics
         pd.options.display.width = 200
         # self.df.groupby('mol_name').describe().to_csv(Path.home() / 'Lilly' / 'py-conformational-sampling' / 'summary_statistics.csv')
-        sum_stats_file = Path.home() / 'Lilly' / 'py-conformational-sampling' / 'summary_statistics.csv'
+        # sum_stats_file = Path.home() / 'Lilly' / 'py-conformational-sampling' / 'summary_statistics.csv'
         group_by = self.df.groupby(['mol_name', 'Product stereochemistry'])
-        sum_stats = group_by[[
-            'activation energy (kcal/mol)',
-            'relative_ts_energy (kcal/mol)',
-            'forming_bond_torsion (deg)',
-        ]].describe(percentiles=[0.5]).T.to_csv(sum_stats_file, float_format=lambda x: f' {x:.6f}')
+        sum_stats = (
+            group_by[
+                [
+                    'activation energy (kcal/mol)',
+                    'relative_ts_energy (kcal/mol)',
+                    'forming_bond_torsion (deg)',
+                ]
+            ]
+            .describe(percentiles=[0.5])
+            .T.to_csv('summary_statistics.csv', float_format=lambda x: f' {x:.6f}')
+        )
         # sum_stats_file.write_text(sum_stats)
 
         return self.df.hvplot.explorer(
@@ -361,14 +371,3 @@ if __name__ == '__main__':
 # except (NameError, AssertionError):
 #     pass
 # bokeh_server = dashboard.app().show()
-
-# %%
-# test_df = pd.read_csv(Path.home() / 'df.csv')
-# groupby = test_df.value_counts(['mol_name', 'exo_endo', 'syn_anti', 'Product stereochemistry']).reset_index(name='count')
-# display(groupby)
-
-# pn.panel(hvplot.explorer(groupby)).show()
-
-# pass
-# %%
-# 'fontsize': {'labels': 10}, 'title': '', 'group_label': 'Prod'

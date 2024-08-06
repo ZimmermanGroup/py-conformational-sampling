@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pytest
 import stk
-from conformational_sampling.catalytic_reaction_complex import CatalyticReactionComplex
+from conformational_sampling.catalytic_reaction_complex import (
+    ReductiveEliminationComplex,
+)
 from conformational_sampling.main import load_stk_mol
 from conformational_sampling.utils import stk_metal
 
@@ -63,7 +65,7 @@ def test_reductive_elim_drive_coords(monkeypatch):
         stk_ancillary_ligand, functional_groups=[functional_group_factory]
     )
 
-    reaction_complex = CatalyticReactionComplex(
+    reaction_complex = ReductiveEliminationComplex(
         metal=stk_metal('Pd'),
         ancillary_ligand=stk_ancillary_ligand,
         reactive_ligand_1=stk_ligand_5a,

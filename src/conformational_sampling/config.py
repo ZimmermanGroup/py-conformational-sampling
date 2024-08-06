@@ -5,10 +5,11 @@ from ase.calculators.calculator import Calculator
 
 from conformational_sampling import utils
 
+
 @dataclass
 class Config:
     xtb_path: str = 'xtb'
-    initial_conformers: int = 100
+    initial_conformers: int = 10
     # set if you want to pass multiple ancillary ligand conformers and generate more
     # conformers based on each of them
     combinatorial_ancillary_ligand_confs: bool = False
