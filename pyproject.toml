@@ -61,6 +61,9 @@ platforms = ["linux-64"]
 [tool.pixi.pypi-dependencies]
 py-conformational-sampling = { path = ".", editable = true }
 
+[tool.pixi.system-requirements]
+linux = "3.10"
+
 [tool.pixi.environments]
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
