@@ -16,3 +16,7 @@ src/*.egg-info
 /examples/*/scratch/*
 /examples/*/conformers*
 /examples/*/output.txt
+
+# pixi environments
+.pixi
+*.egg-info
