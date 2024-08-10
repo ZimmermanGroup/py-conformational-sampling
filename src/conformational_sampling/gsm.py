@@ -82,7 +82,7 @@ def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Co
         list(pb.readfile('xyz', str(ts_opt_path))) for ts_opt_path in ts_opt_paths
     ]
     transition_states = [ts_opt[-1] for ts_opt in ts_opts]
-    with pb.Outputfile('xyz', 'transition_states', overwrite=True) as out_file:
+    with pb.Outputfile('xyz', 'transition_states.xyz', overwrite=True) as out_file:
         for transition_state in transition_states:
             out_file.write(transition_state)
 
@@ -184,7 +184,7 @@ def stk_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         molecule=reactant,
         refE=reactant.energy,
         opt_steps=50,
-        # path=path
+        path=str(Path.cwd() / 'scratch'),
     )
 
     se_gsm = SE_GSM.from_options(
@@ -303,7 +303,7 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
         molecule=reactant,
         refE=reactant.energy,
         opt_steps=OPT_STEPS,
-        # path=path
+        path=str(Path.cwd() / 'scratch'),
     )
 
     se_gsm = SE_GSM.from_options(
@@ -369,7 +369,7 @@ def stk_se_gsm(stk_mol: stk.Molecule, driving_coordinates, config: Config):
     #         molecule=product,
     #         refE=reactant.energy,
     #         opt_steps=50,
-    #         # path=path
+    #         path=str(Path.cwd() / 'scratch'),
     #     )
 
 
@@ -487,6 +487,7 @@ def stk_de_gsm(config: Config):
         molecule=reactant,
         refE=reactant.energy,
         opt_steps=OPT_STEPS,
+        path=str(Path.cwd() / 'scratch'),
     )
 
     nifty.printcool("OPTIMIZING PRODUCT GEOMETRY")
@@ -494,6 +495,7 @@ def stk_de_gsm(config: Config):
         molecule=product,
         refE=reactant.energy,
         opt_steps=OPT_STEPS,
+        path=str(Path.cwd() / 'scratch'),
     )
 
     # For xTB
@@ -549,6 +551,7 @@ def stk_de_gsm(config: Config):
         opt_steps=OPT_STEPS,
         opt_type='TS',
         ictan=de_gsm.ictan[ts_node_index],
+        path=str(Path.cwd() / 'scratch'),
     )
     manage_xyz.write_std_multixyz(
         TS_OPT_FILENAME, geoms, energies, gradrms=None, dEs=None
