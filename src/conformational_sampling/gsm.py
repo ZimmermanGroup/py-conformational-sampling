@@ -77,7 +77,11 @@ def stk_se_de_gsm_single_node_parallel(stk_mols, driving_coordinates, config: Co
         executor.map(
             stk_se_de_gsm, paths, stk_mols, repeat(driving_coordinates), repeat(config)
         )
-    ts_opt_paths = [path / TS_OPT_FILENAME for path in paths]
+    aggregate_transition_states()
+
+
+def aggregate_transition_states():
+    ts_opt_paths = Path.cwd().glob(f'scratch/pystring_*/{TS_OPT_FILENAME}')
     ts_opts = [
         list(pb.readfile('xyz', str(ts_opt_path))) for ts_opt_path in ts_opt_paths
     ]
