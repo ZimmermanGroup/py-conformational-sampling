@@ -86,6 +86,11 @@ def aggregate_transition_states():
         list(pb.readfile('xyz', str(ts_opt_path))) for ts_opt_path in ts_opt_paths
     ]
     transition_states = [ts_opt[-1] for ts_opt in ts_opts]
+    # sort transition states by energy, which pybel reads from the 2nd line of the
+    # XYZ file and puts in its title variable
+    transition_states = sorted(
+        transition_states, key=lambda pybel_mol: float(pybel_mol.title)
+    )
     with pb.Outputfile('xyz', 'transition_states.xyz', overwrite=True) as out_file:
         for transition_state in transition_states:
             out_file.write(transition_state)
