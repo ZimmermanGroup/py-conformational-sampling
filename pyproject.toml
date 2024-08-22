@@ -68,3 +68,7 @@ linux = "3.10"
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
 vscode = { features = ["vscode"], solve-group = "default" }
+
+[tool.pixi.tasks]
+suzuki_example = { cmd = "sbatch slurm.sbatch", cwd = "examples/suzuki" }
+dppe_example = { cmd = "sbatch slurm.sbatch", cwd = "examples/dppe" }

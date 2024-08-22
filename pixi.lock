@@ -3261,7 +3261,7 @@ packages:
   name: py-conformational-sampling
   version: 0.6.4
   path: .
-  sha256: 63f5c9700ce241c6211bd14f1db4f2f40b9da0879e18132b85109479daedd09b
+  sha256: 4790dafaba5a9e8de6630bfe944815149b9ea1552be314d914d0dc38a17e88be
   requires_dist:
   - ase
   - hvplot
