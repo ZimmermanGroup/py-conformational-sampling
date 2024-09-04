@@ -15,7 +15,9 @@ src/*.egg-info
 #scratch files from the examples
 /examples/*/scratch/*
 /examples/*/conformers*
+/examples/*/transition_states.xyz
 /examples/*/output.txt
+/examples/*/error.txt
 
 # pixi environments
 .pixi
