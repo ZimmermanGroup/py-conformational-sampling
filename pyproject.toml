@@ -72,3 +72,5 @@ vscode = { features = ["vscode"], solve-group = "default" }
 [tool.pixi.tasks]
 suzuki_example = { cmd = "sbatch slurm.sbatch", cwd = "examples/suzuki" }
 dppe_example = { cmd = "sbatch slurm.sbatch", cwd = "examples/dppe" }
+replace_dppe_example = { cmd = "sh -c 'cp --parents conformers_*.xyz transition_states.xyz  scratch/pystring_*/* sample_output/'", cwd = "examples/dppe" }
+replace_suzuki_example = { cmd = "sh -c 'cp --parents conformers_*.xyz transition_states.xyz  scratch/pystring_*/* sample_output/'", cwd = "examples/suzuki" }
