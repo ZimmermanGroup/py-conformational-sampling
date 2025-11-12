@@ -8,9 +8,41 @@ py-conformational-sampling is an experimental python library for sampling confor
 The user provides an ancillary ligand and reactive ligands as structure files which this library reads and stores as [stk (supramolecular toolkit) objects](https://stk.readthedocs.io/en/stable/stk.molecular.molecules.building_block.html). The user also provides a description of binding atoms and a description of a reaction in the form of changes in bonding. This library generates an ensemble of conformers for each ligand, binds them to Pd, and performs an optimization and filtering funnel to refine the conformer ensemble. Then for each conformer, the user's reaction is carried out using [pyGSM](https://github.com/ZimmermanGroup/pyGSM) which looks for a reaction path and corresponding transition state.
 
 
-# Draft installation instructions
+# Installation instructions
 
 Note: the code for this project is written in python which is generally platform independent. The author is unaware of any dependencies that are tied to a specific operating system. However, currently development and testing are primarily conducted within a CentOS 7 linux high performance computing environment using pip and venv or anaconda for management of python and other dependencies. Example commands below are for linux and will vary slightly by platform. Python versions 3.8 and 3.11 are tested in github actions workflows.
+
+## Pixi installation (recommended)
+
+[Pixi](https://pixi.sh) is a modern package manager that provides reproducible environments across different systems. This is the recommended installation method as it handles all dependencies including system libraries.
+
+* Use [git](https://git-scm.com/) to clone GitHub repository into a directory location of your choice:
+
+```bash
+git clone https://github.com/ZimmermanGroup/py-conformational-sampling.git
+cd py-conformational-sampling
+```
+
+* Install pixi if not already installed ([installation guide](https://pixi.sh/latest/#installation)):
+
+```bash
+curl -fsSL https://pixi.sh/install.sh | bash
+```
+
+* Install the project and all its dependencies:
+
+```bash
+pixi install
+```
+
+* Run Python scripts using pixi:
+
+```bash
+cd examples/rueping
+pixi run python rueping.py
+```
+
+Pixi automatically manages the Python environment and all dependencies. No manual activation is required - simply prefix commands with `pixi run`.
 
 ## Venv (built in virtual environment) installation
 
@@ -91,15 +123,20 @@ pip install -e .
 
 * Navigate to the examples/suzuki directory:
 
-```
+```bash
 cd examples/suzuki
 ```
 
-* Ensure that the venv or conda environment containing py-conformational-sampling is activated.
-* Execute the example:
+* Execute the example using pixi (recommended):
 
+```bash
+pixi run python suzuki.py
 ```
-python ./suzuki.py
+
+Or if using venv/conda, ensure the environment is activated and run:
+
+```bash
+python suzuki.py
 ```
 
 ## Interactive visualization example
