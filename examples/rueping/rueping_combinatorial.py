@@ -58,7 +58,27 @@ logging.debug(f'Substrate H-bond acceptor N: atom index {acceptor_n_idx}')
 
 logging.debug('Phase 1 complete: Fragments loaded and H-bond atoms identified')
 
-# TODO: Phase 2 - Generate conformers for each fragment
+# =============================================================================
+# Phase 2: Generate conformers for each fragment independently
+# =============================================================================
+
+config = Config(
+    initial_conformers=3,  # Small number for testing; increase for production
+    num_cpus=3,
+)
+
+logging.debug('Phase 2: Starting conformer generation for catalyst')
+catalyst_conformers = gen_confs_openbabel(catalyst, config)
+logging.debug(f'Generated {len(catalyst_conformers)} catalyst conformers')
+stk_list_to_xyz_file(catalyst_conformers, 'catalyst_conformers.xyz')
+
+logging.debug('Phase 2: Starting conformer generation for substrate')
+substrate_conformers = gen_confs_openbabel(substrate, config)
+logging.debug(f'Generated {len(substrate_conformers)} substrate conformers')
+stk_list_to_xyz_file(substrate_conformers, 'substrate_conformers.xyz')
+
+logging.debug('Phase 2 complete: Conformers generated and saved')
+
 # TODO: Phase 3 & 4 - Create combinatorial assembly function
 # TODO: Phase 5 - Generate full combinatorial ensemble
 # TODO: Phase 6 - Integration with optimization pipeline
