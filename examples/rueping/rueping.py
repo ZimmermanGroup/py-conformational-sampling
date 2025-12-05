@@ -7,7 +7,6 @@ FORMAT = (
 )
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
-import stko
 from rdkit import Chem
 from openbabel import pybel as pb
 from xtb.ase import calculator
@@ -98,33 +97,23 @@ conformers = [ConformerOptimizationSequence(conformer) for conformer in stk_conf
 stk_list_to_xyz_file(stk_conformers, 'conformers_0_unoptimized.xyz')
 logging.debug('Saved unoptimized conformers (with hydrogen)')
 
-# Step 3: Optimize with standard force field (skip MCHammer since no fragments, skip MetalOptimizer since no metal)
-logging.debug('Step 3: Optimizing with MMFF force field (better for H-bonds than UFF)')
+# Step 3: Remove duplicates before xTB (skip force field optimization)
+logging.debug('Step 3: Removing duplicate conformers before xTB')
 with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
-    unoptimized_mols = [conformer.stages[UNOPTIMIZED] for conformer in conformers]
+    # Store unoptimized as the pre-xTB stage for duplicate detection
+    for conformer in conformers:
+        conformer.stages[METAL_OPTIMIZER] = conformer.stages[UNOPTIMIZED]
     
-    # Use stko.MMFF for force field optimization (better H-bond handling than UFF)
-    ff_optimized_mols = list(executor.map(stko.MMFF().optimize, unoptimized_mols))
-    logging.debug(f'Force field optimized {len(ff_optimized_mols)} conformers')
-    
-    for i, conformer in enumerate(conformers):
-        conformer.stages[METAL_OPTIMIZER] = ff_optimized_mols[i]
-    
-    # Save force field optimized
-    stk_list_to_xyz_file(ff_optimized_mols, 'conformers_1_force_field.xyz')
-    
-    # Step 4: Remove duplicates before xTB
-    logging.debug('Step 4: Removing duplicate conformers')
     unique_ids = get_unique_conformer_ids(conformers, METAL_OPTIMIZER, config.pre_xtb_rms_threshold)
     unique_conformers = [conformers[i] for i in unique_ids]
     logging.debug(f'Kept {len(unique_conformers)} unique conformers (removed {len(conformers) - len(unique_conformers)} duplicates)')
     
-    ff_optimized_unique = [conformer.stages[METAL_OPTIMIZER] for conformer in unique_conformers]
+    unoptimized_unique = [conformer.stages[UNOPTIMIZED] for conformer in unique_conformers]
     
-    # Step 5: Optimize with xTB
-    logging.debug('Step 5: Optimizing with xTB')
+    # Step 4: Optimize directly with xTB
+    logging.debug('Step 4: Optimizing directly with xTB (skipping force field)')
     (Path.cwd() / 'scratch').mkdir(exist_ok=True)
-    xtb_optimized_mols = list(executor.map(ASE(calculator.XTB()).optimize, ff_optimized_unique))
+    xtb_optimized_mols = list(executor.map(ASE(calculator.XTB()).optimize, unoptimized_unique))
     xtb_optimized_mols = [mol for mol in xtb_optimized_mols if mol is not None]
     logging.debug(f'xTB optimized {len(xtb_optimized_mols)} conformers')
     
@@ -141,7 +130,7 @@ with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
     
     stk_list_to_xyz_file(
         [c.stages[XTB] for c in unique_conformers_with_xtb],
-        'conformers_2_xtb.xyz'
+        'conformers_1_xtb.xyz'
     )
     
     # Log final energies
@@ -157,5 +146,4 @@ with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
 logging.debug('Complete! Generated conformer files:')
 logging.debug('  - conformers_0_with_boron.xyz (initial with B bridge)')
 logging.debug('  - conformers_0_unoptimized.xyz (with H replacement)')
-logging.debug('  - conformers_1_force_field.xyz (MMFF optimized)')
-logging.debug('  - conformers_2_xtb.xyz (xTB optimized, sorted by energy)')
+logging.debug('  - conformers_1_xtb.xyz (xTB optimized directly, sorted by energy)')
