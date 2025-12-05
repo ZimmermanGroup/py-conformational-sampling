@@ -2,6 +2,11 @@ import logging
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
+FORMAT = (
+    '[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s]%(levelname)s: %(message)s'
+)
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
 import stko
 from rdkit import Chem
 from openbabel import pybel as pb
@@ -20,11 +25,6 @@ from conformational_sampling.main import (
 from conformational_sampling.config import Config
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.utils import stk_mol_to_pybel_mol, pybel_mol_to_stk_mol
-
-FORMAT = (
-    '[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s]%(levelname)s: %(message)s'
-)
-logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 
 def replace_boron_with_hydrogen(stk_mol):
@@ -99,12 +99,12 @@ stk_list_to_xyz_file(stk_conformers, 'conformers_0_unoptimized.xyz')
 logging.debug('Saved unoptimized conformers (with hydrogen)')
 
 # Step 3: Optimize with standard force field (skip MCHammer since no fragments, skip MetalOptimizer since no metal)
-logging.debug('Step 3: Optimizing with standard force field (UFF)')
+logging.debug('Step 3: Optimizing with MMFF force field (better for H-bonds than UFF)')
 with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
     unoptimized_mols = [conformer.stages[UNOPTIMIZED] for conformer in conformers]
     
-    # Use stko.UFF for force field optimization
-    ff_optimized_mols = list(executor.map(stko.UFF().optimize, unoptimized_mols))
+    # Use stko.MMFF for force field optimization (better H-bond handling than UFF)
+    ff_optimized_mols = list(executor.map(stko.MMFF().optimize, unoptimized_mols))
     logging.debug(f'Force field optimized {len(ff_optimized_mols)} conformers')
     
     for i, conformer in enumerate(conformers):
@@ -157,5 +157,5 @@ with ProcessPoolExecutor(max_workers=config.num_cpus) as executor:
 logging.debug('Complete! Generated conformer files:')
 logging.debug('  - conformers_0_with_boron.xyz (initial with B bridge)')
 logging.debug('  - conformers_0_unoptimized.xyz (with H replacement)')
-logging.debug('  - conformers_1_force_field.xyz (UFF optimized)')
+logging.debug('  - conformers_1_force_field.xyz (MMFF optimized)')
 logging.debug('  - conformers_2_xtb.xyz (xTB optimized, sorted by energy)')
