@@ -51,7 +51,15 @@ def replace_boron_with_hydrogen(stk_mol):
 
 
 def get_unique_conformer_ids(conformers, stage, rms_threshold=0.175):
-    """Get indices of unique conformers based on RMS comparison."""
+    """Get indices of unique conformers based on RMS comparison.
+    
+    Args:
+        conformers: List of ConformerOptimizationSequence objects
+        stage: Stage name to use for comparison
+        rms_threshold: RMSD threshold in Ångströms (default 0.175 Å)
+                      - Smaller (0.1-0.2 Å): keeps MORE conformers
+                      - Larger (0.5-2.0 Å): keeps FEWER conformers
+    """
     rdkit_mols = {i: Chem.RemoveHs(conformer.stages[stage].to_rdkit_mol())
                   for i, conformer in enumerate(conformers)
                   if stage in conformer.stages}
@@ -73,8 +81,12 @@ stk_mol = load_stk_mol(full_system_path)
 config = Config(
     # larger value samples more thoroughly, set to roughly 20-100 for thorough
     # sampling depending on ligand flexibility and resource availability
-    initial_conformers=3,
-    num_cpus=3,  # set to number of cpus available for use by pycosa
+    initial_conformers=100,
+    num_cpus=64,  # set to number of cpus available for use by pycosa
+    # RMSD threshold for removing duplicate conformers before xTB optimization
+    # 0.175 Å removes only very similar structures (keeps MORE conformers)
+    # Increase to 0.5-2.0 Å for more aggressive filtering (keeps FEWER conformers)
+    pre_xtb_rms_threshold=0.175,
 )
 
 # Step 1: Generate conformers using OpenBabel with boron bridge

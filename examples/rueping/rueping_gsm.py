@@ -26,7 +26,7 @@ logging.info(f'Loaded {len(conformer_mols)} conformers from {conformer_path}')
 
 # Configuration
 config = Config(
-    num_cpus=3,  # set to number of cpus available for parallel GSM runs
+    num_cpus=64,  # set to number of cpus available for parallel GSM runs
 )
 
 # Define driving coordinates for the cationic 2-aza-Cope rearrangement
