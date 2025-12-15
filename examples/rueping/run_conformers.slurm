@@ -8,7 +8,6 @@
 #SBATCH --mem=0                    # Request all memory on node
 #SBATCH --output=conformers_%j.out
 #SBATCH --error=conformers_%j.err
-# #SBATCH --account=YOUR_ACCOUNT   # Uncomment and set if required
 
 # Print job information
 echo "Job started at: $(date)"
@@ -17,24 +16,17 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "Working directory: $(pwd)"
 echo ""
 
-# Load required modules (adjust as needed for your cluster)
-# module load python/3.11
-# module load xtb
-# Or activate conda/pixi environment:
-# source /path/to/conda/etc/profile.d/conda.sh
-# conda activate pycosa
-# Or for pixi:
-# eval "$(pixi shell-hook)"
-
 # Ensure we're in the correct directory
 cd $SLURM_SUBMIT_DIR
 
-# Run conformer generation
+# Run conformer generation using pixi
+# Note: pixi environment must be set up on head node before submitting
+# (compute nodes don't have internet access for downloading dependencies)
 echo "Starting conformer generation with 100 initial conformers on 64 CPUs"
 echo "Expected runtime: 2-8 hours depending on system"
 echo ""
 
-python rueping.py
+pixi run python rueping.py
 
 # Check exit status
 if [ $? -eq 0 ]; then

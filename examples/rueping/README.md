@@ -51,37 +51,47 @@ num_cpus=64  # CPUs for parallel GSM runs (one per conformer)
 
 ### Quick Start
 
-**Option 1: Submit both jobs with automatic dependency**
+**Recommended: Use the automated submission script**
 ```bash
+# This script handles pixi setup and job submission automatically
 ./submit_all.sh
 ```
-This submits the conformer generation job, then automatically submits the GSM job to run after the first completes.
 
-**Option 2: Submit jobs manually**
+The script will:
+1. Set up the pixi environment on the head node (downloads dependencies)
+2. Verify Python and xTB are available
+3. Submit the conformer generation job
+4. Submit the GSM job with dependency (runs after conformers complete)
+
+**Alternative: Submit jobs manually**
 ```bash
-# Step 1: Generate conformers
-sbatch run_conformers.slurm
+# First ensure pixi environment is set up (run on head node)
+cd /path/to/py-conformational-sampling
+pixi install
 
-# Step 2: After step 1 completes, run GSM
-sbatch run_gsm.slurm
+# Then submit jobs
+sbatch run_conformers.slurm
+sbatch run_gsm.slurm  # Run after first job completes
 ```
 
 ### SLURM Configuration
 
 The provided SLURM scripts are configured for the **zimA10 partition** with:
-- 1 node, 64 CPUs per node
+- 1 node, 64 CPUs per node (full node)
+- Memory: All available (512 GB)
 - Time limits: 12h (conformers), 24h (GSM)
-- Memory: All available on node (`--mem=0`)
+- Uses `pixi run python` for environment isolation
 
 **Files:**
+- `submit_all.sh` - **Automated setup and submission** (recommended)
 - `run_conformers.slurm` - Conformer generation job
-- `run_gsm.slurm` - GSM pathway calculations job  
-- `submit_all.sh` - Helper to submit both with dependency
+- `run_gsm.slurm` - GSM pathway calculations job
 
-**Before running, edit the SLURM scripts to:**
-1. Uncomment and set `#SBATCH --account=YOUR_ACCOUNT` if required
-2. Adjust module loading or environment activation for your cluster
-3. Modify time limits if needed based on your system
+### Important Notes
+
+- **Compute nodes lack internet access:** The pixi environment must be set up on the head node before jobs run (handled automatically by `submit_all.sh`)
+- **Full node allocation:** Scripts request all 64 CPUs, which provides access to all 512 GB memory
+- **Automatic dependency:** GSM job waits for conformer job to complete successfully
 
 ### Expected Outputs
 
