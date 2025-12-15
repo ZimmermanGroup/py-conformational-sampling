@@ -47,43 +47,74 @@ num_cpus=64  # CPUs for parallel GSM runs (one per conformer)
 - `ADD: C(100)-C(86)` - Form new C-C bond
 - `BREAK: C(93)-C(94)` - Break C-C bond
 
-## Running on HPC
+## Running on HPC (SLURM)
 
-### Step 1: Conformer Generation
+### Quick Start
+
+**Option 1: Submit both jobs with automatic dependency**
 ```bash
-# Generates conformers_1_xtb.xyz with ~100 unique conformers
-python rueping.py
+./submit_all.sh
+```
+This submits the conformer generation job, then automatically submits the GSM job to run after the first completes.
+
+**Option 2: Submit jobs manually**
+```bash
+# Step 1: Generate conformers
+sbatch run_conformers.slurm
+
+# Step 2: After step 1 completes, run GSM
+sbatch run_gsm.slurm
 ```
 
-**Expected output files:**
+### SLURM Configuration
+
+The provided SLURM scripts are configured for the **zimA10 partition** with:
+- 1 node, 64 CPUs per node
+- Time limits: 12h (conformers), 24h (GSM)
+- Memory: All available on node (`--mem=0`)
+
+**Files:**
+- `run_conformers.slurm` - Conformer generation job
+- `run_gsm.slurm` - GSM pathway calculations job  
+- `submit_all.sh` - Helper to submit both with dependency
+
+**Before running, edit the SLURM scripts to:**
+1. Uncomment and set `#SBATCH --account=YOUR_ACCOUNT` if required
+2. Adjust module loading or environment activation for your cluster
+3. Modify time limits if needed based on your system
+
+### Expected Outputs
+
+**Step 1 (Conformers):**
 - `conformers_0_with_boron.xyz` - Initial conformers with B bridge
 - `conformers_0_unoptimized.xyz` - After B→H replacement
-- `conformers_1_xtb.xyz` - xTB optimized, sorted by energy
+- `conformers_1_xtb.xyz` - xTB optimized, sorted by energy (~50-100 conformers)
+- Runtime: ~2-8 hours on 64 CPUs
 
-**Runtime estimate:** ~2-8 hours on 64 CPUs (depends on system)
-
-### Step 2: GSM Reaction Pathways
-```bash
-# Computes reaction pathways for all conformers
-python rueping_gsm.py
-```
-
-**Expected output:**
+**Step 2 (GSM):**
 - `scratch/pystring_*/opt_converged_001.xyz` - Optimized reaction pathways
 - Energy profiles for each conformer
+- Runtime: ~4-12 hours on 64 CPUs (depends on conformer count)
 
-**Runtime estimate:** ~4-12 hours on 64 CPUs (depends on number of conformers)
-
-### Step 3: Analyze Results
-```bash
-python analyze_gsm_results.py
-```
-
-**Output:**
+**Step 3 (Analysis - automatic in run_gsm.slurm):**
 - Barrier heights for each conformer
-- Reaction energies
-- Full energy profiles
+- Reaction energies  
+- Full energy profile comparison
 - Identification of lowest barrier pathway
+
+### Monitor Jobs
+
+```bash
+# Check job status
+squeue -u $USER
+
+# View output (while running)
+tail -f conformers_*.out
+tail -f gsm_*.out
+
+# Cancel jobs if needed
+scancel <job_id>
+```
 
 ## Results from Test Run (3 conformers)
 
