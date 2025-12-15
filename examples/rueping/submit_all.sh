@@ -21,6 +21,7 @@ if ! command -v pixi &> /dev/null; then
 fi
 
 echo "Found pixi: $(which pixi)"
+echo "Pixi version: $(pixi --version)"
 echo ""
 
 # Navigate to repository root to run pixi install
@@ -29,7 +30,27 @@ echo "Repository root: $REPO_ROOT"
 cd "$REPO_ROOT"
 
 echo "Running pixi install to download dependencies..."
-pixi install
+echo "(This may take a few minutes on first run)"
+echo ""
+
+# Try regular install first, if it fails due to missing sha, update lock file
+if ! pixi install 2>&1 | tee /tmp/pixi_install.log; then
+    if grep -q "missing sha" /tmp/pixi_install.log; then
+        echo ""
+        echo "Lock file needs updating (missing sha errors)"
+        echo "Updating lock file..."
+        pixi install --locked=false || {
+            echo "ERROR: Failed to install pixi environment"
+            exit 1
+        }
+    else
+        echo "ERROR: pixi install failed"
+        cat /tmp/pixi_install.log
+        exit 1
+    fi
+fi
+
+rm -f /tmp/pixi_install.log
 
 echo ""
 echo "Verifying environment..."
