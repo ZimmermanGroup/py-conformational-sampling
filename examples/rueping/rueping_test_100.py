@@ -1,3 +1,8 @@
+"""Test script for 100 conformer run in dev container.
+
+This is a copy of rueping.py with num_cpus adjusted for the dev container
+(4 CPUs instead of 64 on HPC).
+"""
 import logging
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
@@ -24,6 +29,8 @@ from conformational_sampling.main import (
 from conformational_sampling.config import Config
 from conformational_sampling.ase_stko_optimizer import ASE
 from conformational_sampling.utils import stk_mol_to_pybel_mol, pybel_mol_to_stk_mol
+import numpy as np
+import stk
 
 
 def replace_boron_with_hydrogen(stk_mol):
@@ -130,17 +137,21 @@ def get_unique_conformer_ids(conformers, stage, rms_threshold=0.175):
 full_system_path = Path('full_system.xyz')
 stk_mol = load_stk_mol(full_system_path)
 
-# Configuration
+# Configuration - adjusted for dev container (4 CPUs)
 config = Config(
     # larger value samples more thoroughly, set to roughly 20-100 for thorough
     # sampling depending on ligand flexibility and resource availability
     initial_conformers=100,
-    num_cpus=64,  # set to number of cpus available for use by pycosa
+    num_cpus=4,  # Adjusted for dev container (was 64 for HPC)
     # RMSD threshold for removing duplicate conformers before xTB optimization
     # 0.175 Å removes only very similar structures (keeps MORE conformers)
     # Increase to 0.5-2.0 Å for more aggressive filtering (keeps FEWER conformers)
     pre_xtb_rms_threshold=0.175,
 )
+
+print(f"Starting 100 conformer run with {config.num_cpus} CPUs")
+print(f"This will be slower than HPC (64 CPUs) but tests scaling behavior")
+print()
 
 # Step 1: Generate conformers using OpenBabel with boron bridge
 logging.debug('Step 1: Generating conformers with boron bridge')
@@ -212,3 +223,4 @@ logging.debug('Complete! Generated conformer files:')
 logging.debug('  - conformers_0_with_boron.xyz (initial with B bridge)')
 logging.debug('  - conformers_0_unoptimized.xyz (with H replacement)')
 logging.debug('  - conformers_1_xtb.xyz (xTB optimized directly, sorted by energy)')
+print("\n✓ 100 conformer run completed successfully!")
