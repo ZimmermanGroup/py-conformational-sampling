@@ -1,3 +1,8 @@
+import os
+# MUST be set before importing xtb to prevent OpenMP thread oversubscription
+# when parallelizing over conformers. See README for details.
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import logging
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
