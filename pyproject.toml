@@ -18,7 +18,7 @@ dependencies = [
     "morfeus-ml",
     "nglview",
     "numpy<2",
-    "openbabel-wheel",
+    "openbabel>=3.2.0",
     "pandas",
     "panel-chemistry",
     "panel<1",
