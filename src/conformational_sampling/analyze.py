@@ -16,6 +16,30 @@ from rdkit.Chem.rdmolfiles import MolFromMolBlock, MolToMolBlock
 from conformational_sampling.utils import rdkit_mol_to_stk_mol
 
 
+def string_energy_kcal(comment_line: str) -> float:
+    """Return a GSM string node energy in kcal/mol from its XYZ comment/title line.
+
+    Two pyGSM output formats are handled transparently (ZimmermanGroup/pyGSM#65,
+    py-conformational-sampling#86):
+
+    * **Corrected pyGSM** writes the energy in its native ``kcal/mol`` with an
+      explicit unit label, e.g. ``"12.345 kcal/mol"``.
+    * **Legacy pyGSM** wrote a bare float in a garbled unit -- the kcal/mol value
+      multiplied by ``KJ_MOL_TO_AU`` (``write_std_multixyz`` treated a kcal/mol
+      number as if it were kJ/mol). Recover kcal/mol via ``/ KJ_MOL_TO_AU``.
+
+    Detecting the format from the unit label keeps old ensembles readable after
+    the source fix lands, so public pycosa users are not blindsided by the units
+    issue either way.
+    """
+    tokens = comment_line.split()
+    value = float(tokens[0])
+    unit = tokens[1].lower() if len(tokens) > 1 else ""
+    if unit.startswith("kcal"):
+        return value  # corrected pyGSM: already kcal/mol
+    return value / KJ_MOL_TO_AU  # legacy garbled unit -> kcal/mol
+
+
 @dataclass
 class System:
     reductive_elim_torsion: tuple
@@ -114,9 +138,10 @@ class Conformer:
             for node in ob_string_nodes:
                 mol_block = node.write('mol')
                 self.string_nodes.append(MolFromMolBlock(mol_block, removeHs=False))
-                # correcting for mismatched units based on the unit conversion in pyGSM
-                # when writing to XYZ files
-                self.string_energies.append(float(mol_block.split()[0]) / KJ_MOL_TO_AU)
+                # The mol block's title line is the XYZ comment (the energy).
+                # string_energy_kcal handles both the corrected pyGSM output
+                # (labeled kcal/mol) and the legacy garbled unit (pyGSM#65 / #86).
+                self.string_energies.append(string_energy_kcal(mol_block.splitlines()[0]))
         else:
             self.string_nodes = [
                 MolFromMolBlock(node.write("mol"), removeHs=False)
@@ -130,7 +155,10 @@ class Conformer:
                     if line.startswith(' Energy of the end points are'):
                         # extracting energy from output file formatting
                         raw_dft_energy_kcal_mol = float(line.split()[-2][:-1])
-            self.string_energies = [raw_dft_energy_kcal_mol + float(MolToMolBlock(node).split()[0]) * KCAL_MOL_PER_AU
+            # Per-node relative energy (kcal/mol, format-detected the same way as
+            # the singlepoints branch) added to the absolute DFT reference.
+            self.string_energies = [raw_dft_energy_kcal_mol
+                                    + string_energy_kcal(MolToMolBlock(node).splitlines()[0])
                                     for node in self.string_nodes]
 
         self.truncated_string = truncate_string_at_bond_formation(

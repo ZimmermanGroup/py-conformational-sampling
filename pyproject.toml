@@ -23,7 +23,9 @@ dependencies = [
     "panel-chemistry",
     "panel<1",
     "param<2",
-    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
+    # Pinned to the branch carrying the pyGSM#65 units fix so the corrected stack
+    # is what pixi resolves (drop the @branch once the fix merges to master).
+    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git@claude/se-gsm-driver-job-array-kck43i",
     "pytest",
     "rdkit",
     "setuptools", # necessary for pyGSM to run on python 3.11
