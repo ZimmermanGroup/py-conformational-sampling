@@ -30,7 +30,7 @@ from xtb.ase import calculator
 
 from conformational_sampling.config import Config
 
-# from conformational_sampling.analyze import ts_node
+from conformational_sampling.analyze import ts_node
 
 OPT_STEPS = 50 # 10 for debugging, 50 for production
 
@@ -527,19 +527,32 @@ def stk_de_gsm(config: Config):
 
     # TS-Optimization following DE-GSM run
 
-    # ts_node_energy = ts_node(de_gsm.energies)[1]
-    # ts_node_index = de_gsm.energies.index(ts_node_energy)
-    # ts_node_geom = de_gsm.nodes[ts_node_index]
+    ts_node_energy = ts_node(de_gsm.energies)[1]
+    ts_node_index = de_gsm.energies.index(ts_node_energy)
+    ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    # nifty.printcool("Optimizing TS node")
-    # optimizer.optimize(
-    #     molecule=ts_node_geom,
-    #     refE=de_gsm.energies[0],
-    #     opt_steps=OPT_STEPS,
-    #     opt_type="TS",
-    #     ictan=de_gsm.ictan[ts_node_index],
-    # )
+    nifty.printcool("Optimizing TS node")
+    optimizer.optimize(
+        molecule=ts_node_geom,
+        refE=de_gsm.energies[0],
+        opt_steps=OPT_STEPS,
+        opt_type="TS",
+        ictan=de_gsm.ictan[ts_node_index],
+    )
 
-    # de_gsm.nodes[ts_node_index] = ts_node_geom
+    de_gsm.nodes[ts_node_index] = ts_node_geom
+
+    # Persist the exact (eigenvector-following) optimized TS to its own file.
+    # opt_converged_001.xyz already holds the climbing-image string that
+    # go_gsm() wrote before this block ran; this keeps the refined TS geometry
+    # and energy alongside it instead of only updating de_gsm in memory. Same
+    # kcal/mol comment-line unit as the string (see write_std_multixyz).
+    manage_xyz.write_std_multixyz(
+        "ts_opt_{:03d}.xyz".format(de_gsm.ID),
+        [ts_node_geom.geometry],
+        [ts_node_geom.energy],
+        [ts_node_geom.gradrms],
+        [0.0],  # dE is not meaningful for a single-node file
+    )
 
     gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)
