@@ -23,9 +23,7 @@ dependencies = [
     "panel-chemistry",
     "panel<1",
     "param<2",
-    # TEMP: pinned to pyGSM PR #70 (fixes ZimmermanGroup/pyGSM#47 at the
-    # source) pending review/merge -- repoint to master once merged.
-    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git@claude/fragment-indices-error-clarity-rd5s93",
+    "pyGSM @ git+https://github.com/ZimmermanGroup/pyGSM.git",
     "pytest",
     "rdkit",
     "setuptools", # necessary for pyGSM to run on python 3.11
