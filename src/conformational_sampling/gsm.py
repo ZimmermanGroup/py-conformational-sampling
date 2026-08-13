@@ -529,30 +529,45 @@ def stk_de_gsm(config: Config):
 
     ts_node_energy = ts_node(de_gsm.energies)[1]
     ts_node_index = de_gsm.energies.index(ts_node_energy)
-    ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    nifty.printcool("Optimizing TS node")
-    optimizer.optimize(
-        molecule=ts_node_geom,
-        refE=de_gsm.energies[0],
-        opt_steps=OPT_STEPS,
-        opt_type="TS",
-        ictan=de_gsm.ictan[ts_node_index],
-    )
+    # get_tangents() (growing_string_methods/gsm.py) only fills ictan for
+    # interior nodes and leaves ictan[0] as its `[[]]*nnodes` initializer (a
+    # plain empty list, never overwritten) -- a real pyGSM bug independent of
+    # this driver. That makes ts_node_index==0 (a barrierless profile, where
+    # the reactant itself is the highest-energy node) crash eigenvector
+    # following with `'list' object has no attribute 'any'`. The reactant/
+    # product endpoints are already optimized above, so skip the refinement
+    # rather than crash the whole per-conformer run over an edge case.
+    if ts_node_index in (0, len(de_gsm.nodes) - 1):
+        print(f" TS node is an endpoint (index {ts_node_index}, barrierless "
+              "profile) -- skipping eigenvector-following TS refinement; "
+              "opt_converged_001.xyz already has the full string.")
+    else:
+        ts_node_geom = de_gsm.nodes[ts_node_index]
 
-    de_gsm.nodes[ts_node_index] = ts_node_geom
+        nifty.printcool("Optimizing TS node")
+        optimizer.optimize(
+            molecule=ts_node_geom,
+            refE=de_gsm.energies[0],
+            opt_steps=OPT_STEPS,
+            opt_type="TS",
+            ictan=de_gsm.ictan[ts_node_index],
+        )
 
-    # Persist the exact (eigenvector-following) optimized TS to its own file.
-    # opt_converged_001.xyz already holds the climbing-image string that
-    # go_gsm() wrote before this block ran; this keeps the refined TS geometry
-    # and energy alongside it instead of only updating de_gsm in memory. Same
-    # kcal/mol comment-line unit as the string (see write_std_multixyz).
-    manage_xyz.write_std_multixyz(
-        "ts_opt_{:03d}.xyz".format(de_gsm.ID),
-        [ts_node_geom.geometry],
-        [ts_node_geom.energy],
-        [ts_node_geom.gradrms],
-        [0.0],  # dE is not meaningful for a single-node file
-    )
+        de_gsm.nodes[ts_node_index] = ts_node_geom
+
+        # Persist the exact (eigenvector-following) optimized TS to its own
+        # file. opt_converged_001.xyz already holds the climbing-image string
+        # that go_gsm() wrote before this block ran; this keeps the refined
+        # TS geometry and energy alongside it instead of only updating
+        # de_gsm in memory. Same kcal/mol comment-line unit as the string
+        # (see write_std_multixyz).
+        manage_xyz.write_std_multixyz(
+            "ts_opt_{:03d}.xyz".format(de_gsm.ID),
+            [ts_node_geom.geometry],
+            [ts_node_geom.energy],
+            [ts_node_geom.gradrms],
+            [0.0],  # dE is not meaningful for a single-node file
+        )
 
     gsm_plot(de_gsm.energies, x=range(len(de_gsm.energies)), title=1)
