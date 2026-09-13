@@ -27,7 +27,8 @@ dependencies = [
     "pytest",
     "rdkit",
     "setuptools", # necessary for pyGSM to run on python 3.11
-    "stk<=2021.8.2.0",
+    # "stk<=2021.8.2.0",
+    "stk",
     "stko<=0.0.40",
     "xtb",
 ]
